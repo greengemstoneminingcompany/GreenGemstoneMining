@@ -126,18 +126,35 @@ export default function PreviewEditorStudio() {
     try { setDrafts(await api.listDrafts()); } catch (error) { setMessage(error instanceof Error ? error.message : 'Could not load saved drafts.'); }
   }, [api]);
 
-  const loadSession = useCallback(async () => {
-    if (!api) { setMessage('The editor bridge is not loaded. Reload this preview after its latest deployment.'); return; }
+  const loadSession = useCallback(async (): Promise<Session> => {
+    if (!api) {
+      const error = new Error('The editor connection is not loaded. Reload this preview and try again.');
+      setMessage(error.message);
+      throw error;
+    }
     setBusy(true);
     try {
       const current = await api.getSession();
       setSession(current);
-      if (current.isAdmin) await refreshDrafts();
-    } catch (error) { setMessage(error instanceof Error ? error.message : 'Could not check your sign-in.'); }
-    finally { setBusy(false); }
+      if (!current.isAdmin) {
+        const error = new Error(current.email
+          ? 'Your account signed in, but it is not authorised to edit this preview.'
+          : 'You are not signed in yet.');
+        setMessage(error.message);
+        return current;
+      }
+      await refreshDrafts();
+      return current;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not verify your sign-in. Please try again.';
+      setMessage(message);
+      throw error;
+    } finally {
+      setBusy(false);
+    }
   }, [api, refreshDrafts]);
 
-  useEffect(() => { if (open) void loadSession(); }, [open, loadSession]);
+  useEffect(() => { if (open) void loadSession().catch(() => {}); }, [open, loadSession]);
 
   useEffect(() => {
     const root = document.getElementById('root');
@@ -206,11 +223,27 @@ export default function PreviewEditorStudio() {
   };
 
   const signIn = async (event: FormEvent) => {
-    event.preventDefault(); if (!api) return;
-    setBusy(true); setMessage('');
-    try { await api.signIn(email, password); setPassword(''); await loadSession(); setMessage('Signed in successfully.'); }
-    catch (error) { setMessage(error instanceof Error ? error.message : 'Sign-in failed.'); }
-    finally { setBusy(false); }
+    event.preventDefault();
+    if (!api) {
+      setMessage('The editor connection is not loaded. Reload this preview and try again.');
+      return;
+    }
+    setBusy(true);
+    setMessage('');
+    try {
+      await api.signIn(email.trim(), password);
+      setPassword('');
+      const current = await loadSession();
+      if (!current.isAdmin) {
+        setMessage('Sign-in completed, but this account does not have preview editor access.');
+        return;
+      }
+      setMessage('Signed in successfully.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Sign-in failed. Please check your credentials and try again.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const saveDraft = async () => {
@@ -306,6 +339,7 @@ export default function PreviewEditorStudio() {
                 <label>Email address<input autoComplete="username" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" /></label>
                 <label>Password<input autoComplete="current-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your Supabase Auth password" /></label>
                 <button className="ve-primary" disabled={busy} type="submit">{busy ? 'Signing in…' : 'Sign in securely'}</button>
+                {message && <p className="ve-message" role="alert">{message}</p>}
                 <p className="ve-muted">Your password is sent directly to Supabase Auth. It is not saved in this editor.</p>
               </form>
             ) : (
