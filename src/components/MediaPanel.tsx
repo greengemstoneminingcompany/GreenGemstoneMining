@@ -636,7 +636,7 @@ function OwnerLogin({ onClose, admin }: Pick<MediaPanelProps, 'onClose' | 'admin
             <label className="media-label" htmlFor="ol-pass">Password</label>
             <input id="ol-pass" type="password" autoComplete="current-password" className="media-input" value={password} onChange={(e) => setPassword(e.target.value)} required />
             {error && <p className="media-status media-status-error" role="alert">{error}</p>}
-            <button className="media-primary-btn" type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+            <button className="media-primary-btn" type="submit" disabled={busy || admin.checking || !admin.client}>{busy ? 'Signing in…' : admin.checking || !admin.client ? 'Connecting securely…' : 'Sign in'}</button>
           </form>
         )}
       </div>
