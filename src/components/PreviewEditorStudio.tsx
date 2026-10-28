@@ -121,9 +121,18 @@ export default function PreviewEditorStudio() {
     if (!map.has(key)) map.set(key, el.style.getPropertyValue(key));
   };
 
-  const refreshDrafts = useCallback(async () => {
-    if (!api) return;
-    try { setDrafts(await api.listDrafts()); } catch (error) { setMessage(error instanceof Error ? error.message : 'Could not load saved drafts.'); }
+  const refreshDrafts = useCallback(async (): Promise<boolean> => {
+    if (!api) {
+      setMessage('The editor connection is not loaded. Reload this preview and try again.');
+      return false;
+    }
+    try {
+      setDrafts(await api.listDrafts());
+      return true;
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not load saved drafts.');
+      return false;
+    }
   }, [api]);
 
   const loadSession = useCallback(async (): Promise<Session> => {
@@ -143,7 +152,8 @@ export default function PreviewEditorStudio() {
         setMessage(error.message);
         return current;
       }
-      await refreshDrafts();
+      const draftsLoaded = await refreshDrafts();
+      if (!draftsLoaded) throw new Error('You are signed in, but saved drafts could not be loaded. The error is shown here; please retry after checking the connection.');
       return current;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not verify your sign-in. Please try again.';
