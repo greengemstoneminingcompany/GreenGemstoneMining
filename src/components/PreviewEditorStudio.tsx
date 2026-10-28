@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { ArrowDownToLine, ArrowLeftToLine, ArrowRightToLine, Check, ChevronDown, Clock3, Eye, History, ImagePlus, LayoutGrid, Link2, LogIn, LogOut, Minus, Monitor, Plus, Redo2, Save, Smartphone, Tablet, Type, Undo2, X } from 'lucide-react';
 import { applyPublishedVisualEditorPayload } from '@/lib/visualEditorBridge';
 import type { VisualEditorServerDraft, VisualEditorServerVersion } from '@/lib/visualEditorBridge';
@@ -127,12 +127,21 @@ export default function PreviewEditorStudio() {
   useEffect(() => { if (open) void loadSession(); }, [open, loadSession]);
 
   useEffect(() => {
+    const root = document.getElementById('root');
+    if (!root) return;
+    if (device === 'desktop') { root.style.removeProperty('max-width'); root.style.removeProperty('margin'); }
+    else { root.style.maxWidth = device === 'tablet' ? '820px' : '390px'; root.style.margin = '0 auto'; }
+    return () => { root.style.removeProperty('max-width'); root.style.removeProperty('margin'); };
+  }, [device]);
+
+  useEffect(() => {
     if (!open || !session.isAdmin || collapsed) return;
     const onClick = (event: MouseEvent) => {
       const target = event.target;
       if (!(target instanceof HTMLElement) || target.closest('#ggmc-visual-editor')) return;
-      const el = target.closest('h1,h2,h3,h4,p,span,a,button,img,li,small,strong,em,article,section') as HTMLElement | null;
+      const el = target.closest('h1,h2,h3,h4,p,span,a,button,img,li,small,strong,em') as HTMLElement | null;
       if (!el || el.closest('#ggmc-visual-editor') || el.closest('header') || el.closest('footer') && el.classList.contains('owner-link')) return;
+      if (!(el instanceof HTMLImageElement) && el.childElementCount > 0) return;
       const selector = safeSelector(el);
       if (!selector || selector.length > 500) return;
       setSelected(selector);
@@ -183,7 +192,7 @@ export default function PreviewEditorStudio() {
     setFuture(future.slice(1)); setPast([...past, payload]); setPayload(next); restoreCanvas(next);
   };
 
-  const signIn = async (event: React.FormEvent) => {
+  const signIn = async (event: FormEvent) => {
     event.preventDefault(); if (!api) return;
     setBusy(true); setMessage('');
     try { await api.signIn(email, password); setPassword(''); await loadSession(); setMessage('Signed in successfully.'); }
@@ -328,7 +337,9 @@ export default function PreviewEditorStudio() {
                           </div>
                           <label>Padding (px)<input type="range" min="0" max="80" value={padding} onChange={(e) => { setPadding(e.target.value); updateStyle('padding', e.target.value + 'px'); }} /></label>
                           {document.querySelector(selected) instanceof HTMLAnchorElement && <label>Link URL<input type="url" value={linkUrl} onChange={(e) => { setLinkUrl(e.target.value); updateStyle('--ve-link-href', e.target.value); const el = selectedElement(); if (el instanceof HTMLAnchorElement) el.href = e.target.value; }} placeholder="https://…" /></label>}
-                          <button className="ve-secondary" onClick={() => { const next = { ...payload, hidden: { ...payload.hidden, [selected]: !(payload.hidden?.[selected] ?? false) } }; changePayload(next); }}><Eye size={14} /> {payload.hidden?.[selected] ? 'Show element' : 'Hide element'}</button>
+                          <button className="ve-secondary" onClick={() => { const el = selectedElement();
+                    if (el && !originalDisplay.current.has(selected)) originalDisplay.current.set(selected, el.style.display);
+                    const next = { ...payload, hidden: { ...payload.hidden, [selected]: !(payload.hidden?.[selected] ?? false) } }; changePayload(next); }}><Eye size={14} /> {payload.hidden?.[selected] ? 'Show element' : 'Hide element'}</button>
                         </>
                       ) : <div className="ve-empty"><Type size={25} /><strong>Nothing selected yet</strong><span>Click a heading, paragraph, image, or card on the page.</span></div>}
                     </section>
@@ -393,7 +404,7 @@ function rgbToHex(color: string): string {
 const studioCss = `
 .ve-launcher{position:fixed;right:22px;bottom:22px;z-index:9998;display:flex;align-items:center;gap:9px;border:1px solid #c4a252;border-radius:999px;background:#101a15;color:#f2eee4;padding:13px 18px;box-shadow:0 12px 40px #0008;font:600 13px system-ui,sans-serif}
 .ve-studio{position:fixed;z-index:9999;display:flex;flex-direction:column;overflow:auto;resize:both;min-width:310px;min-height:260px;border:1px solid #4b5c4e;border-radius:18px;background:#0b110e;color:#f2eee4;box-shadow:0 24px 90px #000a;font:13px/1.45 system-ui,sans-serif;scrollbar-color:#455447 #101712}
-.ve-studio.is-docked{resize:horizontal;border-radius:16px}
+.ve-studio.is-docked{resize:both;border-radius:16px}
 .ve-studio.is-collapsed{min-width:0;min-height:0;resize:none;border-radius:999px;overflow:hidden}
 .ve-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:13px 14px;background:linear-gradient(130deg,#17241b,#101713);border-bottom:1px solid #2a392d;position:sticky;top:0;z-index:2}
 .ve-brand{display:flex;align-items:center;gap:9px}.ve-brand>span:last-child{display:flex;flex-direction:column}.ve-brand strong{font-size:13px;letter-spacing:.01em}.ve-brand small{font-size:10px;color:#a6b1a6}.ve-mark{display:grid;place-items:center;width:32px;height:32px;border:1px solid #6d5c35;border-radius:10px;color:#e4c87c}
