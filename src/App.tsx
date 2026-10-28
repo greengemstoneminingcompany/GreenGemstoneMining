@@ -18,6 +18,7 @@ const DEPOSIT_ICONS = { gem: Gem, atom: Atom, hammer: Hammer, mountain: Mountain
 const METALS = MINERALS.filter((m) => m.cat === 'Metal' || m.cat === 'Precious');
 
 const MediaPanel = lazy(() => import('@/components/MediaPanel'));
+const PreviewEditorStudio = lazy(() => import('@/components/PreviewEditorStudio'));
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -306,6 +307,7 @@ export default function App() {
           <p>{t.footer.privacyText} <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
         </section>
       </footer>
+      <Suspense fallback={null}><PreviewEditorStudio /></Suspense>
     </div>
   );
 }
