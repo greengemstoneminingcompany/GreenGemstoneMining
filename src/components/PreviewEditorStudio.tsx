@@ -73,6 +73,19 @@ export default function PreviewEditorStudio() {
 
   const api = useMemo(() => typeof window !== 'undefined' ? window.__GGMC_EDITOR_API__ : undefined, []);
 
+  const enabled = useMemo(() => {
+    if (import.meta.env.VITE_VISUAL_EDITOR_ENABLED !== 'true') return false;
+    const expectedRef = import.meta.env.VITE_VISUAL_EDITOR_SUPABASE_REF;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (!expectedRef || !supabaseUrl || typeof window === 'undefined') return false;
+    try {
+      const actualRef = new URL(supabaseUrl).hostname.split('.')[0];
+      return actualRef === expectedRef && (window.location.hostname.endsWith('.vercel.app') || window.location.hostname === 'localhost');
+    } catch {
+      return false;
+    }
+  }, []);
+
   const restoreCanvas = useCallback((next: EditorPayload) => {
     for (const [selector, value] of originalText.current) {
       try { document.querySelectorAll(selector).forEach((el) => { if (!el.closest('#ggmc-visual-editor')) el.textContent = value; }); } catch { /* stale selector */ }
@@ -266,6 +279,7 @@ export default function PreviewEditorStudio() {
       ? { right: '12px', left: 'auto', top: '12px', bottom: '12px', width: 'min(440px, calc(100vw - 24px))', height: 'auto', maxHeight: 'calc(100vh - 24px)' }
       : { right: '20px', bottom: '20px', left: 'auto', top: 'auto', width: 'min(440px, calc(100vw - 24px))', height: 'min(760px, calc(100vh - 40px))', maxHeight: 'calc(100vh - 24px)' };
 
+  if (!enabled) return null;
   if (!open) return <button className="ve-launcher" onClick={() => { setOpen(true); setCollapsed(false); }} type="button"><LayoutGrid size={17} /> Preview Editor</button>;
 
   return (
