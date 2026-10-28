@@ -40,9 +40,9 @@ export function useAdminSession(enabled: boolean) {
     } catch (error) {
       setIsAdmin(false);
       setChecking(false);
-      return { email, isAdmin: false, error: error instanceof Error ? error.message : 'Could not verify the sign-in session.' };
+      return { email: null, isAdmin: false, error: error instanceof Error ? error.message : 'Could not verify the sign-in session.' };
     }
-  }, [email]);
+  }, []);
 
   useEffect(() => {
     if (!enabled) return undefined;
