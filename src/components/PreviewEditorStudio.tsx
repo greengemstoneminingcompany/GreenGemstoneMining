@@ -135,7 +135,7 @@ export default function PreviewEditorStudio() {
     }
   }, [api]);
 
-  const loadSession = useCallback(async (): Promise<Session> => {
+  const loadSession = useCallback(async (): Promise<{ current: Session; draftsLoaded: boolean }> => {
     if (!api) {
       const error = new Error('The editor connection is not loaded. Reload this preview and try again.');
       setMessage(error.message);
@@ -150,11 +150,12 @@ export default function PreviewEditorStudio() {
           ? 'Your account signed in, but it is not authorised to edit this preview.'
           : 'You are not signed in yet.');
         setMessage(error.message);
-        return current;
+        return { current, draftsLoaded: false };
       }
+      // Authentication is independent from draft loading: do not sign a user back
+      // out of the editor just because the draft-list request temporarily fails.
       const draftsLoaded = await refreshDrafts();
-      if (!draftsLoaded) throw new Error('You are signed in, but saved drafts could not be loaded. The error is shown here; please retry after checking the connection.');
-      return current;
+      return { current, draftsLoaded };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not verify your sign-in. Please try again.';
       setMessage(message);
@@ -243,13 +244,18 @@ export default function PreviewEditorStudio() {
     try {
       await api.signIn(email.trim(), password);
       setPassword('');
-      const current = await loadSession();
+      const { current, draftsLoaded } = await loadSession();
       if (!current.isAdmin) {
         setMessage('Sign-in completed, but this account does not have preview editor access.');
         return;
       }
+      if (!draftsLoaded) {
+        setMessage('You are signed in, but saved drafts could not be loaded. Check the connection and use Refresh or reload the preview.');
+        return;
+      }
       setMessage('Signed in successfully.');
     } catch (error) {
+      setPassword('');
       setMessage(error instanceof Error ? error.message : 'Sign-in failed. Please check your credentials and try again.');
     } finally {
       setBusy(false);
@@ -272,10 +278,16 @@ export default function PreviewEditorStudio() {
     setBusy(true); setMessage('');
     try {
       const published = await api.publishDraft(draftId, draftVersion);
-      setDraftVersion(published.version);
+      // Published snapshots are immutable in the database. Keep the published
+      // payload on canvas, but switch the editor to a fresh draft for further edits.
       setPayload(published.payload as EditorPayload);
+      setDraftId(null);
+      setDraftVersion(0);
+      setDraftName(published.name + ' (copy)');
+      setPast([]);
+      setFuture([]);
       restoreCanvas(published.payload as EditorPayload);
-      setMessage('Preview snapshot published to this preview website. Production was not changed.');
+      setMessage('Preview snapshot published. Your canvas is now a new draft so you can keep editing. Production was not changed.');
       await refreshDrafts();
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Could not publish preview snapshot.'); }
     finally { setBusy(false); }
