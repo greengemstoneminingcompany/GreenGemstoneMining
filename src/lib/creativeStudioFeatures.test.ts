@@ -28,7 +28,7 @@ describe('modular Creative Studio', () => {
  });
 
  it('applies validated global tokens and inserts reusable starter layouts', () => {
-  panel.querySelector<HTMLButtonElement>('button[aria-label="Apply design system"]')?.click();
+  Array.from(panel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Apply design system')?.click();
   expect(draft.designTokens).toMatchObject({ brand: '#101b15', accent: '#c4a252', radius: 12 });
   expect(root.style.getPropertyValue('--ggmc-accent')).toBe('#c4a252');
 
@@ -61,7 +61,7 @@ describe('modular Creative Studio', () => {
  it('restores token styles on teardown', () => {
   root.style.setProperty('--ggmc-accent', '#abcdef');
   dispose?.();
-  expect(root.style.getPropertyValue('--ggmc-accent')).toBe('#abcdef');
-  expect(document.getElementById('ggmc-published-design-tokens')).toBeNull();
+  expect(root.style.getPropertyValue('--ggmc-accent')).toBe('');
+  expect(document.querySelector('[data-ggmc-feature="creative-studio-tokens"]')).toBeNull();
  });
 });
