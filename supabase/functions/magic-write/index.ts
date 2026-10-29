@@ -61,7 +61,7 @@ Deno.serve(async (req: Request) => {
   if (!supabaseUrl || !anonKey) return fail(origin, 500, 'not_configured', 'The preview authorization service is not configured.');
   if (!['anthropic', 'openai_compatible', 'n8n'].includes(provider)) return fail(origin, 500, 'not_configured', 'Unknown AI_PROVIDER.');
 
-  let url = '';
+  let url: string;
   let headers: Record<string, string> = { 'content-type': 'application/json' };
   let payload: unknown;
   if (provider === 'anthropic') {
