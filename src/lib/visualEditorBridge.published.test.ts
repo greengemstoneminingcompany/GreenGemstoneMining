@@ -30,4 +30,30 @@ describe('published visual editor payload safety', () => {
   expect(target.style.color).toBe('red');
   expect(target.style.fontFamily).toBe('');
  });
+ it('sanitizes published custom HTML while preserving plain text and multiple roots', () => {
+  document.body.innerHTML = '<div id="root"></div>';
+  const root = document.getElementById('root')!;
+  applyPublishedVisualEditorPayload({ blocks: [{ id: 'html-test', kind: 'html', text: '<p>First root</p><p onclick="alert(1)">Second root</p><script>bad()</script><iframe src="https://evil.example"></iframe>' }] }, root);
+  const block = root.querySelector('[data-ve-block-id="html-test"]')!;
+  expect(block.querySelectorAll('p')).toHaveLength(2);
+  expect(block.textContent).toContain('First root');
+  expect(block.textContent).toContain('Second root');
+  expect(block.querySelector('script,iframe,[onclick]')).toBeNull();
+ });
+
+ it('rejects CSS-breaking characters in published background image URLs', () => {
+  document.body.innerHTML = '<div id="root"><div class="background"></div></div>';
+  const target = document.querySelector('.background') as HTMLElement;
+  applyPublishedVisualEditorPayload({ styles: { '.background': { '--ve-background-image': 'https://evil.example/image.png");color:red' } } }, document.getElementById('root')!);
+  expect(target.style.backgroundImage).toBe('');
+  expect(target.style.color).toBe('');
+ });
+
+ it('accepts a safe published image URL but rejects protocol-relative image hosts', () => {
+  document.body.innerHTML = '<div id="root"><img class="safe"><img class="unsafe"></div>';
+  applyPublishedVisualEditorPayload({ styles: { '.safe': { '--ve-image-src': 'https://example.com/image.webp' }, '.unsafe': { '--ve-image-src': '//evil.example/image.webp' } } }, document.getElementById('root')!);
+  expect((document.querySelector('.safe') as HTMLImageElement).src).toBe('https://example.com/image.webp');
+  expect((document.querySelector('.unsafe') as HTMLImageElement).getAttribute('src')).toBeNull();
+ });
+
 });
