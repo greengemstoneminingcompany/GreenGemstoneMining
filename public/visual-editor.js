@@ -45,9 +45,9 @@
   const lifetime = new AbortController();
   const rootStyleBaseline = ['max-width','width','margin-inline','box-shadow'].map(prop => [prop, root.style.getPropertyValue(prop), root.style.getPropertyPriority(prop)]);
   const rootViewportBaseline = root.dataset.veViewport;
-  let serverDraftId=null,serverVersion=0,serverDraftStatus='draft';
-  try { const savedServer=JSON.parse(localStorage.getItem(SERVER_KEY)||'null'); if(savedServer&&typeof savedServer==='object'){serverDraftId=typeof savedServer.id==='string'?savedServer.id:null;serverVersion=Number.isInteger(savedServer.version)&&savedServer.version>=0?savedServer.version:0;serverDraftStatus=['draft','published','archived'].includes(savedServer.status)?savedServer.status:'draft';} } catch {}
-  const persistServerState=()=>{try{localStorage.setItem(SERVER_KEY,JSON.stringify({id:serverDraftId,version:serverVersion,status:serverDraftStatus}));}catch{say('Could not persist the server draft pointer in this browser.');}};
+  let serverDraftId=null,serverVersion=0,serverDraftStatus='draft',savedServerDraftName='Website draft';
+  try { const savedServer=JSON.parse(localStorage.getItem(SERVER_KEY)||'null'); if(savedServer&&typeof savedServer==='object'){serverDraftId=typeof savedServer.id==='string'?savedServer.id:null;serverVersion=Number.isInteger(savedServer.version)&&savedServer.version>=0?savedServer.version:0;serverDraftStatus=['draft','published','archived'].includes(savedServer.status)?savedServer.status:'draft';savedServerDraftName=typeof savedServer.name==='string'&&savedServer.name.trim()?savedServer.name.slice(0,120):'Website draft';} } catch {}
+  const persistServerState=()=>{try{localStorage.setItem(SERVER_KEY,JSON.stringify({id:serverDraftId,version:serverVersion,status:serverDraftStatus,name:serverAutosaveDraftName}));}catch{say('Could not persist the server draft pointer in this browser.');}};
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (saved && typeof saved === 'object') draft = { ...blank(), ...saved };
@@ -85,7 +85,7 @@
     return parts.join(' > ');
   };
   const all = (selector) => { try { return [...root.querySelectorAll(selector)]; } catch { return []; } };
-  let serverAutosaveDraftName = 'Website draft';
+  let serverAutosaveDraftName = savedServerDraftName;
   let serverAutosaveTimer = null;
   let serverAutosaveDirty = false;
   let serverAutosaveInFlight = false;
@@ -119,7 +119,7 @@
     const snapshot = copy(draft);
     try {
       const session = await api.getSession();
-      if (!session?.isAdmin) return;
+      if (!session?.isAdmin) throw new Error('Server autosave paused because this session is not an authorised editor. Sign in again; your browser draft remains saved locally.');
       const result = await api.saveDraft({ id: draftId, expectedVersion, name: nameSnapshot, payload: snapshot });
       if (!result || result.id !== draftId) throw new Error('Autosave returned an unexpected draft. Use Save server draft to review the server state.');
       if (serverDraftId !== draftId) return;
@@ -530,7 +530,7 @@
      aiAccept.addEventListener('click',()=>{if(!selected)return say('Select the page element you want to update before accepting the suggestion.');const value=aiReview.value.trim();if(!value)return say('Generate and review a suggestion before accepting it.');if(selected.dataset.veBlockId){const block=draft.blocks.find(b=>b.id===selected.dataset.veBlockId);if(!block||!['section','text','card','grid','video'].includes(block.kind))return say('AI acceptance is limited to text content blocks and page text.');saveHistory();block.text=value;applyChange('Accepted AI suggestion and applied it to the selected content block.');}else{saveHistory();const key=path(selected);const before=selected.childElementCount?directTextValue(selected):(selected.textContent||'');draft.text[key]={before:selected.dataset.veOriginal??before,after:value};applyChange('Accepted AI suggestion and applied it to the selected page text.');}aiAccept.disabled=true;});
      const serverHeading=document.createElement('div');serverHeading.className='ve-label';serverHeading.textContent='Secure server drafts';panel.append(serverHeading);
     const serverNote=document.createElement('p');serverNote.className='ve-note';serverNote.textContent='Owner sign-in required. Save creates server versions across devices. Publish records an immutable snapshot; it does not deploy code to Vercel.';panel.append(serverNote);
-    const serverName=input('text','Website draft','Draft name');serverName.addEventListener('input',()=>{serverAutosaveDraftName=serverName.value.trim().slice(0,120)||'Website draft';serverAutosaveDirty=true;scheduleServerAutosave();});panel.append(field('Draft name',serverName));
+    const serverName=input('text',serverAutosaveDraftName,'Draft name');serverName.addEventListener('input',()=>{serverAutosaveDraftName=serverName.value.trim().slice(0,120)||'Website draft';persistServerState();serverAutosaveDirty=true;scheduleServerAutosave();});panel.append(field('Draft name',serverName));
     const serverEmail=input('email','','Owner email'),serverPassword=input('password','','Owner password');serverEmail.autocomplete='username';serverPassword.autocomplete='current-password';
     panel.append(field('Owner email',serverEmail),field('Password',serverPassword));
     const serverSelect=document.createElement('select');serverSelect.setAttribute('aria-label','Saved server drafts');serverSelect.style.width='100%';panel.append(serverSelect);
