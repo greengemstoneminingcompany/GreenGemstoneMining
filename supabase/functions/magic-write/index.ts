@@ -10,14 +10,15 @@ const MODES: Record<string, string> = {
 };
 const TONES = ['professional', 'friendly', 'persuasive', 'technical', 'concise', 'playful', 'bold'];
 const MAX_CHARS = 4000;
-const PREVIEW_BRANCH_ORIGIN = 'https://green-gemstone-mining-git-6510a7-green-gemstone-mining-company.vercel.app';
-const allowedOrigins = [...new Set([PREVIEW_BRANCH_ORIGIN, ...(Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map(s => s.trim()).filter(Boolean)])];
+const allowedOrigins = [...new Set((Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map(s => s.trim()).filter(Boolean))];
 function originOk(origin: string | null): boolean {
   if (!origin) return false;
   try {
     const parsed = new URL(origin);
-    if (parsed.origin !== origin || !['https:', 'http:'].includes(parsed.protocol) || parsed.username || parsed.password) return false;
-    return allowedOrigins.includes(origin);
+    if (parsed.origin !== origin || parsed.protocol !== 'https:' || parsed.username || parsed.password) return false;
+    const host = parsed.hostname.toLowerCase();
+    const isProjectPreview = host.startsWith('green-gemstone-mining-') && host.endsWith('-green-gemstone-mining-company.vercel.app');
+    return isProjectPreview || allowedOrigins.includes(origin);
   } catch { return false; }
 }
 const headersFor = (origin: string | null) => ({
