@@ -15,6 +15,7 @@ window.addEventListener('load', () => {
   const allowedHost = host === 'localhost' || host === '127.0.0.1' || (host.startsWith('green-gemstone-mining-') && host.endsWith('-green-gemstone-mining-company.vercel.app'));
   if (marker?.getAttribute('content') !== 'enabled' || !allowedHost) return;
   const script = document.createElement('script');
+  script.type = 'module';
   script.src = '/visual-editor.js';
   script.async = false;
   script.dataset.previewEditor = 'true';
