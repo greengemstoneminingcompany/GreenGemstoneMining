@@ -534,6 +534,43 @@ test('server autosave reuses the same draft, increments versions, and preserves 
  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]'))).toHaveLength(1);
 });
 
+
+test('layer drag and drop reorders added sections on the canvas', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ const panel = page.locator('#ggmc-visual-editor');
+ await expect(panel).toBeVisible();
+ await expect(panel).toContainText('Shared server library: changes are available across authorized sessions and devices.');
+ await panel.getByLabel('Starter layout').selectOption('mission-story');
+ await panel.getByRole('button', { name: 'Add starter section', exact: true }).click();
+ await panel.getByLabel('Starter layout').selectOption('mining-hero');
+ await panel.getByRole('button', { name: 'Add starter section', exact: true }).click();
+ const blocks = page.locator('#root [data-ve-block-id]');
+ await expect(blocks).toHaveCount(2);
+ await expect(blocks.nth(0)).toContainText('Built on responsible practice');
+ await expect(blocks.nth(1)).toContainText('Responsible mineral development');
+ const rows = panel.locator('button[draggable="true"]');
+ await expect(rows).toHaveCount(2);
+ await rows.nth(1).dragTo(rows.nth(0));
+ await expect(blocks.nth(0)).toContainText('Responsible mineral development');
+ await expect(blocks.nth(1)).toContainText('Built on responsible practice');
+});
+
+test('editor studio remains usable within a narrow mobile viewport', async ({ page }) => {
+ await page.setViewportSize({ width: 390, height: 844 });
+ await page.goto(fixture + '?edit=1');
+ const panel = page.locator('#ggmc-visual-editor');
+ await expect(panel).toBeVisible();
+ const bounds = await panel.boundingBox();
+ expect(bounds).not.toBeNull();
+ expect(bounds!.x).toBeGreaterThanOrEqual(0);
+ expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
+ expect(bounds!.width).toBeLessThan(390);
+ expect(bounds!.height).toBeLessThan(844);
+ await expect(panel.getByRole('button', { name: 'Select element', exact: true })).toBeVisible();
+ await panel.getByRole('button', { name: 'Select element', exact: true }).click();
+ await expect(page.locator('body')).toHaveClass(/ggmc-ve-select/);
+});
+
 test('AI-generated copy is reviewed first and applied only after explicit acceptance', async ({ page }) => {
  await page.goto(fixture + '?edit=1');
  await page.getByRole('button', { name: 'Select element', exact: true }).click();
