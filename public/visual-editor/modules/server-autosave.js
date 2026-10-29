@@ -81,7 +81,11 @@ export function createServerAutosaveController(options) {
     cancel() {
       clearTimer();
       pending = false;
-      cancelled = false;
+    },
+    dispose() {
+      clearTimer();
+      pending = false;
+      cancelled = true;
     },
     isInFlight() {
       return inFlight;

@@ -535,6 +535,19 @@ test('server autosave reuses the same draft, increments versions, and preserves 
 });
 
 
+test('closing the editor cancels queued autosave work', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ await expect(page.locator('#ggmc-visual-editor')).toBeVisible();
+ await page.locator('#headline').fill('Edit should stay local after close');
+ page.on('dialog', dialog => dialog.accept());
+ await page.getByRole('button', { name: 'Close', exact: true }).click();
+ await expect(page.locator('#ggmc-visual-editor')).toHaveCount(0);
+ await page.waitForTimeout(2200);
+ expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]'))).toHaveLength(0);
+ expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2') || '{}').text['#headline'].after)).toBe('Edit should stay local after close');
+});
+
+
 test('layer drag and drop reorders added sections on the canvas', async ({ page }) => {
  await page.goto(fixture + '?edit=1');
  const panel = page.locator('#ggmc-visual-editor');

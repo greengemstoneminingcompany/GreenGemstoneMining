@@ -569,6 +569,7 @@ import { createServerAutosaveController } from './visual-editor/modules/server-a
     }).catch(() => say('Creative Studio module did not load. Existing editor tools remain available.'));
   }
   function teardown(){
+    serverAutosaveController?.dispose();
     if(observer){observer.disconnect();observer=null;}
     lifetime.abort();
     document.body.classList.remove('ggmc-ve-on','ggmc-ve-text','ggmc-ve-select');
