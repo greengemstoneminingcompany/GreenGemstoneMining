@@ -16,6 +16,8 @@ describe('modular Creative Studio', () => {
  let dispose: (() => void) | undefined;
 
  beforeEach(() => {
+  dispose?.(); dispose = undefined;
+  document.querySelectorAll('[data-ggmc-feature="creative-studio-tokens"]').forEach(node => node.remove());
   document.body.innerHTML = '<div id="root"><main></main></div><aside id="panel"></aside>';
   localStorage.clear();
   panel = document.getElementById('panel')!;
