@@ -421,6 +421,11 @@ test('custom HTML preserves plain text and multiple roots while stripping danger
  await expect(block.locator('form')).toHaveCount(1);
  await block.locator('form button').click();
  await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Custom forms are preview-only');
+ await page.locator('#ggmc-visual-editor select[aria-label="Block type"]').selectOption('html');
+ await page.getByRole('button', { name: 'Add content', exact: true }).click();
+ await page.locator('#ggmc-visual-editor textarea[placeholder^="Paste HTML"]').fill('plain text only');
+ await page.getByRole('button', { name: 'Add block', exact: true }).click();
+ await expect(page.locator('#root [data-ve-block-id]').last()).toHaveText('plain text only');
 });
 
 test('custom HTML rejects empty input without throwing or inserting a block', async ({ page }) => {
