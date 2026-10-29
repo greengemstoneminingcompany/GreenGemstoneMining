@@ -83,7 +83,7 @@ export function installVisualEditorBridge(){
 }
 
 function hasControlOrBackslash(value: string, rejectSpaces = false): boolean {
- for (const char of value) { const code=char.charCodeAt(0); if (code <= (rejectSpaces ? 32 : 31) || code === 127 || char === '\\\\') return true; }
+ for (const char of value) { const code=char.charCodeAt(0); if (code <= (rejectSpaces ? 32 : 31) || code === 127 || char === '\\') return true; }
  return false;
 }
 function safePublishedImageSrc(value: unknown): value is string {
@@ -102,7 +102,7 @@ function safePublishedSelector(selector: string): boolean {
 }
 function safePublishedCssValue(prop: string, value: unknown): value is string {
  const allowed = new Set(['color','background-color','font-size','font-family','font-weight','font-style','line-height','letter-spacing','text-align','text-decoration','text-transform','padding','padding-top','padding-right','padding-bottom','padding-left','margin','margin-top','margin-right','margin-bottom','margin-left','border','border-color','border-width','border-style','border-radius','box-shadow','background-size','background-position','filter','width','min-width','max-width','height','min-height','max-height','opacity','display','position','top','right','bottom','left','gap','column-gap','row-gap','object-fit','object-position']);
- if(typeof value!=='string'||value.length>=100||!allowed.has(prop)||Array.from(value).some(char=>{const code=char.charCodeAt(0);return ['<','>','\\\\',';','{','}'].includes(char)||code<=31||code===127;})||/(?:url\s*\(|expression\s*\(|javascript\s*:|vbscript\s*:|@import|!important)/i.test(value))return false;
+ if(typeof value!=='string'||value.length>=100||!allowed.has(prop)||Array.from(value).some(char=>{const code=char.charCodeAt(0);return ['<','>','\\',';','{','}'].includes(char)||code<=31||code===127;})||/(?:url\s*\(|expression\s*\(|javascript\s*:|vbscript\s*:|@import|!important)/i.test(value))return false;
  try{return typeof CSS!=='undefined'&&CSS.supports(prop,value.trim());}catch{return false;}
 }
 
