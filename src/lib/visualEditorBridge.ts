@@ -31,7 +31,9 @@ function isDedicatedPreviewProject(): boolean {
  try {
   const actualRef = new URL(supabaseUrl).hostname.split('.')[0];
   const host = window.location.hostname;
-  return actualRef === expectedPreviewRef && (host.endsWith('.vercel.app') || host === 'localhost');
+  const allowedHost = host === 'localhost' || host === '127.0.0.1' ||
+   (host.startsWith('green-gemstone-mining-') && host.endsWith('-green-gemstone-mining-company.vercel.app'));
+  return actualRef === expectedPreviewRef && allowedHost;
  } catch { return false; }
 }
 async function getPreviewSupabase() {
