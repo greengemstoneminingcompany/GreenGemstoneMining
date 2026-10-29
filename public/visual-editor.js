@@ -168,7 +168,7 @@
     if(applying)return; applying=true;
     try {
       const wantedBlockIds = new Set(draft.blocks.map(block=>String(block.id)));
-      root.querySelectorAll('[data-ve-block-id]').forEach(el=>{if(!wantedBlockIds.has(el.dataset.veBlockId||''))el.remove();});
+      root.querySelectorAll('[data-ve-block-id]').forEach(el=>{if(!wantedBlockIds.has(el.dataset.veBlockId||'')&&el.dataset.vePublishedBlock!=='true')el.remove();});
       draft.blocks.forEach((block) => {
         let el=root.querySelector('[data-ve-block-id="'+block.id+'"]');
         const stamp=JSON.stringify(block);
