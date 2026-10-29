@@ -1,6 +1,8 @@
-(() => {
+(async () => {
   const params = new URLSearchParams(location.search);
   const previewEnabled = document.querySelector('meta[name="ggmc-preview-editor"]')?.content === 'enabled';
+  const allowedPreviewHost = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.endsWith('.vercel.app');
+  if (!previewEnabled || !allowedPreviewHost) return;
   const showPreviewTrigger = () => {
     if (!previewEnabled || document.getElementById('ggmc-preview-editor-trigger')) return;
     const trigger = document.createElement('button');
@@ -14,7 +16,25 @@
     showPreviewTrigger();
     return;
   }
+  const editorApi = window.__GGMC_EDITOR_API__;
+  let authorized = false;
+  try { authorized = (await editorApi?.getSession?.())?.isAdmin === true; } catch { authorized = false; }
+  if (!authorized) {
+    const gate = document.createElement('section'); gate.id = 'ggmc-editor-auth-gate'; gate.setAttribute('aria-label','Preview editor sign in');
+    gate.style.cssText='position:fixed;z-index:2147483647;right:18px;bottom:18px;width:min(360px,calc(100vw - 36px));padding:20px;background:#0d1310;color:#f2eee4;border:1px solid #c4a252;border-radius:14px;font:14px system-ui,sans-serif;box-shadow:0 12px 36px #0009';
+    const title=document.createElement('h2');title.textContent='Preview editor sign in';title.style.cssText='margin:0 0 8px;color:#e4c87c;font-size:18px';
+    const note=document.createElement('p');note.textContent='Sign in with an authorised preview editor account. Opening this URL does not grant access.';
+    const form=document.createElement('form');
+    const email=document.createElement('input');email.type='email';email.required=true;email.autocomplete='username';email.placeholder='Owner email';email.setAttribute('aria-label','Owner email');email.style.cssText='display:block;box-sizing:border-box;width:100%;margin:8px 0;padding:10px';
+    const password=document.createElement('input');password.type='password';password.required=true;password.autocomplete='current-password';password.placeholder='Password';password.setAttribute('aria-label','Password');password.style.cssText=email.style.cssText;
+    const submit=document.createElement('button');submit.type='submit';submit.textContent='Sign in';submit.style.cssText='padding:10px 14px;background:#c4a252;color:#07100b;border:0;border-radius:6px;font-weight:700';
+    const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Close';cancel.style.cssText='padding:10px 14px;margin-left:8px';cancel.addEventListener('click',()=>{const u=new URL(location.href);u.searchParams.delete('edit');history.replaceState({},'',u);gate.remove();showPreviewTrigger();});
+    const message=document.createElement('p');message.setAttribute('role','status');message.setAttribute('aria-live','polite');
+    form.append(email,password,submit,cancel,message);form.addEventListener('submit',async event=>{event.preventDefault();submit.disabled=true;message.textContent='Checking preview editor permissions…';try{const api=window.__GGMC_EDITOR_API__;if(!api?.signIn||!api?.getSession)throw Error('Preview sign-in is not ready. Reload this preview and try again.');await api.signIn(email.value.trim(),password.value);const session=await api.getSession();if(session?.isAdmin!==true)throw Error('This account is not authorised to edit the preview.');location.reload();}catch(error){password.value='';message.textContent=error instanceof Error?error.message:'Sign-in failed.';}finally{submit.disabled=false;}});
+    gate.append(title,note,form);document.body.append(gate);return;
+  }
   const KEY = 'ggmc-preview-editor-v2';
+  const SERVER_KEY = 'ggmc-preview-editor-server-draft-v1';
   const ID = 'ggmc-visual-editor';
   const root = document.getElementById('root');
   if (!root) return;
@@ -29,6 +49,8 @@
   const rootStyleBaseline = ['max-width','width','margin-inline','box-shadow'].map(prop => [prop, root.style.getPropertyValue(prop), root.style.getPropertyPriority(prop)]);
   const rootViewportBaseline = root.dataset.veViewport;
   let serverDraftId=null,serverVersion=0,serverDraftStatus='draft';
+  try { const savedServer=JSON.parse(localStorage.getItem(SERVER_KEY)||'null'); if(savedServer&&typeof savedServer==='object'){serverDraftId=typeof savedServer.id==='string'?savedServer.id:null;serverVersion=Number.isInteger(savedServer.version)&&savedServer.version>=0?savedServer.version:0;serverDraftStatus=['draft','published','archived'].includes(savedServer.status)?savedServer.status:'draft';} } catch {}
+  const persistServerState=()=>{try{localStorage.setItem(SERVER_KEY,JSON.stringify({id:serverDraftId,version:serverVersion,status:serverDraftStatus}));}catch{say('Could not persist the server draft pointer in this browser.');}};
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (saved && typeof saved === 'object') draft = { ...blank(), ...saved };
@@ -66,13 +88,15 @@
     return parts.join(' > ');
   };
   const all = (selector) => { try { return [...root.querySelectorAll(selector)]; } catch { return []; } };
-  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(draft)); } catch { say('Browser storage is unavailable. Export the draft before leaving.'); } updateCount(); };
+  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(draft)); } catch { say('Browser storage is unavailable. Export the draft before leaving.'); } persistServerState(); updateCount(); };
   const say = (text) => { if (status) status.textContent = text; };
   const updateCount = () => { if (counter) counter.textContent = Object.keys(draft.text).length+' text edits · '+Object.keys(draft.styles).length+' styled elements · '+draft.blocks.length+' added blocks · local draft'; };
   const saveHistory = () => { undo.push(copy(draft)); if (undo.length>60) undo.shift(); redo=[]; };
   const applyChange = (message) => { persist(); refresh(); renderLayers(); if(selected) inspect(selected); say(message||'Saved locally. This is not published.'); };
-  const safeUrl = (value) => { try { const u=new URL(value,location.origin); return ['https:','http:','mailto:'].includes(u.protocol)||String(value).startsWith('#')?value:'#'; } catch { return String(value).startsWith('#')?value:'#'; } };
-  const safeImageSrc = value => typeof value==='string'&&((/^https:\/\//i.test(value))||(value.startsWith('/')&&!value.startsWith('//'))||/^data:image\/(?:png|jpeg|webp);base64,[a-z0-9+/]+=*$/i.test(value));
+  const safeUrl = (value) => { if(typeof value!=='string'||!value.trim()||/[\u0000-\u001f\\]/.test(value))return '#'; const raw=value.trim(); if(raw.startsWith('#'))return /^#[\w-]*$/.test(raw)?raw:'#'; if(raw.startsWith('/')&&!raw.startsWith('//'))return raw; try { const u=new URL(raw,location.origin); return ['https:','http:','mailto:'].includes(u.protocol)&&!u.username&&!u.password?raw:'#'; } catch { return '#'; } };
+  const safeImageSrc = value => { if(typeof value!=='string'||/[\u0000-\u0020\\]/.test(value))return false; if(/^data:image\/(?:png|jpeg|webp);base64,[a-z0-9+/]+=*$/i.test(value))return true; if(value.startsWith('/')&&!value.startsWith('//'))return true; try{const u=new URL(value,location.origin);return u.protocol==='https:'&&!u.username&&!u.password&&/^https:\/\//i.test(value);}catch{return false;} };
+  const SAFE_CSS_PROPERTIES = new Set(['color','background-color','font-size','padding','margin','border-radius','text-align','font-weight','font-style','text-decoration-line','text-transform','rotate','font-family','line-height','letter-spacing','width','height','border','box-shadow','opacity','background-size','background-position','filter','object-fit','object-position','display']);
+  const safeCssValue = (prop, value) => { if(typeof value!=='string'||value.length>200||/[<>\\;{}\u0000-\u001f]/.test(value)||/(?:url\s*\(|expression\s*\(|@import|javascript\s*:|vbscript\s*:)/i.test(value))return false; if(!SAFE_CSS_PROPERTIES.has(prop))return false; try{return typeof CSS!=='undefined'&&CSS.supports(prop,value.trim());}catch{return false;} };
   async function compressImage(file){
     if(!file||!['image/jpeg','image/png','image/webp'].includes(file.type))throw Error('Choose a JPG, PNG, or WebP image.');
     const bitmap=await createImageBitmap(file),scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));
@@ -190,7 +214,7 @@
         if(prop==='--ve-image-src'&&el instanceof HTMLImageElement&&safeImageSrc(val)){if(!imageSrcBaselines.has(el))imageSrcBaselines.set(el,el.getAttribute('src')||'');el.src=val;nextAppliedImageSrc.push(el);}
         else if(prop==='--ve-image-alt'&&el instanceof HTMLImageElement&&typeof val==='string'){if(!imageAltBaselines.has(el))imageAltBaselines.set(el,el.alt);el.alt=val;nextAppliedImageAlt.push(el);}
         else if(prop==='--ve-link-href'&&el instanceof HTMLAnchorElement&&typeof val==='string')el.setAttribute('href',safeUrl(val));
-        else {const cssProp=customCss[prop]||(!prop.startsWith('--ve-')?prop:null);if(cssProp){rememberStyle(el,cssProp);const cssVal=prop==='--ve-background-image'&&safeImageSrc(val)?`url("${val}")`:val;el.style.setProperty(cssProp,cssVal);nextAppliedStyles.push({el,prop:cssProp});}}
+        else {const cssProp=customCss[prop]||(!prop.startsWith('--ve-')?prop:null);if(cssProp&&safeCssValue(cssProp,val)){rememberStyle(el,cssProp);const cssVal=prop==='--ve-background-image'&&safeImageSrc(val)?`url("${val}")`:val;el.style.setProperty(cssProp,cssVal);nextAppliedStyles.push({el,prop:cssProp});}}
       })));
       lastAppliedImageSrc.forEach(el=>{if(!nextAppliedImageSrc.includes(el)){const base=imageSrcBaselines.get(el);if(base!==undefined)el.setAttribute('src',base);imageSrcBaselines.delete(el);}});
       lastAppliedImageAlt.forEach(el=>{if(!nextAppliedImageAlt.includes(el)){const base=imageAltBaselines.get(el);if(base!==undefined)el.alt=base;imageAltBaselines.delete(el);}});
@@ -214,7 +238,11 @@
   const cssLength = (v) => /^(auto|0|[0-9.]+(px|rem|em|%|vw|vh))$/i.test(v.trim())?v.trim():'initial';
   function selectElement(el){if(selected)delete selected.dataset.veSelected;selected=el;if(selected)selected.dataset.veSelected='true';inspect(selected);}
   function changeStyle(prop,value){
-    if(!selected)return;saveHistory();const key=path(selected);draft.styles[key]={...(draft.styles[key]||{}),[prop]:value};applyChange('Updated '+prop+'.');inspect(selected);
+    if(!selected)return;
+    const cssProp=({'--ve-background-image':'background-image','--ve-background-size':'background-size','--ve-background-position':'background-position','--ve-image-filter':'filter','--ve-object-fit':'object-fit','--ve-object-position':'object-position'})[prop]||prop;
+    if(prop==='--ve-background-image'){if(!safeImageSrc(value))return say('Use a safe HTTPS or site-relative image URL.');}
+    else if(!safeCssValue(cssProp,value))return say('That CSS value is not allowed. URL-based CSS and unsupported values are blocked.');
+    saveHistory();const key=path(selected);draft.styles[key]={...(draft.styles[key]||{}),[prop]:value};applyChange('Updated '+prop+'.');inspect(selected);
   }
   function inspect(el){
     if(!inspector)return;inspector.replaceChildren();
