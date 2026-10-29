@@ -90,6 +90,7 @@ import { createServerAutosaveController } from './visual-editor/modules/server-a
   let serverAutosaveDraftName = savedServerDraftName;
   let serverAutosaveDirty = false;
   let serverAutosaveConflict = false;
+  let serverManualSaveInFlight = false;
   let serverAutosaveController = null;
   const persist = () => {
     try { localStorage.setItem(KEY, JSON.stringify(draft)); }
@@ -98,7 +99,7 @@ import { createServerAutosaveController } from './visual-editor/modules/server-a
     updateCount();
     scheduleServerAutosave();
   };
-  function scheduleServerAutosave() { serverAutosaveController?.schedule(); }
+  function scheduleServerAutosave() { if (!serverManualSaveInFlight) serverAutosaveController?.schedule(); }
   const say = (text) => { if (status) status.textContent = text; };
   serverAutosaveController = createServerAutosaveController({
     delay: 1800,
@@ -507,7 +508,38 @@ import { createServerAutosaveController } from './visual-editor/modules/server-a
     const serverLogin=document.createElement('button');serverLogin.textContent='Sign in';serverLogin.addEventListener('click',async()=>{try{const api=window.__GGMC_EDITOR_API__;if(!api?.signIn)throw Error('Server drafts are not connected on this preview.');await api.signIn(serverEmail.value,serverPassword.value);say('Signed in as editor admin.');await loadServerDrafts();}catch(err){say(err.message||'Sign in failed.');}});
     const serverRefresh=document.createElement('button');serverRefresh.textContent='Refresh';serverRefresh.addEventListener('click',loadServerDrafts);
     const serverLoad=document.createElement('button');serverLoad.textContent='Load draft';serverLoad.addEventListener('click',async()=>{try{serverAutosaveController?.cancel();const api=window.__GGMC_EDITOR_API__;if(!api?.listDrafts)throw Error('Server drafts are not connected on this preview.');const rows=await api.listDrafts();const row=rows?.find(x=>x.id===serverSelect.value);if(!row)throw Error('Select a server draft first.');draft=copy(row.payload);serverDraftId=row.id;serverVersion=row.version;serverDraftStatus=row.status;serverAutosaveDirty=false;serverAutosaveConflict=false;serverName.value=row.name;serverAutosaveDraftName=row.name;persistServerState();undo=[];redo=[];persist();refresh();renderLayers();inspect(null);say('Loaded '+row.status+' version '+row.version+'.');}catch(err){say(err.message||'Could not load draft.');}});
-    const serverSave=document.createElement('button');serverSave.className='primary';serverSave.textContent='Save server draft';serverSave.addEventListener('click',async()=>{try{if(serverAutosaveController?.isInFlight())throw Error('Wait for the current server autosave to finish before saving manually.');serverAutosaveController?.cancel();const api=window.__GGMC_EDITOR_API__;if(!api?.getSession||!api?.saveDraft)throw Error('Server drafts are not connected on this preview.');const session=await api.getSession();if(!session?.isAdmin)throw Error('Sign in with an authorised owner account first.');let name=serverName.value.trim();if(!name||name.length>120)throw Error('Draft name must be 1–120 characters.');if(serverDraftStatus==='published'){name=(name+' (copy)').slice(0,120);serverName.value=name;}const result=await api.saveDraft({id:serverDraftStatus==='published'?null:serverDraftId,expectedVersion:serverDraftStatus==='published'?0:serverVersion,name,payload:draft});if(!result)throw Error('Server did not return the saved version.');serverDraftId=result.id;serverVersion=result.version;serverDraftStatus=result.status;serverAutosaveDirty=false;serverAutosaveConflict=false;serverAutosaveDraftName=name;persistServerState();await loadServerDrafts();say('Server draft saved as version '+result.version+'.');}catch(err){say(err.message||'Server save failed.');}});
+    const serverSave=document.createElement('button');serverSave.className='primary';serverSave.textContent='Save server draft';serverSave.addEventListener('click',async()=>{
+      if(serverManualSaveInFlight)return;
+      serverManualSaveInFlight=true;
+      try{
+        if(serverAutosaveController?.isInFlight())throw Error('Wait for the current server autosave to finish before saving manually.');
+        serverAutosaveController?.cancel();
+        const api=window.__GGMC_EDITOR_API__;
+        if(!api?.getSession||!api?.saveDraft)throw Error('Server drafts are not connected on this preview.');
+        const session=await api.getSession();
+        if(!session?.isAdmin)throw Error('Sign in with an authorised owner account first.');
+        let name=serverName.value.trim();
+        if(!name||name.length>120)throw Error('Draft name must be 1–120 characters.');
+        if(serverDraftStatus==='published'){name=(name+' (copy)').slice(0,120);serverName.value=name;}
+        const nameSnapshot=name;
+        const payloadSnapshot=copy(draft);
+        serverAutosaveDraftName=nameSnapshot;
+        const result=await api.saveDraft({id:serverDraftStatus==='published'?null:serverDraftId,expectedVersion:serverDraftStatus==='published'?0:serverVersion,name:nameSnapshot,payload:payloadSnapshot});
+        if(!result)throw Error('Server did not return the saved version.');
+        const contentChangedDuringSave=JSON.stringify(payloadSnapshot)!==JSON.stringify(draft);
+        const nameChangedDuringSave=serverAutosaveDraftName!==nameSnapshot;
+        serverDraftId=result.id;
+        serverVersion=result.version;
+        serverDraftStatus=result.status;
+        serverAutosaveConflict=false;
+        if(!nameChangedDuringSave){serverAutosaveDraftName=nameSnapshot;serverName.value=nameSnapshot;}
+        serverAutosaveDirty=contentChangedDuringSave||nameChangedDuringSave;
+        persistServerState();
+        await loadServerDrafts();
+        say(serverAutosaveDirty?'Server draft saved; newer edits are waiting to save…':'Server draft saved as version '+result.version+'.');
+      }catch(err){say(err.message||'Server save failed.');}
+      finally{serverManualSaveInFlight=false;if(serverAutosaveDirty)scheduleServerAutosave();}
+    });
     const serverPublish=document.createElement('button');serverPublish.className='primary';serverPublish.textContent='Publish snapshot';serverPublish.addEventListener('click',async()=>{try{if(!serverDraftId||serverVersion<1||serverDraftStatus==='published')throw Error('Save a new draft before publishing.');const api=window.__GGMC_EDITOR_API__;if(!api?.publishDraft)throw Error('Server drafts are not connected on this preview.');if(!confirm('Publish this saved snapshot? This does not deploy code to Vercel.'))return;const result=await api.publishDraft(serverDraftId,serverVersion);if(!result)throw Error('Publish returned no result.');serverDraftStatus=result.status;serverVersion=result.version;persistServerState();await loadServerDrafts();say('Published server snapshot v'+result.version+'.');}catch(err){say(err.message||'Publish failed.');}});
     const serverVersions=document.createElement('button');serverVersions.textContent='Load versions';serverVersions.addEventListener('click',async()=>{try{if(!serverDraftId)throw Error('Load or save a server draft first.');const api=window.__GGMC_EDITOR_API__;if(!api?.listVersions)throw Error('Server drafts are not connected on this preview.');const rows=await api.listVersions(serverDraftId);versionSelect.replaceChildren();(rows||[]).forEach(v=>{const o=document.createElement('option');o.value=String(v.id);o.dataset.version=String(v.version);o.textContent='v'+v.version+' · '+v.status+' · '+v.note;o.dataset.payload=JSON.stringify(v.payload);versionSelect.append(o);});say('Version history loaded.');}catch(err){say(err.message||'Version history failed.');}});
     const restoreLocalVersion=document.createElement('button');restoreLocalVersion.textContent='Restore locally';restoreLocalVersion.addEventListener('click',()=>{const opt=versionSelect.selectedOptions[0];if(!opt)return say('Select a version first.');saveHistory();draft=JSON.parse(opt.dataset.payload||'{}');serverDraftId=null;serverVersion=0;serverDraftStatus='draft';persistServerState();persist();refresh();renderLayers();say('Restored version into a local draft.');});
