@@ -57,7 +57,7 @@ const textInput = (label, value = '') => {
 };
 
 export function mountCreativeStudio(api) {
-  const { panel, root, getDraft, saveHistory, applyChange, say, getSelected, aiWrite } = api;
+  const { panel, root, getDraft, saveHistory, applyChange, say, getSelected, aiWrite, editorApi } = api;
   if (!panel || !root || typeof getDraft !== 'function') return () => {};
   const originalTokens = new Map(['--ggmc-brand','--ggmc-accent','--ggmc-surface','--ggmc-copy','--ggmc-radius','--ggmc-section-space','--ggmc-content-width'].map(key => [key, root.style.getPropertyValue(key)]));
   const tokenStyle = document.createElement('style');
@@ -115,7 +115,7 @@ export function mountCreativeStudio(api) {
   panel.append(sectionDraft);
   applyTokens();
 
-  const librarySection = section('', 'Creative library', 'Use starter layouts or save your own sections as reusable templates. Your library stays in this browser.');
+  const librarySection = section('', 'Creative library', 'Use starter layouts, browser-local templates, or secure server templates shared across your authorised preview editing sessions.');
   const starter = select('Starter template', BUILT_INS.map(item => [item.id, item.name]));
   const starterInfo = document.createElement('p'); starterInfo.className='ve-note';
   const updateStarterInfo = () => { starterInfo.textContent = BUILT_INS.find(item => item.id === starter.value)?.description || ''; };
@@ -153,7 +153,61 @@ export function mountCreativeStudio(api) {
       row.append(name, insert, remove); savedList.append(row);
     });
   }
-  librarySection.append(field('Starter layout', starter), starterInfo, addStarter, field('Template name', templateName), saveSelected, savedList);
+  const serverTemplateHeading = document.createElement('div');
+  serverTemplateHeading.className = 've-label';
+  serverTemplateHeading.textContent = 'Shared server templates';
+  const serverTemplateNote = document.createElement('p');
+  serverTemplateNote.className = 've-note';
+  serverTemplateNote.textContent = 'These templates are stored in the preview database and are available across devices to authorised editor admins. Sign in to load, save, or delete them.';
+  const serverTemplateList = document.createElement('div');
+  serverTemplateList.style.cssText = 'display:grid;gap:6px;margin-top:8px';
+  const loadServerTemplates = async () => {
+    if (!editorApi?.listTemplates) return say('Shared server templates are not connected on this preview.');
+    try {
+      const items = await editorApi.listTemplates();
+      serverTemplateList.replaceChildren();
+      if (!items.length) {
+        const empty = document.createElement('p'); empty.className = 've-note';
+        empty.textContent = 'No shared templates saved yet.'; serverTemplateList.append(empty);
+      }
+      items.forEach(item => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:5px;align-items:center';
+        const name = document.createElement('span'); name.textContent = item.name;
+        name.style.cssText = 'overflow-wrap:anywhere;color:#f2eee4;font-size:11px';
+        const insert = button('Insert', () => {
+          if (!item.block || typeof item.block !== 'object') return say('This saved template is invalid and cannot be inserted.');
+          saveHistory(); getDraft().blocks.push({ ...clone(item.block), id: makeId() });
+          applyChange('Inserted shared server template "' + item.name + '" as a new draft block.');
+        });
+        const remove = button('Delete', async () => {
+          if (!confirm('Delete the shared template "' + item.name + '"? Existing page blocks are unchanged.')) return;
+          try { await editorApi.deleteTemplate(item.id); await loadServerTemplates(); say('Deleted shared template "' + item.name + '".'); }
+          catch (error) { say(error instanceof Error ? error.message : 'Could not delete the shared template.'); }
+        });
+        row.append(name, insert, remove); serverTemplateList.append(row);
+      });
+      say('Loaded ' + items.length + ' shared server template(s).');
+    } catch (error) {
+      say(error instanceof Error ? error.message : 'Could not load shared server templates. Sign in with an authorised preview editor account.');
+    }
+  };
+  const saveSelectedServer = button('Save selected block to server', async () => {
+    if (!editorApi?.saveTemplate) return say('Shared server templates are not connected on this preview.');
+    const selected = getSelected();
+    const id = selected?.dataset?.veBlockId;
+    const block = id ? getDraft().blocks.find(item => item.id === id) : null;
+    if (!block) return say('Select an editor-added block on the page before saving it as a shared template.');
+    const name = safeText(templateName.value, 80);
+    if (!name) return say('Give this shared template a name first.');
+    try {
+      const saved = await editorApi.saveTemplate({ id: null, name, block: clone(block) });
+      await loadServerTemplates();
+      say('Saved "' + saved.name + '" to shared server templates.');
+    } catch (error) { say(error instanceof Error ? error.message : 'Could not save the shared template.'); }
+  }, true);
+  const loadServerButton = button('Load shared templates', loadServerTemplates);
+  librarySection.append(field('Starter layout', starter), starterInfo, addStarter, field('Template name', templateName), saveSelected, savedList, serverTemplateHeading, serverTemplateNote, loadServerButton, saveSelectedServer, serverTemplateList);
   panel.append(librarySection); renderLibrary();
 
   const aiSection = section('', 'AI section workshop', 'Turn a brief into a proposed section. AI output is review-only until you explicitly add it to the draft; no existing links or images are replaced.');
