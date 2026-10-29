@@ -458,3 +458,32 @@ test('unsafe links and CSS URL values are rejected and docking clears stale left
  await shadow.press('Tab');
  await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('That CSS value is not allowed');
 });
+
+
+test('server draft pointer survives reload and publishing starts a separate copy', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ await page.locator('#ggmc-visual-editor input[placeholder="Draft name"]').fill('Reload cycle test');
+ await page.getByRole('button', { name: 'Save server draft', exact: true }).click();
+ await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Server draft saved as version 1');
+ const first = await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-server-draft-v1') || '{}'));
+ expect(first.id).toMatch(/^fixture-/);
+ expect(first.version).toBe(1);
+ await page.reload();
+ await expect(page.locator('#ggmc-visual-editor')).toBeVisible();
+ await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+ await page.getByRole('button', { name: 'Load draft', exact: true }).click();
+ await expect(page.locator('#ggmc-visual-editor input[placeholder="Draft name"]')).toHaveValue('Reload cycle test');
+ page.on('dialog', dialog => dialog.accept());
+ await page.getByRole('button', { name: 'Publish snapshot', exact: true }).click();
+ await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Published server snapshot v2');
+ const published = await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-server-draft-v1') || '{}'));
+ expect(published.id).toBe(first.id);
+ expect(published.version).toBe(2);
+ expect(published.status).toBe('published');
+ await page.getByRole('button', { name: 'Save server draft', exact: true }).click();
+ await expect(page.locator('#ggmc-visual-editor input[placeholder="Draft name"]')).toHaveValue('Reload cycle test (copy)');
+ const copyState = await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-server-draft-v1') || '{}'));
+ expect(copyState.id).not.toBe(first.id);
+ expect(copyState.version).toBe(1);
+ expect(copyState.status).toBe('draft');
+});
