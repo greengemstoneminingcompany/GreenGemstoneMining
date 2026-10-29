@@ -379,3 +379,82 @@ test('panel buttons dock, collapse, expand, preview widths, export, and reset', 
  await expect(page.locator('#headline')).toHaveText('White text that should be editable');
  await expect(panel).toContainText('0 text edits');
 });
+
+
+test('edit query alone cannot activate the editor without the preview build marker', async ({ page }) => {
+ await page.route('**/tests/fixtures/visual-editor.html?edit=1', async route => {
+  const response = await route.fetch();
+  const body = (await response.text()).replace('<meta name="ggmc-preview-editor" content="enabled">','');
+  await route.fulfill({ response, body });
+ });
+ await page.goto(fixture + '?edit=1');
+ await expect(page.locator('#ggmc-visual-editor')).toHaveCount(0);
+ await expect(page.locator('#ggmc-editor-auth-gate')).toHaveCount(0);
+ await expect(page.locator('body')).not.toHaveClass(/ggmc-ve-on/);
+});
+
+test('preview editor requires an authenticated admin session, not a query parameter', async ({ page }) => {
+ await page.route('**/tests/fixtures/visual-editor.html?edit=1', async route => {
+  const response = await route.fetch();
+  const body = (await response.text()).replace(/window\.__GGMC_EDITOR_API__=\{[^;]+;\s*/, '');
+  await route.fulfill({ response, body });
+ });
+ await page.goto(fixture + '?edit=1');
+ await expect(page.locator('#ggmc-editor-auth-gate')).toBeVisible();
+ await expect(page.locator('#ggmc-visual-editor')).toHaveCount(0);
+ await expect(page.locator('#ggmc-editor-auth-gate')).toContainText('Opening this URL does not grant access');
+});
+
+test('custom HTML preserves plain text and multiple roots while stripping dangerous markup', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ await expect(page.locator('#ggmc-visual-editor')).toBeVisible();
+ await page.locator('#ggmc-visual-editor select[aria-label="Block type"]').selectOption('html');
+ await page.getByRole('button', { name: 'Add content', exact: true }).click();
+ await page.locator('#ggmc-visual-editor textarea[placeholder^="Paste HTML"]').fill('<p onerror="alert(1)">Root A</p><p>Root B</p><script>alert(2)</script><iframe src="javascript:alert(3)"></iframe><form onsubmit="alert(4)"><input name="x"><button type="submit">Preview form</button></form>');
+ await page.getByRole('button', { name: 'Add block', exact: true }).click();
+ const block = page.locator('#root [data-ve-block-id]').last();
+ await expect(block.locator('p')).toHaveCount(2);
+ await expect(block).toContainText('Root A');
+ await expect(block).toContainText('Root B');
+ await expect(block.locator('script,iframe')).toHaveCount(0);
+ await expect(block.locator('[onerror],[onsubmit],[onclick]')).toHaveCount(0);
+ await expect(block.locator('form')).toHaveCount(1);
+ await block.locator('form button').click();
+ await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Custom forms are preview-only');
+});
+
+test('custom HTML rejects empty input without throwing or inserting a block', async ({ page }) => {
+ const errors: string[] = [];
+ page.on('pageerror', error => errors.push(error.message));
+ await page.goto(fixture + '?edit=1');
+ await page.locator('#ggmc-visual-editor select[aria-label="Block type"]').selectOption('html');
+ await page.getByRole('button', { name: 'Add content', exact: true }).click();
+ await page.getByRole('button', { name: 'Add block', exact: true }).click();
+ await expect(page.locator('#root [data-ve-block-id]')).toHaveCount(0);
+ await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Enter valid, non-empty HTML content');
+ await expect(page.locator('#ggmc-visual-editor .ve-add-form')).toBeVisible();
+ expect(errors).toEqual([]);
+});
+
+test('unsafe links and CSS URL values are rejected and docking clears stale left positioning', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ await page.locator('#ggmc-visual-editor select[aria-label="Block type"]').selectOption('link');
+ await page.getByRole('button', { name: 'Add content', exact: true }).click();
+ await page.locator('#ggmc-visual-editor input[placeholder="Link URL"]').fill('javascript:alert(1)');
+ await page.getByRole('button', { name: 'Add block', exact: true }).click();
+ await expect(page.locator('#root [data-ve-block-id]')).toHaveCount(0);
+ await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Use HTTPS, HTTP, mailto:');
+ const panel = page.locator('#ggmc-visual-editor');
+ await panel.evaluate(el => (el as HTMLElement).style.left = '50px');
+ await page.getByRole('button', { name: 'Dock left', exact: true }).click();
+ await expect(panel).not.toHaveAttribute('style', /left:\s*50px/);
+ await page.getByRole('button', { name: 'Dock right', exact: true }).click();
+ await expect(panel).not.toHaveAttribute('style', /left:\s*50px/);
+ await page.getByRole('button', { name: 'Select element', exact: true }).click();
+ await page.locator('#contact').click();
+ await page.locator('#ggmc-visual-editor details summary').click();
+ const shadow = page.locator('#ggmc-visual-editor input[placeholder="0 4px 18px #0003"]');
+ await shadow.fill('url(https://evil.example/x.png)');
+ await shadow.press('Tab');
+ await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('That CSS value is not allowed');
+});
