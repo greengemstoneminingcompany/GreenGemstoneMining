@@ -7,6 +7,7 @@ const MODES: Record<string, string> = {
   seo_title: 'Write one SEO page title (max 60 characters) for this content.',
   meta_description: 'Write one meta description (max 155 characters) for this content.',
   alt_text: 'Write concise image alt text (max 125 characters) for this description.',
+  section_copy: 'Write a concise website section headline on the first line, then a blank line, then 2–4 sentences of supporting copy. Use only facts provided in the brief. Do not invent certifications, locations, statistics, reserves, or claims. Return plain text only.',
 };
 const TONES = ['professional', 'friendly', 'persuasive', 'technical', 'concise', 'playful', 'bold'];
 const MAX_CHARS = 4000;
