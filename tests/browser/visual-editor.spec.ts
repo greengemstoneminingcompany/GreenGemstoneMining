@@ -529,6 +529,7 @@ test('Creative Studio module exposes design tokens, reusable templates, AI revie
  await expect(page.locator('#root [data-ve-block-id]')).toHaveCount(1);
  await expect(page.locator('#root [data-ve-block-id]')).toContainText('Built on responsible practice');
  await panel.getByLabel('Template name').fill('Mission template');
+ await panel.getByRole('button', { name: 'Select element', exact: true }).click();
  await page.locator('#root [data-ve-block-id]').click();
  await panel.getByRole('button', { name: 'Save selected block as template', exact: true }).click();
  await expect(panel).toContainText('Mission template');
