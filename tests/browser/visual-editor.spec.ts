@@ -487,3 +487,22 @@ test('server draft pointer survives reload and publishing starts a separate copy
  expect(copyState.version).toBe(1);
  expect(copyState.status).toBe('draft');
 });
+
+
+test('AI-generated copy is reviewed first and applied only after explicit acceptance', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ await page.getByRole('button', { name: 'Select element', exact: true }).click();
+ await page.locator('#headline').click();
+ const headline = page.locator('#headline');
+ await expect(headline).toHaveText('White text that should be editable');
+ const source = page.locator('#ggmc-visual-editor textarea[aria-label="Text to send for AI review"]');
+ await source.fill('White text that should be editable');
+ const accept = page.getByRole('button', { name: 'Accept and apply to selected element', exact: true });
+ await expect(accept).toBeDisabled();
+ await page.getByRole('button', { name: 'Generate suggestion', exact: true }).click();
+ await expect(page.locator('#ggmc-visual-editor textarea[aria-label="AI suggestion review"]')).toHaveValue('Suggested: White text that should be editable');
+ await expect(headline).toHaveText('White text that should be editable');
+ await expect(accept).toBeEnabled();
+ await accept.click();
+ await expect(headline).toHaveText('Suggested: White text that should be editable');
+});
