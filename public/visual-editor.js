@@ -220,7 +220,7 @@
         if(prop==='--ve-image-src'&&el instanceof HTMLImageElement&&safeImageSrc(val)){if(!imageSrcBaselines.has(el))imageSrcBaselines.set(el,el.getAttribute('src')||'');el.src=val;nextAppliedImageSrc.push(el);}
         else if(prop==='--ve-image-alt'&&el instanceof HTMLImageElement&&typeof val==='string'){if(!imageAltBaselines.has(el))imageAltBaselines.set(el,el.alt);el.alt=val;nextAppliedImageAlt.push(el);}
         else if(prop==='--ve-link-href'&&el instanceof HTMLAnchorElement&&typeof val==='string')el.setAttribute('href',safeUrl(val));
-        else {const cssProp=customCss[prop]||(!prop.startsWith('--ve-')?prop:null);if(cssProp&&safeCssValue(cssProp,val)){rememberStyle(el,cssProp);const cssVal=prop==='--ve-background-image'&&safeImageSrc(val)?`url("${val}")`:val;el.style.setProperty(cssProp,cssVal);nextAppliedStyles.push({el,prop:cssProp});}}
+        else {const cssProp=customCss[prop]||(!prop.startsWith('--ve-')?prop:null);if(cssProp&&((prop==='--ve-background-image'&&safeImageSrc(val))||safeCssValue(cssProp,val))){rememberStyle(el,cssProp);const cssVal=prop==='--ve-background-image'&&safeImageSrc(val)?`url("${val}")`:val;el.style.setProperty(cssProp,cssVal);nextAppliedStyles.push({el,prop:cssProp});}}
       })));
       lastAppliedImageSrc.forEach(el=>{if(!nextAppliedImageSrc.includes(el)){const base=imageSrcBaselines.get(el);if(base!==undefined)el.setAttribute('src',base);imageSrcBaselines.delete(el);}});
       lastAppliedImageAlt.forEach(el=>{if(!nextAppliedImageAlt.includes(el)){const base=imageAltBaselines.get(el);if(base!==undefined)el.alt=base;imageAltBaselines.delete(el);}});
