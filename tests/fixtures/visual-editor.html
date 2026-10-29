@@ -13,7 +13,18 @@
   </main>
  </div>
  <script>
-  window.__GGMC_EDITOR_API__={getSession:async()=>({email:'test@example.com',isAdmin:true}),signIn:async()=>{},signOut:async()=>{}};
+  const serverRows=()=>JSON.parse(localStorage.getItem('fixture-server-drafts')||'[]');
+  const storeRows=rows=>localStorage.setItem('fixture-server-drafts',JSON.stringify(rows));
+  window.__GGMC_EDITOR_API__={
+   getSession:async()=>({email:'test@example.com',isAdmin:true}),signIn:async()=>{},signOut:async()=>{},
+   listDrafts:async()=>serverRows(),
+   saveDraft:async input=>{const rows=serverRows();let row;if(input.id){row=rows.find(x=>x.id===input.id);if(!row)throw Error('draft not found');if(row.status==='published')throw Error('published snapshot is immutable');if(row.version!==input.expectedVersion)throw Error('version conflict');row={...row,name:input.name,payload:input.payload,version:row.version+1,status:'draft'};row.history=[...(row.history||[]),{id:row.history?.length+1||1,draft_id:row.id,version:row.version,payload:row.payload,status:'draft',note:'Saved draft'}];}else{row={id:'fixture-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),name:input.name,payload:input.payload,version:1,status:'draft',updated_at:new Date().toISOString(),published_at:null,history:[{id:1,version:1,payload:input.payload,status:'draft',note:'Initial save'}]};}const at=rows.findIndex(x=>x.id===row.id);if(at>=0)rows[at]=row;else rows.push(row);storeRows(rows);return row;},
+   publishDraft:async(id,expected)=>{const rows=serverRows(),row=rows.find(x=>x.id===id);if(!row)throw Error('draft not found');if(row.version!==expected)throw Error('version conflict');if(row.status!=='draft')throw Error('published snapshot is immutable');row.version+=1;row.status='published';row.published_at=new Date().toISOString();row.history.push({id:row.history.length+1,version:row.version,payload:row.payload,status:'published',note:'Published snapshot'});storeRows(rows);return row;},
+   listVersions:async id=>serverRows().find(x=>x.id===id)?.history||[],
+   restoreVersion:async(id,version)=>{const source=serverRows().find(x=>x.id===id);const v=source?.history.find(x=>x.version===version);if(!v)throw Error('version not found');return window.__GGMC_EDITOR_API__.saveDraft({id:null,expectedVersion:0,name:'Restored: '+source.name,payload:v.payload});},
+   getPublishedPayload:async()=>null,
+   aiWrite:async input=>'Suggested: '+input.text
+  };
   const manyLayers=document.createElement('section');manyLayers.id='many-layers';
   for(let i=0;i<105;i++){const button=document.createElement('button');button.textContent='Extra layer '+i;manyLayers.append(button);}
   document.querySelector('#root main').append(manyLayers);
