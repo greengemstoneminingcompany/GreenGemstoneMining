@@ -83,6 +83,14 @@ describe('modular Creative Studio', () => {
    serverPanel.querySelector<HTMLInputElement>('[aria-label="Template name"]')!.value = 'Saved card';
    Array.from(serverPanel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Save selected block to server')!.click();
    await vi.waitFor(() => expect(editorApi.saveTemplate).toHaveBeenCalledWith(expect.objectContaining({ id: null, name: 'Saved card', block: expect.objectContaining({ id: 'existing' }) })));
+
+   const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+   try {
+    Array.from(serverPanel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Delete')!.click();
+    await vi.waitFor(() => expect(editorApi.deleteTemplate).toHaveBeenCalledWith('template-1'));
+   } finally {
+    confirmSpy.mockRestore();
+   }
   } finally {
    serverDispose();
    serverPanel.remove();
