@@ -560,7 +560,7 @@
     document.body.append(panel);updateCount();inspect(null);
     import('/visual-editor/features/creative-studio.js').then(module => {
       if (!panel || !panel.isConnected) return;
-      featureTeardown = module.mountCreativeStudio({ panel, root, getDraft: () => draft, saveHistory, applyChange, say, getSelected: () => selected, aiWrite: input => window.__GGMC_EDITOR_API__?.aiWrite?.(input) });
+      featureTeardown = module.mountCreativeStudio({ panel, root, getDraft: () => draft, saveHistory, applyChange, say, getSelected: () => selected, editorApi: window.__GGMC_EDITOR_API__, aiWrite: input => window.__GGMC_EDITOR_API__?.aiWrite?.(input) });
     }).catch(() => say('Creative Studio module did not load. Existing editor tools remain available.'));
   }
   function teardown(){
