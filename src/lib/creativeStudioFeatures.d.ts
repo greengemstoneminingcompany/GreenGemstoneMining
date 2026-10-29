@@ -4,6 +4,14 @@ export interface CreativeStudioDraft {
   [key: string]: unknown;
 }
 
+export interface CreativeStudioServerTemplate {
+  id: string;
+  name: string;
+  block: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CreativeStudioAdapter {
   panel: HTMLElement;
   root: HTMLElement;
@@ -12,6 +20,11 @@ export interface CreativeStudioAdapter {
   applyChange(message?: string): void;
   say(message: string): void;
   getSelected(): HTMLElement | null;
+  editorApi?: {
+    listTemplates?: () => Promise<CreativeStudioServerTemplate[]>;
+    saveTemplate?: (input: { id: string | null; name: string; block: Record<string, unknown> }) => Promise<CreativeStudioServerTemplate>;
+    deleteTemplate?: (id: string) => Promise<boolean>;
+  };
   aiWrite?: (input: { mode: string; tone: string; text: string }) => Promise<string | undefined>;
 }
 
