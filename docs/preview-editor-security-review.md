@@ -34,6 +34,14 @@
 | limit_lead_rate() | Trigger invocation only | Remains a security-definer trigger because lead submission rate limiting must read protected lead records. Direct execution is revoked and the search path is fixed. |
 | reject_visual_editor_version_mutation() | Trigger invocation only | Ordinary trigger guard, not security-definer; direct execution is revoked. It prevents updates/deletes to immutable history. |
 
+## Edge Function review
+
+- `magic-write` is active on the dedicated preview project at version 6 with JWT verification enabled.
+- It accepts only POST/OPTIONS, checks the request origin against the preview-host pattern or explicit `ALLOWED_ORIGINS`, bounds request size and text length, and allows only known writing modes and tones.
+- Before calling the configured AI provider, it forwards the caller's bearer token to `ai_usage_take(integer)`; that RPC rejects anonymous and non-allowlisted users and applies a per-user daily quota.
+- Provider secrets are read from Edge Function environment variables and are not sent to the browser. Provider calls have a timeout and bounded output.
+- Live provider calls were not exercised during this static review; verify them after the preview build can be tested.
+
 ## Remaining advisor warnings
 
 Supabase's security advisor flags functions based on their SECURITY DEFINER attribute and role grants; it does not prove the function body is exploitable. The remaining function warnings are deliberate:
