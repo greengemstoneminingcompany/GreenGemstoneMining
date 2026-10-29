@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { mountCreativeStudio } from './creativeStudioFeatures';
+import { mountCreativeStudio } from './creativeStudioFeatures.js';
 
 describe('modular Creative Studio', () => {
  let panel: HTMLElement;
