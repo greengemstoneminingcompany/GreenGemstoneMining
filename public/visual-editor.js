@@ -1,6 +1,7 @@
 import { createServerAutosaveController } from './visual-editor/modules/server-autosave.js';
 import { createPanelResizer } from './visual-editor/modules/panel-resize.js';
 import { safeCssValue, safeImageSrc, safeUrl } from './visual-editor/modules/safe-content.js';
+import { compressImage, createElementPath } from './visual-editor/modules/editor-utils.js';
 
 (async () => {
   const params = new URLSearchParams(location.search);
@@ -76,18 +77,7 @@ import { safeCssValue, safeImageSrc, safeUrl } from './visual-editor/modules/saf
   document.head.appendChild(style);
   document.body.classList.add('ggmc-ve-on');
 
-  const path = (el) => {
-    if (!el) return '';
-    if (el.dataset.veBlockId) return '[data-ve-block-id="'+el.dataset.veBlockId+'"]';
-    if (el.id) return '#'+el.id.replace(/([^\w-])/g,'\\$1');
-    const parts = []; let node = el;
-    while (node && node.nodeType === 1 && node !== root && node !== document.body) {
-      let n=1, sib=node; while ((sib=sib.previousElementSibling)) if (sib.tagName===node.tagName) n++;
-      parts.unshift(node.tagName.toLowerCase()+':nth-of-type('+n+')'); node=node.parentElement;
-      if (node && node.id) { parts.unshift('#'+node.id.replace(/([^\w-])/g,'\\$1')); break; }
-    }
-    return parts.join(' > ');
-  };
+  const path = createElementPath(root);
   const all = (selector) => { try { return [...root.querySelectorAll(selector)]; } catch { return []; } };
   let serverAutosaveDraftName = savedServerDraftName;
   let serverAutosaveDirty = false;
@@ -123,14 +113,6 @@ import { safeCssValue, safeImageSrc, safeUrl } from './visual-editor/modules/saf
   const updateCount = () => { if (counter) counter.textContent = Object.keys(draft.text).length+' text edits · '+Object.keys(draft.styles).length+' styled elements · '+draft.blocks.length+' added blocks · local draft'; };
   const saveHistory = () => { undo.push(copy(draft)); if (undo.length>60) undo.shift(); redo=[]; };
   const applyChange = (message) => { serverAutosaveDirty = true; persist(); refresh(); renderLayers(); if(selected) inspect(selected); say(message||'Saved locally. This is not published.'); };
-  async function compressImage(file){
-    if(!file||!['image/jpeg','image/png','image/webp'].includes(file.type))throw Error('Choose a JPG, PNG, or WebP image.');
-    const bitmap=await createImageBitmap(file),scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));
-    const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
-    const ctx=canvas.getContext('2d');if(!ctx)throw Error('This browser cannot prepare the image.');ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();
-    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',0.78));if(!blob||blob.size>1_100_000)throw Error('This image is still too large after compression. Choose a smaller image.');
-    return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(Error('Could not read this image.'));reader.readAsDataURL(blob);});
-  }
   const makeBlock = (item) => {
     const el=document.createElement(item.kind==='section'?'section':'article');
     el.dataset.veBlockId=item.id;
