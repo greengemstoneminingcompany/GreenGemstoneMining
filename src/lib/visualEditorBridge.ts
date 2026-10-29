@@ -18,6 +18,7 @@ export interface VisualEditorBridge {
  listVersions(id:string):Promise<VisualEditorServerVersion[]>;
  restoreVersion(id:string,version:number):Promise<VisualEditorServerDraft>;
  getPublishedPayload():Promise<Record<string,unknown>|null>;
+ aiWrite(input:{mode:string;tone:string;text:string}):Promise<string>;
 }
 declare global { interface Window { __GGMC_EDITOR_API__?:VisualEditorBridge } }
 
@@ -75,7 +76,8 @@ export function installVisualEditorBridge(){
   async publishDraft(id,expectedVersion){const sb=await adminClient();const {data,error}=await sb.rpc('publish_visual_editor_draft',{p_draft_id:id,p_expected_version:expectedVersion});if(error)throw error;return data as VisualEditorServerDraft;},
   async listVersions(id){const sb=await adminClient();const {data,error}=await sb.rpc('list_visual_editor_versions',{p_draft_id:id});if(error)throw error;return (data??[]) as VisualEditorServerVersion[];},
   async restoreVersion(id,version){const sb=await adminClient();const {data,error}=await sb.rpc('restore_visual_editor_version',{p_draft_id:id,p_version:version});if(error)throw error;return data as VisualEditorServerDraft;},
-  async getPublishedPayload(){const sb=await getPreviewSupabase();if(!sb)return null;const {data,error}=await sb.rpc('get_published_visual_editor_payload');if(error)throw error;return (data??null) as Record<string,unknown>|null;}
+  async getPublishedPayload(){const sb=await getPreviewSupabase();if(!sb)return null;const {data,error}=await sb.rpc('get_published_visual_editor_payload');if(error)throw error;return (data??null) as Record<string,unknown>|null;},
+  async aiWrite(input){const sb=await adminClient();const {data,error}=await sb.functions.invoke('magic-write',{body:input});if(error)throw new Error('AI writing request failed: '+error.message);if(!data||typeof data.text!=='string'||!data.text.trim())throw new Error('AI writing returned no reviewable text.');return data.text;}
  };
 }
 
