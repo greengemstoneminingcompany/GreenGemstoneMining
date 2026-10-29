@@ -1,4 +1,5 @@
 import { getSupabase } from '@/lib/supabase';
+import DOMPurify from 'dompurify';
 
 export interface VisualEditorServerDraft {
  id:string; name:string; payload:Record<string,unknown>; version:number;
@@ -178,15 +179,20 @@ export function applyPublishedVisualEditorPayload(payload: Record<string, unknow
   const el = document.createElement(kind === 'section' ? 'section' : 'article');
   el.dataset.veBlockId = id;
   el.style.cssText = 'padding:24px;margin:16px 0;border:1px solid #8d7747;border-radius:10px;color:inherit;background:rgba(16,27,21,.96)';
-  if (typeof block.title === 'string' && block.title) { const h = document.createElement(kind==='section'?'h2':'h3'); h.textContent=block.title; el.append(h); }
-  if (kind === 'image' && typeof block.src === 'string' && (/^https:\/\//i.test(block.src)||block.src.startsWith('/'))) {
+  if (typeof block.title === 'string' && block.title && kind!=='html') { const h = document.createElement(kind==='section'?'h2':'h3'); h.textContent=block.title; el.append(h); }
+  if (kind === 'html') {
+    const html = typeof block.html === 'string' ? block.html : typeof block.text === 'string' ? block.text : '';
+    const fragment = DOMPurify.sanitize(html,{RETURN_DOM_FRAGMENT:true,ALLOWED_TAGS:['a','abbr','b','blockquote','br','caption','code','dd','del','details','div','dl','dt','em','figcaption','figure','h2','h3','h4','hr','i','img','li','ol','p','picture','pre','q','s','section','small','span','strong','sub','summary','sup','table','tbody','td','th','thead','tr','u','ul','form','label','input','button'],ALLOWED_ATTR:['alt','aria-label','class','colspan','disabled','for','height','href','id','name','placeholder','rel','required','rowspan','src','target','title','type','value','width'],FORBID_TAGS:['script','style','iframe','object','embed','base','meta','link'],FORBID_ATTR:['action','formaction','srcdoc']});
+    el.append(fragment);el.addEventListener('submit',event=>{if(event.target instanceof HTMLFormElement)event.preventDefault();},true);
+   }
+   if (kind === 'image' && typeof block.src === 'string' && (/^https:\/\//i.test(block.src)||block.src.startsWith('/'))) {
    const img=document.createElement('img');img.src=block.src;img.alt=typeof block.alt==='string'?block.alt:'';img.loading='lazy';img.style.cssText='max-width:100%;height:auto';el.append(img);
   }
   if (kind === 'link' && typeof block.href === 'string') {
    let href='#';try{const u=new URL(block.href,location.origin);if(['https:','http:','mailto:'].includes(u.protocol)||block.href.startsWith('#'))href=block.href;}catch{ /* unsafe or malformed URL */ }
    const a=document.createElement('a');a.href=href;a.textContent=typeof block.title==='string'&&block.title?block.title:'Learn more';el.append(a);
   }
-  if (typeof block.text === 'string' && block.text) { const p=document.createElement('p');p.textContent=block.text;p.style.whiteSpace='pre-wrap';el.append(p); }
+  if (kind!=='html' && typeof block.text === 'string' && block.text) { const p=document.createElement('p');p.textContent=block.text;p.style.whiteSpace='pre-wrap';el.append(p); }
   const after = typeof block.after === 'string' ? block.after : '';
   let target: Element|null=null;try{target=after?root.querySelector(after):null;}catch{ /* stale selector */ }
   if (target?.parentElement) target.insertAdjacentElement('afterend',el); else main.append(el);
