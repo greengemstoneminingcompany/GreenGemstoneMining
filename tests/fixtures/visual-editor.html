@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Visual editor browser test fixture</title></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="ggmc-preview-editor" content="enabled"><title>Visual editor browser test fixture</title></head>
 <body>
  <div id="root" data-ve-viewport="before" style="max-width: 900px; width: 90%; margin-inline: 0 auto; box-shadow: 1px 2px 3px red">
   <main>
@@ -13,11 +13,11 @@
   </main>
  </div>
  <script>
-  if(new URLSearchParams(location.search).has('preview-editor')) document.head.insertAdjacentHTML('beforeend','<meta name="ggmc-preview-editor" content="enabled">');
+  window.__GGMC_EDITOR_API__={getSession:async()=>({email:'test@example.com',isAdmin:true}),signIn:async()=>{},signOut:async()=>{}};
   const manyLayers=document.createElement('section');manyLayers.id='many-layers';
   for(let i=0;i<105;i++){const button=document.createElement('button');button.textContent='Extra layer '+i;manyLayers.append(button);}
   document.querySelector('#root main').append(manyLayers);
  </script>
- <script src="/visual-editor.js" defer></script>
+ <script type="module" src="/src/previewEditorBootstrap.ts"></script>
 </body>
 </html>
