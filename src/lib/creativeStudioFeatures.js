@@ -182,7 +182,7 @@ export function mountCreativeStudio(api) {
         });
         const remove = button('Delete', async () => {
           if (!confirm('Delete the shared template "' + item.name + '"? Existing page blocks are unchanged.')) return;
-          try { await editorApi.deleteTemplate(item.id); await loadServerTemplates(); say('Deleted shared template "' + item.name + '".'); }
+          try { const removed = await editorApi.deleteTemplate(item.id); if (!removed) throw new Error('This template was already removed. Reload the shared template list.'); await loadServerTemplates(); say('Deleted shared template "' + item.name + '".'); }
           catch (error) { say(error instanceof Error ? error.message : 'Could not delete the shared template.'); }
         });
         row.append(name, insert, remove); serverTemplateList.append(row);
