@@ -187,7 +187,8 @@ export function applyPublishedVisualEditorPayload(payload: Record<string, unknow
   const kind = typeof block.kind === 'string' ? block.kind : 'card';
   const el = document.createElement(kind === 'section' ? 'section' : 'article');
   el.dataset.veBlockId = id;
-  el.style.cssText = 'padding:24px;margin:16px 0;border:1px solid #8d7747;border-radius:10px;color:inherit;background:rgba(16,27,21,.96)';
+   el.dataset.vePublishedBlock = 'true';
+   el.style.cssText = 'padding:24px;margin:16px 0;border:1px solid #8d7747;border-radius:10px;color:inherit;background:rgba(16,27,21,.96)';
   if (typeof block.title === 'string' && block.title && kind!=='html') { const h = document.createElement(kind==='section'?'h2':'h3'); h.textContent=block.title; el.append(h); }
   if (kind === 'html') {
     const html = typeof block.html === 'string' ? block.html : typeof block.text === 'string' ? block.text : '';
