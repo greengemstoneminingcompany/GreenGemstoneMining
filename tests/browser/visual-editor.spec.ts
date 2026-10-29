@@ -514,3 +514,25 @@ test('AI-generated copy is reviewed first and applied only after explicit accept
  await accept.click();
  await expect(headline).toHaveText('Suggested: White text that should be editable');
 });
+
+test('Creative Studio module exposes design tokens, reusable templates, AI review and version comparison', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ const panel = page.locator('#ggmc-visual-editor');
+ await expect(panel.getByText('Global design tokens')).toBeVisible();
+ await expect(panel.getByText('Creative library')).toBeVisible();
+ await expect(panel.getByText('AI section workshop')).toBeVisible();
+ await expect(panel.getByText('Version comparison')).toBeVisible();
+ await panel.getByRole('button', { name: 'Apply design system', exact: true }).click();
+ await expect(page.locator('#root')).toHaveCSS('--ggmc-accent', '#c4a252');
+ await panel.getByLabel('Starter layout').selectOption('mission-story');
+ await panel.getByRole('button', { name: 'Add starter section', exact: true }).click();
+ await expect(page.locator('#root [data-ve-block-id]')).toHaveCount(1);
+ await expect(page.locator('#root [data-ve-block-id]')).toContainText('Built on responsible practice');
+ await panel.getByLabel('Template name').fill('Mission template');
+ await page.locator('#root [data-ve-block-id]').click();
+ await panel.getByRole('button', { name: 'Save selected block as template', exact: true }).click();
+ await expect(panel).toContainText('Mission template');
+ await panel.getByRole('button', { name: 'Insert', exact: true }).click();
+ await expect(page.locator('#root [data-ve-block-id]')).toHaveCount(2);
+});
+
