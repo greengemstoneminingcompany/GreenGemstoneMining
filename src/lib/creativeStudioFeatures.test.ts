@@ -37,7 +37,7 @@ describe('modular Creative Studio', () => {
   const starter = panel.querySelector<HTMLSelectElement>('[aria-label="Starter template"]')!;
   starter.value = 'mission-story';
   starter.dispatchEvent(new Event('change'));
-  panel.querySelectorAll<HTMLButtonElement>('button').find(button => button.textContent === 'Add starter section')?.click();
+  Array.from(panel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Add starter section')?.click();
   expect(draft.blocks).toHaveLength(1);
   expect(draft.blocks[0]).toMatchObject({ kind: 'section', title: 'Built on responsible practice' });
   expect(saveHistory).toHaveBeenCalledTimes(2);
@@ -48,11 +48,11 @@ describe('modular Creative Studio', () => {
   draft.blocks.push({ id: 'existing', kind: 'image', src: 'https://example.com/keep.webp', alt: 'Keep image' });
   const brief = panel.querySelector<HTMLTextAreaElement>('[aria-label="AI section brief"]')!;
   brief.value = 'Explain our approach to responsible sourcing.';
-  panel.querySelectorAll<HTMLButtonElement>('button').find(button => button.textContent === 'Generate section proposal')?.click();
+  Array.from(panel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Generate section proposal')?.click();
   await vi.waitFor(() => expect(aiWrite).toHaveBeenCalledWith(expect.objectContaining({ mode: 'section_copy' })));
   await vi.waitFor(() => expect(panel.querySelector<HTMLTextAreaElement>('[aria-label="AI section proposal review"]')?.value).toContain('We explain our approach'));
   expect(draft.blocks).toHaveLength(1);
-  const accept = panel.querySelectorAll<HTMLButtonElement>('button').find(button => button.textContent === 'Review accepted — add section to draft')!;
+  const accept = Array.from(panel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Review accepted — add section to draft')!;
   expect(accept.disabled).toBe(false);
   accept.click();
   expect(draft.blocks).toHaveLength(2);
