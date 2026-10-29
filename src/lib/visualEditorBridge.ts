@@ -100,6 +100,41 @@ function safePublishedHref(value: unknown): string {
  const raw=value.trim();if(/^#[\w-]*$/.test(raw))return raw;if(raw.startsWith('/')&&!raw.startsWith('//'))return raw;
  try{const url=new URL(raw,location.origin);return ['https:','http:','mailto:'].includes(url.protocol)&&!url.username&&!url.password?raw:'#';}catch{return '#';}
 }
+function safePublishedMediaSrc(value: unknown): value is string {
+ if(typeof value!=='string'||hasControlOrBackslash(value,true)||/["'();{}]/.test(value))return false;
+ if(value.startsWith('/')&&!value.startsWith('//'))return true;
+ try{const url=new URL(value,location.origin);return url.protocol==='https:'&&!url.username&&!url.password&&/^https:\/\//i.test(value);}catch{return false;}
+}
+function applyPublishedDesignTokens(payload: Record<string, unknown>, root: HTMLElement): void {
+ const raw = payload.designTokens && typeof payload.designTokens === 'object' ? payload.designTokens as Record<string, unknown> : {};
+ const color = (key: string, fallback: string) => typeof raw[key] === 'string' && /^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(raw[key] as string) ? raw[key] as string : fallback;
+ const number = (key: string, fallback: number, min: number, max: number) => {
+  const value = Number(raw[key]); return Number.isFinite(value) && value >= min && value <= max ? value : fallback;
+ };
+ root.style.setProperty('--ggmc-brand', color('brand','#101b15'));
+ root.style.setProperty('--ggmc-accent', color('accent','#c4a252'));
+ root.style.setProperty('--ggmc-surface', color('surface','#16231b'));
+ root.style.setProperty('--ggmc-copy', color('copy','#f2eee4'));
+ root.style.setProperty('--ggmc-radius', number('radius',12,0,48)+'px');
+ root.style.setProperty('--ggmc-section-space', number('sectionSpace',64,16,180)+'px');
+ root.style.setProperty('--ggmc-content-width', number('contentWidth',1120,640,1600)+'px');
+ let style = document.getElementById('ggmc-published-design-tokens');
+ if (!style) { style = document.createElement('style'); style.id = 'ggmc-published-design-tokens'; document.head.append(style); }
+ style.textContent = [
+  '#root .ve-added-section{background:var(--ggmc-brand);color:var(--ggmc-copy);padding-block:var(--ggmc-section-space)}',
+  '#root .ve-added-inner{max-width:var(--ggmc-content-width);margin-inline:auto;padding-inline:24px}',
+  '#root .ve-added-section h2,#root .ve-added-card h3{font:500 clamp(28px,4vw,48px)/1.15 Georgia,serif;margin:0 0 18px;color:inherit}',
+  '#root .ve-added-section p,#root .ve-added-card p{font:400 16px/1.7 system-ui,sans-serif;white-space:pre-wrap}',
+  '#root .ve-added-card{padding:24px;margin:14px 0;border:1px solid var(--ggmc-accent);border-radius:var(--ggmc-radius);background:var(--ggmc-surface);color:var(--ggmc-copy)}',
+  '#root .ve-added-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:18px 0}',
+  '#root .ve-added-grid .ve-added-card{margin:0}',
+  '#root .ve-added-image{display:block;max-width:100%;height:auto;border-radius:var(--ggmc-radius);margin:16px 0}',
+  '#root .ve-added-video{display:block;width:100%;max-height:70vh;border-radius:var(--ggmc-radius);margin:16px 0;background:#000}',
+  '#root .ve-added-spacer{min-height:8px}',
+  '#root .ve-added-link{display:inline-block;padding:12px 18px;background:var(--ggmc-accent);color:#07100b;border-radius:calc(var(--ggmc-radius) + 18px);text-decoration:none;font-weight:700;margin:12px 0}',
+  '@media(max-width:640px){#root .ve-added-grid{grid-template-columns:1fr}}'
+ ].join('\n');
+}
 function safePublishedSelector(selector: string): boolean {
  return typeof selector === 'string' && selector.length > 0 && selector.length <= 500 && !/^(?:html|body|#root|#ggmc-visual-editor)$/i.test(selector.trim());
 }
@@ -190,32 +225,68 @@ export function applyPublishedVisualEditorPayload(payload: Record<string, unknow
    }
   }
 
+  applyPublishedDesignTokens(payload, root);
+
   const blocks = Array.isArray(payload.blocks) ? payload.blocks as Array<Record<string,unknown>> : [];
- const main = root.querySelector('main') || root;
- for (const block of blocks) {
-  const id = typeof block.id === 'string' ? block.id : '';
-  if (!id || [...root.querySelectorAll('[data-ve-block-id]')].some(el => (el as HTMLElement).dataset.veBlockId === id)) continue;
-  const kind = typeof block.kind === 'string' ? block.kind : 'card';
-  const el = document.createElement(kind === 'section' ? 'section' : 'article');
-  el.dataset.veBlockId = id;
-   el.dataset.vePublishedBlock = 'true';
-   el.style.cssText = 'padding:24px;margin:16px 0;border:1px solid #8d7747;border-radius:10px;color:inherit;background:rgba(16,27,21,.96)';
-  if (typeof block.title === 'string' && block.title && kind!=='html') { const h = document.createElement(kind==='section'?'h2':'h3'); h.textContent=block.title; el.append(h); }
-  if (kind === 'html') {
-    const html = typeof block.html === 'string' ? block.html : typeof block.text === 'string' ? block.text : '';
-    const fragment = DOMPurify.sanitize(html,{RETURN_DOM_FRAGMENT:true,ALLOWED_TAGS:['a','abbr','b','blockquote','br','caption','code','dd','del','details','div','dl','dt','em','figcaption','figure','h2','h3','h4','hr','i','img','li','ol','p','picture','pre','q','s','section','small','span','strong','sub','summary','sup','table','tbody','td','th','thead','tr','u','ul','form','label','input','button'],ALLOWED_ATTR:['alt','aria-label','class','colspan','disabled','for','height','href','id','name','placeholder','rel','required','rowspan','src','target','title','type','value','width'],FORBID_TAGS:['script','style','iframe','object','embed','base','meta','link'],FORBID_ATTR:['action','formaction','srcdoc']});
-    el.append(fragment);el.addEventListener('submit',event=>{if(event.target instanceof HTMLFormElement)event.preventDefault();},true);
-   }
-   if (kind === 'image' && safePublishedImageSrc(block.src)) {
-   const img=document.createElement('img');img.src=block.src;img.alt=typeof block.alt==='string'?block.alt:'';img.loading='lazy';img.style.cssText='max-width:100%;height:auto';el.append(img);
+  const main = root.querySelector('main') || root;
+  const allowedKinds = new Set(['section','text','card','grid','image','video','link','html','divider','spacer']);
+  for (const block of blocks) {
+    const id = typeof block.id === 'string' ? block.id.slice(0,120) : '';
+    if (!id || [...root.querySelectorAll('[data-ve-block-id]')].some(el => (el as HTMLElement).dataset.veBlockId === id)) continue;
+    const requestedKind = typeof block.kind === 'string' ? block.kind : 'card';
+    const kind = allowedKinds.has(requestedKind) ? requestedKind : 'card';
+    const el = document.createElement(kind === 'section' ? 'section' : 'article');
+    el.dataset.veBlockId = id;
+    el.dataset.vePublishedBlock = 'true';
+
+    if (kind === 'section') {
+      el.className = 've-added-section';
+      const inner = document.createElement('div'); inner.className = 've-added-inner'; el.append(inner);
+      if (typeof block.title === 'string' && block.title.trim()) { const h = document.createElement('h2'); h.textContent = block.title.slice(0,300); inner.append(h); }
+      if (typeof block.text === 'string' && block.text) { const p = document.createElement('p'); p.textContent = block.text.slice(0,10000); inner.append(p); }
+    } else if (kind === 'html') {
+      el.className = 've-added-html';
+      const html = typeof block.html === 'string' ? block.html : typeof block.text === 'string' ? block.text : '';
+      const fragment = DOMPurify.sanitize(html,{RETURN_DOM_FRAGMENT:true,ALLOWED_TAGS:['a','abbr','b','blockquote','br','caption','code','dd','del','details','div','dl','dt','em','figcaption','figure','h2','h3','h4','hr','i','img','li','ol','p','picture','pre','q','s','section','small','span','strong','sub','summary','sup','table','tbody','td','th','thead','tr','u','ul','form','label','input','button'],ALLOWED_ATTR:['alt','aria-label','class','colspan','disabled','for','height','href','id','name','placeholder','rel','required','rowspan','src','target','title','type','value','width'],FORBID_TAGS:['script','style','iframe','object','embed','base','meta','link'],FORBID_ATTR:['action','formaction','srcdoc']});
+      el.append(fragment);
+      el.addEventListener('submit',event=>{if(event.target instanceof HTMLFormElement)event.preventDefault();},true);
+    } else if (kind === 'image') {
+      const img=document.createElement('img');
+      if (safePublishedImageSrc(block.src)) img.src=block.src;
+      img.alt=typeof block.alt==='string'?block.alt.slice(0,500):typeof block.title==='string'?block.title.slice(0,500):'';
+      img.loading='lazy'; img.className='ve-added-image'; el.append(img);
+      if (typeof block.title==='string' && block.title.trim()) { const cap=document.createElement('p'); cap.textContent=block.title.slice(0,500); el.append(cap); }
+    } else if (kind === 'video') {
+      const video=document.createElement('video');
+      if (safePublishedMediaSrc(block.src)) video.src=block.src;
+      video.controls=true; video.preload='metadata'; video.playsInline=true; video.className='ve-added-video';
+      video.setAttribute('aria-label',typeof block.title==='string'&&block.title.trim()?block.title.slice(0,300):'Added video'); el.append(video);
+      if (typeof block.text==='string'&&block.text) { const cap=document.createElement('p'); cap.textContent=block.text.slice(0,10000); el.append(cap); }
+    } else if (kind === 'spacer') {
+      el.className='ve-added-spacer'; el.setAttribute('aria-hidden','true');
+      const height = typeof block.height === 'string' && /^\d{1,3}px$/.test(block.height) && Number.parseInt(block.height,10)>=8 && Number.parseInt(block.height,10)<=300 ? block.height : '48px';
+      el.style.height=height;
+    } else if (kind === 'grid') {
+      el.className='ve-added-grid';
+      for (let index=0;index<2;index++) {
+        const card=document.createElement('article'); card.className='ve-added-card';
+        const heading=document.createElement('h3'); heading.textContent=index===0?(typeof block.title==='string'&&block.title.trim()?block.title.slice(0,300):'Column one'):'Column two'; card.append(heading);
+        const p=document.createElement('p'); p.textContent=index===0?(typeof block.text==='string'&&block.text?block.text.slice(0,10000):'Describe the first part of your approach.'):'Add a second point to complete this layout.'; card.append(p); el.append(card);
+      }
+    } else if (kind === 'link') {
+      const a=document.createElement('a'); a.className='ve-added-link';
+      a.textContent=typeof block.title==='string'&&block.title.trim()?block.title.slice(0,300):'Learn more';
+      a.href=safePublishedHref(block.href); el.append(a);
+    } else if (kind === 'divider') {
+      const hr=document.createElement('hr'); hr.style.cssText='border:0;border-top:1px solid var(--ggmc-accent,#c4a252);margin:24px 0'; el.append(hr);
+    } else {
+      el.className='ve-added-card';
+      if (typeof block.title==='string'&&block.title.trim()) { const h=document.createElement('h3'); h.textContent=block.title.slice(0,300); el.append(h); }
+      if (typeof block.text==='string'&&block.text) { const p=document.createElement('p'); p.textContent=block.text.slice(0,10000); el.append(p); }
+    }
+
+    const after = typeof block.after === 'string' && safePublishedSelector(block.after) ? block.after : '';
+    let target: Element|null=null; try { target=after?root.querySelector(after):null; } catch { /* stale selector */ }
+    if (target?.parentElement) target.insertAdjacentElement('afterend',el); else main.append(el);
   }
-  if (kind === 'link' && typeof block.href === 'string') {
-   const href=safePublishedHref(block.href);
-   const a=document.createElement('a');a.href=href;a.textContent=typeof block.title==='string'&&block.title?block.title:'Learn more';el.append(a);
-  }
-  if (kind!=='html' && typeof block.text === 'string' && block.text) { const p=document.createElement('p');p.textContent=block.text;p.style.whiteSpace='pre-wrap';el.append(p); }
-  const after = typeof block.after === 'string' ? block.after : '';
-  let target: Element|null=null;try{target=after?root.querySelector(after):null;}catch{ /* stale selector */ }
-  if (target?.parentElement) target.insertAdjacentElement('afterend',el); else main.append(el);
- }
 }
