@@ -60,6 +60,30 @@ describe('modular Creative Studio', () => {
   expect(draft.blocks[1]).toMatchObject({ kind: 'section', title: 'Responsible operations', text: 'We explain our approach clearly and responsibly.' });
  });
 
+ it('loads and saves shared server templates through the editor adapter', async () => {
+  const shared = { id: 'template-1', name: 'Partner card', block: { kind: 'card', title: 'Partner with us', text: 'Start a conversation.' }, created_at: '2026-10-29T00:00:00Z', updated_at: '2026-10-29T00:00:00Z' };
+  const editorApi = {
+   listTemplates: vi.fn(async () => [shared]),
+   saveTemplate: vi.fn(async () => shared),
+   deleteTemplate: vi.fn(async () => true),
+  };
+  dispose?.();
+  dispose = mountCreativeStudio({ panel, root, getDraft: () => draft, saveHistory, applyChange, say, getSelected: () => selected, aiWrite, editorApi });
+  panel.querySelector<HTMLButtonElement>('button')?.click();
+  const load = Array.from(panel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Load shared templates')!;
+  load.click();
+  await vi.waitFor(() => expect(panel.textContent).toContain('Partner card'));
+  const insert = Array.from(panel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Insert')!;
+  insert.click();
+  expect(draft.blocks[0]).toMatchObject({ kind: 'card', title: 'Partner with us' });
+  draft.blocks.push({ id: 'existing', kind: 'card', title: 'Saved card', text: 'Reusable copy' });
+  selected = document.createElement('div');
+  selected.dataset.veBlockId = 'existing';
+  panel.querySelector<HTMLInputElement>('[aria-label="Template name"]')!.value = 'Saved card';
+  Array.from(panel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Save selected block to server')!.click();
+  await vi.waitFor(() => expect(editorApi.saveTemplate).toHaveBeenCalledWith(expect.objectContaining({ id: null, name: 'Saved card', block: expect.objectContaining({ id: 'existing' }) })));
+ });
+
  it('restores token styles on teardown', () => {
   root.style.setProperty('--ggmc-accent', '#abcdef');
   dispose?.();
