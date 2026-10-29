@@ -3,16 +3,16 @@ import path from 'node:path';
 
 const fixture = '/tests/fixtures/visual-editor.html';
 
-test('actual application renders with and without ?edit=1', async ({ page }) => {
+test('actual application renders and edit query shows an auth gate without an admin session', async ({ page }) => {
  const pageErrors: string[] = [];
  page.on('pageerror', error => pageErrors.push(error.message));
  await page.goto('/');
  await expect.poll(() => page.locator('#root').evaluate(el => el.childElementCount)).toBeGreaterThan(0);
  await expect(page.locator('#ggmc-visual-editor')).toHaveCount(0);
  await page.goto('/?edit=1');
- await expect(page.locator('#ggmc-visual-editor')).toBeVisible();
- await expect.poll(() => page.locator('#root').evaluate(el => el.childElementCount)).toBeGreaterThan(0);
- await expect.poll(() => page.locator('#ggmc-visual-editor .ve-layer-item').count()).toBeGreaterThan(0);
+ await expect(page.locator('#ggmc-editor-auth-gate')).toBeVisible();
+ await expect(page.locator('#ggmc-visual-editor')).toHaveCount(0);
+ await expect(page.locator('#ggmc-editor-auth-gate')).toContainText('Opening this URL does not grant access');
  await expect(page.locator('#root')).toBeVisible();
  expect(pageErrors).toEqual([]);
 });
