@@ -9,13 +9,10 @@
     trigger.type = 'button'; trigger.id = 'ggmc-preview-editor-trigger'; trigger.textContent = 'Preview Editor';
     trigger.setAttribute('aria-label', 'Open Preview Editor');
     trigger.style.cssText = 'position:fixed;z-index:2147483646;right:18px;bottom:18px;padding:12px 18px;border:1px solid #e4c87c;border-radius:999px;background:#0d1310;color:#f2eee4;font:700 14px system-ui,sans-serif;box-shadow:0 8px 28px #0008;cursor:pointer';
-    trigger.addEventListener('click', () => { const url=new URL(location.href);url.searchParams.set('edit','1');location.assign(url); });
+    trigger.addEventListener('click', () => { trigger.remove(); void startEditor(); });
     document.body.append(trigger);
   };
-  if (params.get('edit') !== '1') {
-    showPreviewTrigger();
-    return;
-  }
+  const startEditor = async () => {
   const editorApi = window.__GGMC_EDITOR_API__;
   let authorized = false;
   try { authorized = (await editorApi?.getSession?.())?.isAdmin === true; } catch { authorized = false; }
@@ -30,7 +27,7 @@
     const submit=document.createElement('button');submit.type='submit';submit.textContent='Sign in';submit.style.cssText='padding:10px 14px;background:#c4a252;color:#07100b;border:0;border-radius:6px;font-weight:700';
     const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Close';cancel.style.cssText='padding:10px 14px;margin-left:8px';cancel.addEventListener('click',()=>{const u=new URL(location.href);u.searchParams.delete('edit');history.replaceState({},'',u);gate.remove();showPreviewTrigger();});
     const message=document.createElement('p');message.setAttribute('role','status');message.setAttribute('aria-live','polite');
-    form.append(email,password,submit,cancel,message);form.addEventListener('submit',async event=>{event.preventDefault();submit.disabled=true;message.textContent='Checking preview editor permissions…';try{const api=window.__GGMC_EDITOR_API__;if(!api?.signIn||!api?.getSession)throw Error('Preview sign-in is not ready. Reload this preview and try again.');await api.signIn(email.value.trim(),password.value);const session=await api.getSession();if(session?.isAdmin!==true)throw Error('This account is not authorised to edit the preview.');location.reload();}catch(error){password.value='';message.textContent=error instanceof Error?error.message:'Sign-in failed.';}finally{submit.disabled=false;}});
+    form.append(email,password,submit,cancel,message);form.addEventListener('submit',async event=>{event.preventDefault();submit.disabled=true;message.textContent='Checking preview editor permissions…';try{const api=window.__GGMC_EDITOR_API__;if(!api?.signIn||!api?.getSession)throw Error('Preview sign-in is not ready. Reload this preview and try again.');await api.signIn(email.value.trim(),password.value);const session=await api.getSession();if(session?.isAdmin!==true)throw Error('This account is not authorised to edit the preview.');gate.remove();void startEditor();}catch(error){password.value='';message.textContent=error instanceof Error?error.message:'Sign-in failed.';}finally{submit.disabled=false;}});
     gate.append(title,note,form);document.body.append(gate);return;
   }
   const KEY = 'ggmc-preview-editor-v2';
@@ -529,4 +526,6 @@
   buildPanel();refresh();setMode('text');
   observer=new MutationObserver(()=>{if(panel&&panel.isConnected){refresh();renderLayers();}});observer.observe(root,{childList:true,subtree:true});
   say('Draft only. No website or production changes are published from this panel.');
+  };
+  if (params.get('edit') === '1') void startEditor(); else showPreviewTrigger();
 })();
