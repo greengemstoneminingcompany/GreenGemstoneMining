@@ -26,6 +26,9 @@
 | save_visual_editor_draft(uuid, integer, text, jsonb) | authenticated only | Checks admin access, validates name/payload bounds, scopes writes to preview, uses expected-version conflict checks, and rejects changes to published snapshots. |
 | publish_visual_editor_draft(uuid, integer) | authenticated only | Checks admin access, locks the draft row, checks the expected version, and publishes only a draft. A separate immutable version record is created. |
 | restore_visual_editor_version(uuid, integer) | authenticated only | Checks admin access and source version, then creates a new draft instead of mutating existing history. |
+| list_visual_editor_templates() | authenticated only | Checks the signed-in identity and editor-admin allowlist; lists only the fixed preview project's templates and caps results at 40. |
+| save_visual_editor_template(uuid, text, jsonb) | authenticated only | Checks admin access, validates name, supported block kind, and payload size, and scopes writes to the preview project. |
+| delete_visual_editor_template(uuid) | authenticated only | Checks admin access and deletes only a template in the fixed preview project. Direct table privileges remain revoked. |
 | limit_lead_rate() | Trigger invocation only | Remains a security-definer trigger because lead submission rate limiting must read protected lead records. Direct execution is revoked and the search path is fixed. |
 | reject_visual_editor_version_mutation() | Trigger invocation only | Ordinary trigger guard, not security-definer; direct execution is revoked. It prevents updates/deletes to immutable history. |
 
@@ -34,7 +37,9 @@
 Supabase's security advisor flags functions based on their SECURITY DEFINER attribute and role grants; it does not prove the function body is exploitable. The remaining function warnings are deliberate:
 
 - **One anonymous-callable definer:** get_published_visual_editor_payload() is public by design and returns only the published preview payload. Removing its anonymous grant without replacing the public read path would break public snapshot rendering.
-- **Nine authenticated-callable definer findings:** these are the quota gate, boolean authorization checks, and draft/version RPCs. Each has a narrow grant and performs the relevant authentication/admin checks internally. Moving them to invoker mode without redesigning table privileges would break their purpose or require broader direct table access.
+- **Twelve authenticated-callable definer findings:** these are the quota gate, boolean authorization checks, draft/version RPCs, and the three shared-template RPCs. Each has a narrow grant and performs the relevant authentication/admin checks internally. Moving them to invoker mode without redesigning table privileges would break their purpose or require broader direct table access.
+
+The three shared-template RPCs are also intentionally callable by authenticated users; each checks the preview editor-admin allowlist before reading or changing template records. The template table denies direct client table access and has indexes on both actor foreign keys.
 
 The advisor also reports **Leaked Password Protection Disabled**. This is an Auth configuration setting, not a database function or SQL grant. It was **not** changed through SQL because that is not a supported/safe way to alter the project's Auth configuration. Enable leaked-password protection in the preview project's Supabase Dashboard under **Authentication → Settings → Password Security**. Reference: [Supabase password security documentation](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
 
@@ -43,6 +48,8 @@ The advisor also reports **Leaked Password Protection Disabled**. This is an Aut
 - [x] Anonymous direct execution revoked for editor/admin RPCs and the trigger-only rate limiter.
 - [x] Sensitive allowlist and quota tables have deny-all client RLS policies and no client table grants.
 - [x] Draft write/history RPCs remain authenticated-only and perform admin checks.
+- [x] Shared-template RPCs enforce the editor-admin allowlist; direct table grants are revoked.
+- [x] Template actor foreign keys are indexed.
 - [x] Public published snapshot read intentionally preserved.
 - [x] Security advisor re-run after migration; RLS no-policy findings cleared.
 - [ ] Enable leaked-password protection in Supabase Auth settings.
