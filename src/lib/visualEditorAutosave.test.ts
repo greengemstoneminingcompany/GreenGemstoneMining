@@ -81,6 +81,15 @@ describe('createServerAutosaveController', () => {
     expect(ctx.isDirty()).toBe(true);
   });
 
+  it('waits for a valid draft name instead of silently renaming a draft', async () => {
+    const ctx = setup();
+    ctx.setName('   ');
+    ctx.controller.schedule();
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(ctx.api.saveDraft).not.toHaveBeenCalled();
+    expect(ctx.isDirty()).toBe(true);
+  });
+
   it('does not save when the draft is clean or is already published', async () => {
     const ctx = setup();
     ctx.setDirty(false);
