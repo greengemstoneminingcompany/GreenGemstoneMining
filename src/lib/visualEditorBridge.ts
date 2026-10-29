@@ -82,11 +82,23 @@ export function installVisualEditorBridge(){
  };
 }
 
+function safePublishedImageSrc(value: unknown): value is string {
+ if(typeof value!=='string'||/[\u0000-\u0020\\]/.test(value))return false;
+ if(value.startsWith('/')&&!value.startsWith('//'))return true;
+ try{const url=new URL(value,location.origin);return url.protocol==='https:'&&!url.username&&!url.password&&/^https:\/\//i.test(value);}catch{return false;}
+}
+function safePublishedHref(value: unknown): string {
+ if(typeof value!=='string'||!value.trim()||/[\u0000-\u001f\\]/.test(value))return '#';
+ const raw=value.trim();if(/^#[\w-]*$/.test(raw))return raw;if(raw.startsWith('/')&&!raw.startsWith('//'))return raw;
+ try{const url=new URL(raw,location.origin);return ['https:','http:','mailto:'].includes(url.protocol)&&!url.username&&!url.password?raw:'#';}catch{return '#';}
+}
 function safePublishedSelector(selector: string): boolean {
  return typeof selector === 'string' && selector.length > 0 && selector.length <= 500 && !/^(?:html|body|#root|#ggmc-visual-editor)$/i.test(selector.trim());
 }
-function safePublishedCssValue(value: unknown): value is string {
- return typeof value === 'string' && value.length < 100 && !/(?:url\s*\(|expression\s*\(|javascript\s*:|@import|!important|[{}<>\\\\])/i.test(value);
+function safePublishedCssValue(prop: string, value: unknown): value is string {
+ const allowed = new Set(['color','background-color','font-size','font-family','font-weight','font-style','line-height','letter-spacing','text-align','text-decoration','text-transform','padding','padding-top','padding-right','padding-bottom','padding-left','margin','margin-top','margin-right','margin-bottom','margin-left','border','border-color','border-width','border-style','border-radius','box-shadow','width','min-width','max-width','height','min-height','max-height','opacity','display','position','top','right','bottom','left','gap','column-gap','row-gap','object-fit','object-position']);
+ if(typeof value!=='string'||value.length>=100||!allowed.has(prop)||/[<>\\;{}\u0000-\u001f]/.test(value)||/(?:url\s*\(|expression\s*\(|javascript\s*:|vbscript\s*:|@import|!important)/i.test(value))return false;
+ try{return typeof CSS!=='undefined'&&CSS.supports(prop,value.trim());}catch{return false;}
 }
 
 /** Apply a published snapshot. Inserted content is rendered with textContent and safe URL checks. */
@@ -108,10 +120,10 @@ export function applyPublishedVisualEditorPayload(payload: Record<string, unknow
  for (const [selector, props] of Object.entries(styles)) {
   if (!safePublishedSelector(selector)) continue;
   try { root.querySelectorAll(selector).forEach((el) => Object.entries(props || {}).forEach(([key,value]) => {
-   if (key === '--ve-image-src' && el instanceof HTMLImageElement && typeof value === 'string' && (value.startsWith('https://') || value.startsWith('/'))) el.src = value;
+   if (key === '--ve-image-src' && el instanceof HTMLImageElement && safePublishedImageSrc(value)) el.src = value;
    else if (key === '--ve-image-alt' && el instanceof HTMLImageElement && typeof value === 'string' && value.length < 500) el.alt = value;
-   else if (key === '--ve-link-href' && el instanceof HTMLAnchorElement && typeof value === 'string') { let href = '#'; try { const u = new URL(value, location.origin); if (['https:', 'http:', 'mailto:'].includes(u.protocol) || value.startsWith('#')) href = value; } catch { /* unsafe or malformed URL */ } el.setAttribute('href', href); }
-   else if (/^(color|background-color|font-size|font-family|font-weight|font-style|line-height|letter-spacing|text-align|text-decoration|text-transform|padding|padding-top|padding-right|padding-bottom|padding-left|margin|margin-top|margin-right|margin-bottom|margin-left|border|border-color|border-width|border-style|border-radius|box-shadow|width|min-width|max-width|height|min-height|max-height|opacity|display|position|top|right|bottom|left|gap|column-gap|row-gap|object-fit|object-position)$/.test(key) && safePublishedCssValue(value)) (el as HTMLElement).style.setProperty(key,value);
+   else if (key === '--ve-link-href' && el instanceof HTMLAnchorElement && typeof value === 'string') el.setAttribute('href', safePublishedHref(value));
+   else if (/^(color|background-color|font-size|font-family|font-weight|font-style|line-height|letter-spacing|text-align|text-decoration|text-transform|padding|padding-top|padding-right|padding-bottom|padding-left|margin|margin-top|margin-right|margin-bottom|margin-left|border|border-color|border-width|border-style|border-radius|box-shadow|width|min-width|max-width|height|min-height|max-height|opacity|display|position|top|right|bottom|left|gap|column-gap|row-gap|object-fit|object-position)$/.test(key) && safePublishedCssValue(key,value)) (el as HTMLElement).style.setProperty(key,value);
   })); } catch { /* stale selector */ }
  }
  const hidden = payload.hidden && typeof payload.hidden === 'object' ? payload.hidden as Record<string,unknown> : {};
@@ -121,10 +133,7 @@ export function applyPublishedVisualEditorPayload(payload: Record<string, unknow
  }
  
   const actions = payload.actions && typeof payload.actions === 'object' ? payload.actions as Record<string, Record<string, unknown>> : {};
-  const safeHref = (raw: unknown) => {
-   if (typeof raw !== 'string') return '#';
-   try { const u = new URL(raw, location.origin); return ['https:','http:','mailto:'].includes(u.protocol) || raw.startsWith('#') ? raw : '#'; } catch { return raw.startsWith('#') ? raw : '#'; }
-  };
+  const safeHref = safePublishedHref;
   const makeMenu = (items: unknown) => {
    const menu = document.createElement('div');
    menu.style.cssText = 'display:none;gap:5px;padding:8px;margin:6px 0;border:1px solid #8d7747;border-radius:8px;background:#101a15';
@@ -185,11 +194,11 @@ export function applyPublishedVisualEditorPayload(payload: Record<string, unknow
     const fragment = DOMPurify.sanitize(html,{RETURN_DOM_FRAGMENT:true,ALLOWED_TAGS:['a','abbr','b','blockquote','br','caption','code','dd','del','details','div','dl','dt','em','figcaption','figure','h2','h3','h4','hr','i','img','li','ol','p','picture','pre','q','s','section','small','span','strong','sub','summary','sup','table','tbody','td','th','thead','tr','u','ul','form','label','input','button'],ALLOWED_ATTR:['alt','aria-label','class','colspan','disabled','for','height','href','id','name','placeholder','rel','required','rowspan','src','target','title','type','value','width'],FORBID_TAGS:['script','style','iframe','object','embed','base','meta','link'],FORBID_ATTR:['action','formaction','srcdoc']});
     el.append(fragment);el.addEventListener('submit',event=>{if(event.target instanceof HTMLFormElement)event.preventDefault();},true);
    }
-   if (kind === 'image' && typeof block.src === 'string' && (/^https:\/\//i.test(block.src)||block.src.startsWith('/'))) {
+   if (kind === 'image' && safePublishedImageSrc(block.src)) {
    const img=document.createElement('img');img.src=block.src;img.alt=typeof block.alt==='string'?block.alt:'';img.loading='lazy';img.style.cssText='max-width:100%;height:auto';el.append(img);
   }
   if (kind === 'link' && typeof block.href === 'string') {
-   let href='#';try{const u=new URL(block.href,location.origin);if(['https:','http:','mailto:'].includes(u.protocol)||block.href.startsWith('#'))href=block.href;}catch{ /* unsafe or malformed URL */ }
+   const href=safePublishedHref(block.href);
    const a=document.createElement('a');a.href=href;a.textContent=typeof block.title==='string'&&block.title?block.title:'Learn more';el.append(a);
   }
   if (kind!=='html' && typeof block.text === 'string' && block.text) { const p=document.createElement('p');p.textContent=block.text;p.style.whiteSpace='pre-wrap';el.append(p); }
