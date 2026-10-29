@@ -10,7 +10,8 @@ const MODES: Record<string, string> = {
 };
 const TONES = ['professional', 'friendly', 'persuasive', 'technical', 'concise', 'playful', 'bold'];
 const MAX_CHARS = 4000;
-const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map(s => s.trim()).filter(Boolean);
+const PREVIEW_BRANCH_ORIGIN = 'https://green-gemstone-mining-git-6510a7-green-gemstone-mining-company.vercel.app';
+const allowedOrigins = [...new Set([PREVIEW_BRANCH_ORIGIN, ...(Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map(s => s.trim()).filter(Boolean)])];
 function originOk(origin: string | null): boolean {
   if (!origin) return false;
   try {
