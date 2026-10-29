@@ -12,6 +12,7 @@
 - Added explicit deny-all RLS policies for public.visual_editor_admins and public.ai_usage_daily. Client table privileges remain revoked; privileged operations use narrow RPCs.
 - Re-audited direct table grants and removed broad TRUNCATE, REFERENCES, TRIGGER, UPDATE, and DELETE privileges from the preview client roles. Only the required media gallery and lead form privileges remain; editor drafts, versions, templates, allowlists, and quota tables have no direct client grants.
 - Split the media SELECT policies so anonymous visitors can read active media without needing execute permission on the authenticated-only `is_admin()` function; authenticated admins retain access to inactive media.
+- Added database-side lead constraints for normalized email, email format, trimmed values, company/message lengths, and the contact form's allowed interest values so direct API callers cannot bypass the UI's validation.
 - Reasserted explicit function grants and added database comments documenting each security-definer function's purpose and intended exposure.
 - Kept the public published-snapshot reader because the website needs approved snapshot data. It returns only the latest published payload, not drafts.
 
@@ -59,6 +60,7 @@ The advisor also reports **Leaked Password Protection Disabled**. This is an Aut
 - [x] Sensitive allowlist and quota tables have deny-all client RLS policies and no client table grants.
 - [x] Direct table grants are least-privilege: media read for visitors; media CRUD for authenticated users guarded by admin RLS; lead insert for visitors and authenticated users; lead select for authenticated users guarded by admin RLS; no broad table-operation grants.
 - [x] Anonymous media SELECT policy does not call the authenticated-only `is_admin()` RPC.
+- [x] Lead inserts are constrained at the database boundary in addition to client-side validation and trigger-based rate limiting.
 - [x] Draft write/history RPCs remain authenticated-only and perform admin checks.
 - [x] Shared-template RPCs enforce the editor-admin allowlist; direct table grants are revoked.
 - [x] Template actor foreign keys are indexed.
