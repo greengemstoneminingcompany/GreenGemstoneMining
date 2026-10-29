@@ -1,7 +1,7 @@
 (async () => {
   const params = new URLSearchParams(location.search);
   const previewEnabled = document.querySelector('meta[name="ggmc-preview-editor"]')?.content === 'enabled';
-  const allowedPreviewHost = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.endsWith('.vercel.app');
+  const allowedPreviewHost = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || (location.hostname.startsWith('green-gemstone-mining-') && location.hostname.endsWith('-green-gemstone-mining-company.vercel.app'));
   if (!previewEnabled || !allowedPreviewHost) return;
   const showPreviewTrigger = () => {
     if (!previewEnabled || document.getElementById('ggmc-preview-editor-trigger')) return;
