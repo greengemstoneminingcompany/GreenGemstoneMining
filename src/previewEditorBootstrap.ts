@@ -12,7 +12,7 @@ window.DOMPurify = DOMPurify;
 window.addEventListener('load', () => {
   const marker = document.querySelector('meta[name="ggmc-preview-editor"]');
   const host = window.location.hostname;
-  const allowedHost = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.vercel.app');
+  const allowedHost = host === 'localhost' || host === '127.0.0.1' || (host.startsWith('green-gemstone-mining-') && host.endsWith('-green-gemstone-mining-company.vercel.app'));
   if (marker?.getAttribute('content') !== 'enabled' || !allowedHost) return;
   const script = document.createElement('script');
   script.src = '/visual-editor.js';
