@@ -10,11 +10,15 @@ export function createServerAutosaveController(options) {
 
   const isEligible = () => {
     const state = options.getState();
+    const name = options.getName();
     return options.isDirty() &&
       Boolean(state.id) &&
       state.status === 'draft' &&
       Number.isInteger(state.version) &&
       state.version >= 1 &&
+      typeof name === 'string' &&
+      name.trim().length >= 1 &&
+      name.length <= 120 &&
       !options.isConflict();
   };
 
