@@ -5,12 +5,15 @@ describe('createServerAutosaveController', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  function setup(saveDraft = vi.fn(async (input: { id: string; expectedVersion: number; name: string; payload: unknown }) => ({
+  type ServerAutosaveResult = { id: string; version: number; status: 'draft' | 'published' | 'archived' };
+  type SaveDraft = (input: { id: string; expectedVersion: number; name: string; payload: unknown }) => Promise<ServerAutosaveResult>;
+
+  function setup(saveDraft: SaveDraft = vi.fn(async (input: { id: string; expectedVersion: number; name: string; payload: unknown }) => ({
     id: input.id,
     version: input.expectedVersion + 1,
     status: 'draft' as const,
   }))) {
-    const state = { id: 'draft-1', version: 4, status: 'draft' as const };
+    const state: ServerAutosaveResult = { id: 'draft-1', version: 4, status: 'draft' };
     let draft: Record<string, unknown> = { title: 'Initial title' };
     let name = 'Exploration draft';
     let dirty = true;
