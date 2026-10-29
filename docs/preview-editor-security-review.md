@@ -11,6 +11,7 @@
 - Revoked anonymous execution of public.is_admin(); authenticated execution remains for existing signed-in admin flows.
 - Added explicit deny-all RLS policies for public.visual_editor_admins and public.ai_usage_daily. Client table privileges remain revoked; privileged operations use narrow RPCs.
 - Re-audited direct table grants and removed broad TRUNCATE, REFERENCES, TRIGGER, UPDATE, and DELETE privileges from the preview client roles. Only the required media gallery and lead form privileges remain; editor drafts, versions, templates, allowlists, and quota tables have no direct client grants.
+- Split the media SELECT policies so anonymous visitors can read active media without needing execute permission on the authenticated-only `is_admin()` function; authenticated admins retain access to inactive media.
 - Reasserted explicit function grants and added database comments documenting each security-definer function's purpose and intended exposure.
 - Kept the public published-snapshot reader because the website needs approved snapshot data. It returns only the latest published payload, not drafts.
 
@@ -49,6 +50,7 @@ The advisor also reports **Leaked Password Protection Disabled**. This is an Aut
 - [x] Anonymous direct execution revoked for editor/admin RPCs and the trigger-only rate limiter.
 - [x] Sensitive allowlist and quota tables have deny-all client RLS policies and no client table grants.
 - [x] Direct table grants are least-privilege: media read for visitors; media CRUD for authenticated users guarded by admin RLS; lead insert for visitors and authenticated users; lead select for authenticated users guarded by admin RLS; no broad table-operation grants.
+- [x] Anonymous media SELECT policy does not call the authenticated-only `is_admin()` RPC.
 - [x] Draft write/history RPCs remain authenticated-only and perform admin checks.
 - [x] Shared-template RPCs enforce the editor-admin allowlist; direct table grants are revoked.
 - [x] Template actor foreign keys are indexed.
