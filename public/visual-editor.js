@@ -1,5 +1,6 @@
 import { createServerAutosaveController } from './visual-editor/modules/server-autosave.js';
 import { createPanelResizer } from './visual-editor/modules/panel-resize.js';
+import { safeCssValue, safeImageSrc, safeUrl } from './visual-editor/modules/safe-content.js';
 
 (async () => {
   const params = new URLSearchParams(location.search);
@@ -122,10 +123,6 @@ import { createPanelResizer } from './visual-editor/modules/panel-resize.js';
   const updateCount = () => { if (counter) counter.textContent = Object.keys(draft.text).length+' text edits · '+Object.keys(draft.styles).length+' styled elements · '+draft.blocks.length+' added blocks · local draft'; };
   const saveHistory = () => { undo.push(copy(draft)); if (undo.length>60) undo.shift(); redo=[]; };
   const applyChange = (message) => { serverAutosaveDirty = true; persist(); refresh(); renderLayers(); if(selected) inspect(selected); say(message||'Saved locally. This is not published.'); };
-  const safeUrl = (value) => { if(typeof value!=='string'||!value.trim()||/[\u0000-\u001f\\]/.test(value))return '#'; const raw=value.trim(); if(raw.startsWith('#'))return /^#[\w-]*$/.test(raw)?raw:'#'; if(raw.startsWith('/')&&!raw.startsWith('//'))return raw; try { const u=new URL(raw,location.origin); return ['https:','http:','mailto:'].includes(u.protocol)&&!u.username&&!u.password?raw:'#'; } catch { return '#'; } };
-  const safeImageSrc = value => { if(typeof value!=='string'||/[\u0000-\u0020\\]/.test(value))return false; if(/^data:image\/(?:png|jpeg|webp);base64,[a-z0-9+/]+=*$/i.test(value))return true; if(/["'();{}]/.test(value))return false; if(value.startsWith('/')&&!value.startsWith('//'))return true; try{const u=new URL(value,location.origin);return u.protocol==='https:'&&!u.username&&!u.password&&/^https:\/\//i.test(value);}catch{return false;} };
-  const SAFE_CSS_PROPERTIES = new Set(['color','background-color','font-size','padding','margin','border-radius','text-align','font-weight','font-style','text-decoration-line','text-transform','rotate','font-family','line-height','letter-spacing','width','height','border','box-shadow','opacity','background-size','background-position','filter','object-fit','object-position','display']);
-  const safeCssValue = (prop, value) => { if(typeof value!=='string'||value.length>200||/[<>\\;{}\u0000-\u001f]/.test(value)||/(?:url\s*\(|expression\s*\(|@import|javascript\s*:|vbscript\s*:)/i.test(value))return false; if(!SAFE_CSS_PROPERTIES.has(prop))return false; try{return typeof CSS!=='undefined'&&CSS.supports(prop,value.trim());}catch{return false;} };
   async function compressImage(file){
     if(!file||!['image/jpeg','image/png','image/webp'].includes(file.type))throw Error('Choose a JPG, PNG, or WebP image.');
     const bitmap=await createImageBitmap(file),scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));
