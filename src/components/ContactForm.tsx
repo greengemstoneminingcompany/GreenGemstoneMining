@@ -21,8 +21,13 @@ export default function ContactForm() {
     setErrors(found);
     if (Object.keys(found).length > 0) return;
     setState('sending');
-    const result = await submitLead(form);
-    setState(result.ok ? 'sent' : 'error');
+    try {
+      const result = await submitLead(form);
+      setState(result.ok ? 'sent' : 'error');
+    } catch {
+      // Keep the form recoverable if the client or network fails unexpectedly.
+      setState('error');
+    }
   };
 
   if (state === 'sent') {
