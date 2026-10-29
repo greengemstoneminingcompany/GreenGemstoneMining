@@ -28,7 +28,7 @@ const writeLibrary = value => {
   if (serialized.length > MAX_LIBRARY_BYTES) throw new Error('The creative library is full. Remove an older template before saving another.');
   localStorage.setItem(LIBRARY_KEY, serialized);
 };
-const section = (className, title, description) => {
+const section = (title, description) => {
   const node = document.createElement('section');
   node.className = 've-feature-module';
   node.style.cssText = 'border-top:1px solid #3b493f;margin-top:14px;padding-top:12px';
