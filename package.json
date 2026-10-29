@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "npm run typecheck && npm run lint && node --check public/visual-editor.js && node --check public/visual-editor/features/creative-studio.js && npm test && vite build",
+    "build": "node scripts/sync-visual-editor-features.mjs && npm run typecheck && npm run lint && node --check public/visual-editor.js && node --check public/visual-editor/features/creative-studio.js && npm test && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
