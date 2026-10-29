@@ -6,7 +6,7 @@ const { mountCreativeStudio } = await import(/* @vite-ignore */ moduleUrl.href);
 describe('modular Creative Studio', () => {
  let panel: HTMLElement;
  let root: HTMLElement;
- let draft: Record<string, any>;
+ let draft: { text: Record<string, unknown>; styles: Record<string, unknown>; hidden: Record<string, unknown>; blocks: Array<Record<string, unknown>>; actions: Record<string, unknown>; designTokens?: Record<string, unknown> };
  let selected: HTMLElement | null;
  let say: ReturnType<typeof vi.fn>;
  let applyChange: ReturnType<typeof vi.fn>;
