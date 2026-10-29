@@ -41,7 +41,7 @@
   let draft = blank(), undo = [], redo = [], mode = 'text', selected = null, applying = false;
   let panel, inspector, status, counter, layers, textStart = null, lastSelection = null, layerFilter = '', layerOffset = 0;
   const styleBaselines = new WeakMap(), imageSrcBaselines = new WeakMap(), imageAltBaselines = new WeakMap(); let lastAppliedStyles = [], lastAppliedImageSrc = [], lastAppliedImageAlt = [], lastHiddenElements = [];
-  let observer = null;
+  let observer = null, featureTeardown = null;
   const lifetime = new AbortController();
   const rootStyleBaseline = ['max-width','width','margin-inline','box-shadow'].map(prop => [prop, root.style.getPropertyValue(prop), root.style.getPropertyPriority(prop)]);
   const rootViewportBaseline = root.dataset.veViewport;
@@ -499,6 +499,10 @@
     status=document.createElement('div');status.className='ve-status';status.setAttribute('aria-live','polite');panel.append(status);
     counter=document.createElement('div');counter.className='ve-count';panel.append(counter);
     document.body.append(panel);updateCount();inspect(null);
+    import('/visual-editor/features/creative-studio.js').then(module => {
+      if (!panel || !panel.isConnected) return;
+      featureTeardown = module.mountCreativeStudio({ panel, root, getDraft: () => draft, saveHistory, applyChange, say, getSelected: () => selected, aiWrite: input => window.__GGMC_EDITOR_API__?.aiWrite?.(input) });
+    }).catch(() => say('Creative Studio module did not load. Existing editor tools remain available.'));
   }
   function teardown(){
     if(observer){observer.disconnect();observer=null;}
@@ -508,6 +512,7 @@
     root.querySelectorAll('[data-ve-selected="true"]').forEach(el=>el.removeAttribute('data-ve-selected'));
     rootStyleBaseline.forEach(([prop,value,priority])=>{if(value)root.style.setProperty(prop,value,priority);else root.style.removeProperty(prop);});
     if(rootViewportBaseline===undefined)delete root.dataset.veViewport;else root.dataset.veViewport=rootViewportBaseline;
+    try { featureTeardown?.(); } catch {} featureTeardown = null;
     if(panel)panel.remove();style.remove();panel=null;mode='closed';selected=null;textStart=null;lastSelection=null;
     const u=new URL(location.href);u.searchParams.delete('edit');history.replaceState({},'',u);
     showPreviewTrigger();
