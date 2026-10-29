@@ -67,21 +67,26 @@ describe('modular Creative Studio', () => {
    saveTemplate: vi.fn(async () => shared),
    deleteTemplate: vi.fn(async () => true),
   };
-  dispose?.();
-  dispose = mountCreativeStudio({ panel, root, getDraft: () => draft, saveHistory, applyChange, say, getSelected: () => selected, aiWrite, editorApi });
-  panel.querySelector<HTMLButtonElement>('button')?.click();
-  const load = Array.from(panel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Load shared templates')!;
-  load.click();
-  await vi.waitFor(() => expect(panel.textContent).toContain('Partner card'));
-  const insert = Array.from(panel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Insert')!;
-  insert.click();
-  expect(draft.blocks[0]).toMatchObject({ kind: 'card', title: 'Partner with us' });
-  draft.blocks.push({ id: 'existing', kind: 'card', title: 'Saved card', text: 'Reusable copy' });
-  selected = document.createElement('div');
-  selected.dataset.veBlockId = 'existing';
-  panel.querySelector<HTMLInputElement>('[aria-label="Template name"]')!.value = 'Saved card';
-  Array.from(panel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Save selected block to server')!.click();
-  await vi.waitFor(() => expect(editorApi.saveTemplate).toHaveBeenCalledWith(expect.objectContaining({ id: null, name: 'Saved card', block: expect.objectContaining({ id: 'existing' }) })));
+  const serverPanel = document.createElement('aside');
+  document.body.append(serverPanel);
+  const serverDispose = mountCreativeStudio({ panel: serverPanel, root, getDraft: () => draft, saveHistory, applyChange, say, getSelected: () => selected, aiWrite, editorApi });
+  try {
+   const load = Array.from(serverPanel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Load shared templates')!;
+   load.click();
+   await vi.waitFor(() => expect(serverPanel.textContent).toContain('Partner card'));
+   const insert = Array.from(serverPanel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Insert')!;
+   insert.click();
+   expect(draft.blocks[0]).toMatchObject({ kind: 'card', title: 'Partner with us' });
+   draft.blocks.push({ id: 'existing', kind: 'card', title: 'Saved card', text: 'Reusable copy' });
+   selected = document.createElement('div');
+   selected.dataset.veBlockId = 'existing';
+   serverPanel.querySelector<HTMLInputElement>('[aria-label="Template name"]')!.value = 'Saved card';
+   Array.from(serverPanel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Save selected block to server')!.click();
+   await vi.waitFor(() => expect(editorApi.saveTemplate).toHaveBeenCalledWith(expect.objectContaining({ id: null, name: 'Saved card', block: expect.objectContaining({ id: 'existing' }) })));
+  } finally {
+   serverDispose();
+   serverPanel.remove();
+  }
  });
 
  it('restores token styles on teardown', () => {
