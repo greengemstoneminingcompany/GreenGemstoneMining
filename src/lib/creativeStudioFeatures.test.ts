@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-const moduleUrl = new URL('../../public/visual-editor/features/creative-studio.js', import.meta.url);
-const { mountCreativeStudio } = await import(/* @vite-ignore */ moduleUrl.href);
+import { mountCreativeStudio } from './creativeStudioFeatures';
 
 describe('modular Creative Studio', () => {
  let panel: HTMLElement;
