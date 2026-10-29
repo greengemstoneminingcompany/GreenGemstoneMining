@@ -85,7 +85,63 @@
     return parts.join(' > ');
   };
   const all = (selector) => { try { return [...root.querySelectorAll(selector)]; } catch { return []; } };
-  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(draft)); } catch { say('Browser storage is unavailable. Export the draft before leaving.'); } persistServerState(); updateCount(); };
+  let serverAutosaveTimer = null;
+  let serverAutosaveInFlight = false;
+  let serverAutosavePending = false;
+  let serverAutosaveConflict = false;
+  const persist = () => {
+    try { localStorage.setItem(KEY, JSON.stringify(draft)); }
+    catch { say('Browser storage is unavailable. Export the draft before leaving.'); }
+    persistServerState();
+    updateCount();
+    scheduleServerAutosave();
+  };
+  function scheduleServerAutosave() {
+    if (!serverDraftId || serverDraftStatus !== 'draft' || serverDraftVersionIsUnavailable() || serverAutosaveConflict) return;
+    if (serverAutosaveInFlight) { serverAutosavePending = true; return; }
+    if (serverAutosaveTimer) clearTimeout(serverAutosaveTimer);
+    serverAutosaveTimer = setTimeout(() => { void autosaveServerDraft(); }, 1800);
+  }
+  function serverDraftVersionIsUnavailable() { return !Number.isInteger(serverVersion) || serverVersion < 1; }
+  async function autosaveServerDraft() {
+    serverAutosaveTimer = null;
+    if (!serverDraftId || serverDraftStatus !== 'draft' || serverDraftVersionIsUnavailable() || serverAutosaveConflict) return;
+    if (serverAutosaveInFlight) { serverAutosavePending = true; return; }
+    const api = window.__GGMC_EDITOR_API__;
+    if (!api?.getSession || !api?.saveDraft) return;
+    serverAutosaveInFlight = true;
+    serverAutosavePending = false;
+    const draftId = serverDraftId;
+    const expectedVersion = serverVersion;
+    const snapshot = copy(draft);
+    try {
+      const session = await api.getSession();
+      if (!session?.isAdmin) return;
+      const result = await api.saveDraft({ id: draftId, expectedVersion, name: 'Website draft', payload: snapshot });
+      if (!result || result.id !== draftId) throw new Error('Autosave returned an unexpected draft. Use Save server draft to review the server state.');
+      if (serverDraftId !== draftId) return;
+      serverVersion = result.version;
+      serverDraftStatus = result.status;
+      persistServerState();
+      const changedDuringSave = JSON.stringify(snapshot) !== JSON.stringify(draft);
+      say(changedDuringSave ? 'Server autosave saved a version; newer edits are waiting to save…' : 'Server autosaved version ' + result.version + '.');
+      if (changedDuringSave) serverAutosavePending = true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Server autosave failed.';
+      if (/version|conflict|changed since|expected/i.test(message)) {
+        serverAutosaveConflict = true;
+        say('Autosave paused to protect newer server changes. Refresh server drafts, load the latest version, and review your local edits before saving again.');
+      } else {
+        say('Server autosave could not complete: ' + message + '. Your browser draft is still saved locally.');
+      }
+    } finally {
+      serverAutosaveInFlight = false;
+      if (serverAutosavePending && !serverAutosaveConflict && serverDraftStatus === 'draft') {
+        serverAutosavePending = false;
+        scheduleServerAutosave();
+      }
+    }
+  }
   const say = (text) => { if (status) status.textContent = text; };
   const updateCount = () => { if (counter) counter.textContent = Object.keys(draft.text).length+' text edits · '+Object.keys(draft.styles).length+' styled elements · '+draft.blocks.length+' added blocks · local draft'; };
   const saveHistory = () => { undo.push(copy(draft)); if (undo.length>60) undo.shift(); redo=[]; };
