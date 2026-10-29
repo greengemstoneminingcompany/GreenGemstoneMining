@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { Atom, ArrowRight, ArrowUpRight, ChevronDown, Gem, Hammer, Linkedin, Mail, MapPin, Menu, Mountain, X } from 'lucide-react';
 import Gallery from '@/components/Gallery';
 import CompanyContent from '@/components/CompanyContent';
