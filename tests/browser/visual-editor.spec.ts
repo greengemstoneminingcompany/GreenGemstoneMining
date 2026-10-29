@@ -339,6 +339,7 @@ test('text conversion and existing-button dropdown actions work', async ({ page 
 
 test('server controls fail clearly without a preview server API', async ({ page }) => {
  await page.goto(fixture + '?edit=1');
+ await page.evaluate(() => { Reflect.deleteProperty(window, '__GGMC_EDITOR_API__'); });
  for (const name of ['Sign in', 'Refresh', 'Load draft', 'Save server draft']) {
   await page.getByRole('button', { name, exact: true }).click();
   await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Server drafts are not connected on this preview.');

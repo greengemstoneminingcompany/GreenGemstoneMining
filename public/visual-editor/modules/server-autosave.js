@@ -50,6 +50,7 @@ export function createServerAutosaveController(options) {
       if (!result || typeof result.id !== 'string' || !Number.isInteger(result.version)) {
         throw new Error('The server returned an invalid draft response.');
       }
+      options.setId(result.id);
       options.setVersion(result.version);
       options.setStatus(result.status || 'draft');
       const changedDuringSave =

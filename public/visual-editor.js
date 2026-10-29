@@ -106,6 +106,7 @@ import { createServerAutosaveController } from './visual-editor/modules/server-a
     getApi: () => window.__GGMC_EDITOR_API__,
     getDraft: () => draft,
     getState: () => ({ id: serverDraftId, version: serverVersion, status: serverDraftStatus }),
+    setId: (id) => { serverDraftId = id; },
     setVersion: (version) => { serverVersion = version; },
     setStatus: (status) => { serverDraftStatus = status; },
     getName: () => serverAutosaveDraftName,
@@ -273,7 +274,9 @@ import { createServerAutosaveController } from './visual-editor/modules/server-a
   function changeStyle(prop,value){
     if(!selected)return;
     const cssProp=({'--ve-background-image':'background-image','--ve-background-size':'background-size','--ve-background-position':'background-position','--ve-image-filter':'filter','--ve-object-fit':'object-fit','--ve-object-position':'object-position'})[prop]||prop;
-    if(prop==='--ve-background-image'){if(!safeImageSrc(value))return say('Use a safe HTTPS or site-relative image URL.');}
+    if(prop==='--ve-image-src'){if(!safeImageSrc(value))return say('Use a safe HTTPS or site-relative image URL.');}
+    else if(prop==='--ve-image-alt'){if(typeof value!=='string'||value.length>500)return say('Image descriptions must be 500 characters or fewer.');}
+    else if(prop==='--ve-background-image'){if(!safeImageSrc(value))return say('Use a safe HTTPS or site-relative image URL.');}
     else if(!safeCssValue(cssProp,value))return say('That CSS value is not allowed. URL-based CSS and unsupported values are blocked.');
     saveHistory();const key=path(selected);draft.styles[key]={...(draft.styles[key]||{}),[prop]:value};applyChange('Updated '+prop+'.');inspect(selected);
   }

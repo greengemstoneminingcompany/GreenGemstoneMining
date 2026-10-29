@@ -116,7 +116,7 @@ export function mountCreativeStudio(api) {
   applyTokens();
 
   const librarySection = section('', 'Creative library', 'Use starter layouts or save your own sections as reusable templates. When the secured server library is available, templates sync across sessions and devices.');
-  const starter = select('Starter template', BUILT_INS.map(item => [item.id, item.name]));
+  const starter = select('Starter layout', BUILT_INS.map(item => [item.id, item.name]));
   const starterInfo = document.createElement('p'); starterInfo.className='ve-note';
   const updateStarterInfo = () => { starterInfo.textContent = BUILT_INS.find(item => item.id === starter.value)?.description || ''; };
   starter.addEventListener('change', updateStarterInfo); updateStarterInfo();
