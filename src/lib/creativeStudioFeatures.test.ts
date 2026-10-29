@@ -25,7 +25,7 @@ describe('modular Creative Studio', () => {
   say = vi.fn<(message: string) => void>();
   applyChange = vi.fn<(message?: string) => void>();
   saveHistory = vi.fn<() => void>();
-  aiWrite = vi.fn(async (_input: { mode: string; tone: string; text: string }) => 'Responsible operations\n\nWe explain our approach clearly and responsibly.');
+  aiWrite = vi.fn(async (input: { mode: string; tone: string; text: string }) => input.mode === 'section_copy' ? 'Responsible operations\n\nWe explain our approach clearly and responsibly.' : input.text);
   dispose = mountCreativeStudio({ panel, root, getDraft: () => draft, saveHistory, applyChange, say, getSelected: () => selected, aiWrite });
  });
 
