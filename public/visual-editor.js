@@ -351,6 +351,7 @@
     if(kind==='link'&&safeUrl(href)==='#'&&href!=='#')return say('Use HTTPS, HTTP, mailto:, a site-relative path, or a #section link.');
     let sanitizedHtml='';
     if(kind==='html'){
+      if(String(text||'').length>20000)return say('Custom HTML is limited to 20,000 characters.');
       if(typeof window.DOMPurify?.sanitize!=='function')return say('The HTML sanitizer is unavailable. Reload this preview before inserting HTML.');
       const fragment=window.DOMPurify.sanitize(String(text||''),{RETURN_DOM_FRAGMENT:true,ALLOWED_TAGS:['a','abbr','b','blockquote','br','caption','code','dd','del','details','div','dl','dt','em','figcaption','figure','h2','h3','h4','hr','i','img','li','ol','p','picture','pre','q','s','section','small','span','strong','sub','summary','sup','table','tbody','td','th','thead','tr','u','ul','form','label','input','button'],ALLOWED_ATTR:['alt','aria-label','class','colspan','disabled','for','height','href','id','name','placeholder','rel','required','rowspan','src','target','title','type','value','width'],FORBID_TAGS:['script','style','iframe','object','embed','base','meta','link'],FORBID_ATTR:['action','formaction','srcdoc']});
       const holder=document.createElement('div');holder.append(fragment);if(!holder.childNodes.length||!holder.textContent.trim()&&!holder.querySelector('img,hr,br,table,form,input,button'))return say('Enter valid, non-empty HTML content.');sanitizedHtml=holder.innerHTML;text=sanitizedHtml;
