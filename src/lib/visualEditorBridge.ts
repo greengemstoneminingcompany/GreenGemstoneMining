@@ -9,6 +9,9 @@ export interface VisualEditorServerVersion {
  id:number; draft_id:string; version:number; payload:Record<string,unknown>;
  status:'draft'|'published'|'restored'; created_at:string; note:string;
 }
+export interface VisualEditorServerTemplate {
+ id:string; name:string; block:Record<string,unknown>; created_at:string; updated_at:string;
+}
 export interface VisualEditorBridge {
  getSession():Promise<{email:string|null;isAdmin:boolean}>;
  signIn(email:string,password:string):Promise<void>;
@@ -18,6 +21,9 @@ export interface VisualEditorBridge {
  publishDraft(id:string,expectedVersion:number):Promise<VisualEditorServerDraft>;
  listVersions(id:string):Promise<VisualEditorServerVersion[]>;
  restoreVersion(id:string,version:number):Promise<VisualEditorServerDraft>;
+ listTemplates():Promise<VisualEditorServerTemplate[]>;
+ saveTemplate(input:{id:string|null;name:string;block:Record<string,unknown>}):Promise<VisualEditorServerTemplate>;
+ deleteTemplate(id:string):Promise<boolean>;
  getPublishedPayload():Promise<Record<string,unknown>|null>;
  aiWrite(input:{mode:string;tone:string;text:string}):Promise<string>;
 }
@@ -79,6 +85,9 @@ export function installVisualEditorBridge(){
   async publishDraft(id,expectedVersion){const sb=await adminClient();const {data,error}=await sb.rpc('publish_visual_editor_draft',{p_draft_id:id,p_expected_version:expectedVersion});if(error)throw error;return data as VisualEditorServerDraft;},
   async listVersions(id){const sb=await adminClient();const {data,error}=await sb.rpc('list_visual_editor_versions',{p_draft_id:id});if(error)throw error;return (data??[]) as VisualEditorServerVersion[];},
   async restoreVersion(id,version){const sb=await adminClient();const {data,error}=await sb.rpc('restore_visual_editor_version',{p_draft_id:id,p_version:version});if(error)throw error;return data as VisualEditorServerDraft;},
+  async listTemplates(){const sb=await adminClient();const {data,error}=await sb.rpc('list_visual_editor_templates');if(error)throw error;return (data??[]) as VisualEditorServerTemplate[];},
+  async saveTemplate(input){const sb=await adminClient();const {data,error}=await sb.rpc('save_visual_editor_template',{p_id:input.id,p_name:input.name,p_block:input.block});if(error)throw error;return data as VisualEditorServerTemplate;},
+  async deleteTemplate(id){const sb=await adminClient();const {data,error}=await sb.rpc('delete_visual_editor_template',{p_id:id});if(error)throw error;return data===true;},
   async getPublishedPayload(){const sb=await getPreviewSupabase();if(!sb)return null;const {data,error}=await sb.rpc('get_published_visual_editor_payload');if(error)throw error;return (data??null) as Record<string,unknown>|null;},
   async aiWrite(input){const sb=await adminClient();const {data,error}=await sb.functions.invoke('magic-write',{body:input});if(error)throw new Error('AI writing request failed: '+error.message);if(!data||typeof data.text!=='string'||!data.text.trim())throw new Error('AI writing returned no reviewable text.');return data.text;}
  };
