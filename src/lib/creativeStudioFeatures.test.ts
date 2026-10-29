@@ -7,10 +7,10 @@ describe('modular Creative Studio', () => {
  let root: HTMLElement;
  let draft: { text: Record<string, unknown>; styles: Record<string, unknown>; hidden: Record<string, unknown>; blocks: Array<Record<string, unknown>>; actions: Record<string, unknown>; designTokens?: Record<string, unknown>; [key: string]: unknown };
  let selected: HTMLElement | null;
- let say: ReturnType<typeof vi.fn>;
- let applyChange: ReturnType<typeof vi.fn>;
- let saveHistory: ReturnType<typeof vi.fn>;
- let aiWrite: ReturnType<typeof vi.fn>;
+ let say: ReturnType<typeof vi.fn<(message: string) => void>>;
+ let applyChange: ReturnType<typeof vi.fn<(message?: string) => void>>;
+ let saveHistory: ReturnType<typeof vi.fn<() => void>>;
+ let aiWrite: ReturnType<typeof vi.fn<(input: { mode: string; tone: string; text: string }) => Promise<string>>>;
  let dispose: (() => void) | undefined;
 
  beforeEach(() => {
@@ -22,10 +22,10 @@ describe('modular Creative Studio', () => {
   root = document.getElementById('root')!;
   draft = { text: {}, styles: {}, hidden: {}, blocks: [], actions: {} };
   selected = null;
-  say = vi.fn();
-  applyChange = vi.fn();
-  saveHistory = vi.fn();
-  aiWrite = vi.fn(async () => 'Responsible operations\n\nWe explain our approach clearly and responsibly.');
+  say = vi.fn<(message: string) => void>();
+  applyChange = vi.fn<(message?: string) => void>();
+  saveHistory = vi.fn<() => void>();
+  aiWrite = vi.fn(async (_input: { mode: string; tone: string; text: string }) => 'Responsible operations\n\nWe explain our approach clearly and responsibly.');
   dispose = mountCreativeStudio({ panel, root, getDraft: () => draft, saveHistory, applyChange, say, getSelected: () => selected, aiWrite });
  });
 
