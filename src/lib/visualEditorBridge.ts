@@ -89,6 +89,7 @@ function hasControlOrBackslash(value: string, rejectSpaces = false): boolean {
 function safePublishedImageSrc(value: unknown): value is string {
  if(typeof value!=='string'||hasControlOrBackslash(value,true))return false;
  if(/^data:image\/(?:png|jpeg|webp);base64,[a-z0-9+/]+=*$/i.test(value))return true;
+ if(/[\"'();{}]/.test(value))return false;
  if(value.startsWith('/')&&!value.startsWith('//'))return true;
  try{const url=new URL(value,location.origin);return url.protocol==='https:'&&!url.username&&!url.password&&/^https:\/\//i.test(value);}catch{return false;}
 }
