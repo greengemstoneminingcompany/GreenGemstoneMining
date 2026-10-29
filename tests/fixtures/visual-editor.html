@@ -22,6 +22,9 @@
    publishDraft:async(id,expected)=>{const rows=serverRows(),row=rows.find(x=>x.id===id);if(!row)throw Error('draft not found');if(row.version!==expected)throw Error('version conflict');if(row.status!=='draft')throw Error('published snapshot is immutable');row.version+=1;row.status='published';row.published_at=new Date().toISOString();row.history.push({id:row.history.length+1,version:row.version,payload:row.payload,status:'published',note:'Published snapshot'});storeRows(rows);return row;},
    listVersions:async id=>serverRows().find(x=>x.id===id)?.history||[],
    restoreVersion:async(id,version)=>{const source=serverRows().find(x=>x.id===id);const v=source?.history.find(x=>x.version===version);if(!v)throw Error('version not found');return window.__GGMC_EDITOR_API__.saveDraft({id:null,expectedVersion:0,name:'Restored: '+source.name,payload:v.payload});},
+   listTemplates:async()=>JSON.parse(localStorage.getItem('fixture-server-templates')||'[]'),
+   saveTemplate:async input=>{const rows=JSON.parse(localStorage.getItem('fixture-server-templates')||'[]');const now=new Date().toISOString();const row={id:input.id||'template-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),name:input.name,block:input.block,created_at:rows.find(x=>x.id===input.id)?.created_at||now,updated_at:now};const at=rows.findIndex(x=>x.id===row.id);if(at>=0)rows[at]=row;else rows.unshift(row);localStorage.setItem('fixture-server-templates',JSON.stringify(rows));return row;},
+   deleteTemplate:async id=>{const rows=JSON.parse(localStorage.getItem('fixture-server-templates')||'[]');localStorage.setItem('fixture-server-templates',JSON.stringify(rows.filter(x=>x.id!==id)));return true;},
    getPublishedPayload:async()=>null,
    aiWrite:async input=>'Suggested: '+input.text
   };
