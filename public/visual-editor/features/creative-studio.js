@@ -163,7 +163,7 @@ export function mountCreativeStudio(api) {
   const saveSelected = button('Save selected block as template', async () => {
     if (libraryBusy) return;
     const selected = getSelected();
-    const id = selected?.dataset?.veBlockId;
+    const id = selected?.dataset?.veBlockId || selected?.closest?.('[data-ve-block-id]')?.dataset?.veBlockId;
     const block = id ? getDraft().blocks.find(item => item.id === id) : null;
     if (!block) return say('Select an editor-added block on the page before saving it as a template.');
     const name = safeText(templateName.value, 80);
