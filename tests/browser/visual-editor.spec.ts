@@ -533,6 +533,10 @@ test('Creative Studio module exposes design tokens, reusable templates, AI revie
  await page.locator('#root [data-ve-block-id]').click();
  await panel.getByRole('button', { name: 'Save selected block as template', exact: true }).click();
  await expect(panel).toContainText('Mission template');
+ // Saved templates must survive a full editor reload before they can be reused.
+ await page.reload();
+ await expect(panel).toBeVisible();
+ await expect(panel).toContainText('Mission template');
  await panel.getByRole('button', { name: 'Insert', exact: true }).click();
  await expect(page.locator('#root [data-ve-block-id]')).toHaveCount(2);
 });
