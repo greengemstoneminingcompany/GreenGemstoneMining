@@ -84,6 +84,7 @@ export function installVisualEditorBridge(){
 
 function safePublishedImageSrc(value: unknown): value is string {
  if(typeof value!=='string'||/[\u0000-\u0020\\]/.test(value))return false;
+ if(/^data:image\/(?:png|jpeg|webp);base64,[a-z0-9+/]+=*$/i.test(value))return true;
  if(value.startsWith('/')&&!value.startsWith('//'))return true;
  try{const url=new URL(value,location.origin);return url.protocol==='https:'&&!url.username&&!url.password&&/^https:\/\//i.test(value);}catch{return false;}
 }
@@ -96,7 +97,7 @@ function safePublishedSelector(selector: string): boolean {
  return typeof selector === 'string' && selector.length > 0 && selector.length <= 500 && !/^(?:html|body|#root|#ggmc-visual-editor)$/i.test(selector.trim());
 }
 function safePublishedCssValue(prop: string, value: unknown): value is string {
- const allowed = new Set(['color','background-color','font-size','font-family','font-weight','font-style','line-height','letter-spacing','text-align','text-decoration','text-transform','padding','padding-top','padding-right','padding-bottom','padding-left','margin','margin-top','margin-right','margin-bottom','margin-left','border','border-color','border-width','border-style','border-radius','box-shadow','width','min-width','max-width','height','min-height','max-height','opacity','display','position','top','right','bottom','left','gap','column-gap','row-gap','object-fit','object-position']);
+ const allowed = new Set(['color','background-color','font-size','font-family','font-weight','font-style','line-height','letter-spacing','text-align','text-decoration','text-transform','padding','padding-top','padding-right','padding-bottom','padding-left','margin','margin-top','margin-right','margin-bottom','margin-left','border','border-color','border-width','border-style','border-radius','box-shadow','background-size','background-position','filter','width','min-width','max-width','height','min-height','max-height','opacity','display','position','top','right','bottom','left','gap','column-gap','row-gap','object-fit','object-position']);
  if(typeof value!=='string'||value.length>=100||!allowed.has(prop)||/[<>\\;{}\u0000-\u001f]/.test(value)||/(?:url\s*\(|expression\s*\(|javascript\s*:|vbscript\s*:|@import|!important)/i.test(value))return false;
  try{return typeof CSS!=='undefined'&&CSS.supports(prop,value.trim());}catch{return false;}
 }
@@ -119,8 +120,11 @@ export function applyPublishedVisualEditorPayload(payload: Record<string, unknow
  const styles = payload.styles && typeof payload.styles === 'object' ? payload.styles as Record<string, Record<string, unknown>> : {};
  for (const [selector, props] of Object.entries(styles)) {
   if (!safePublishedSelector(selector)) continue;
+  const customCss: Record<string,string> = {'--ve-background-size':'background-size','--ve-background-position':'background-position','--ve-image-filter':'filter','--ve-object-fit':'object-fit','--ve-object-position':'object-position'};
   try { root.querySelectorAll(selector).forEach((el) => Object.entries(props || {}).forEach(([key,value]) => {
-   if (key === '--ve-image-src' && el instanceof HTMLImageElement && safePublishedImageSrc(value)) el.src = value;
+   if (key === '--ve-background-image' && safePublishedImageSrc(value)) (el as HTMLElement).style.backgroundImage = `url(\"${value}\")`;
+   else if (customCss[key] && safePublishedCssValue(customCss[key],value)) (el as HTMLElement).style.setProperty(customCss[key],value as string);
+   else if (key === '--ve-image-src' && el instanceof HTMLImageElement && safePublishedImageSrc(value)) el.src = value;
    else if (key === '--ve-image-alt' && el instanceof HTMLImageElement && typeof value === 'string' && value.length < 500) el.alt = value;
    else if (key === '--ve-link-href' && el instanceof HTMLAnchorElement && typeof value === 'string') el.setAttribute('href', safePublishedHref(value));
    else if (/^(color|background-color|font-size|font-family|font-weight|font-style|line-height|letter-spacing|text-align|text-decoration|text-transform|padding|padding-top|padding-right|padding-bottom|padding-left|margin|margin-top|margin-right|margin-bottom|margin-left|border|border-color|border-width|border-style|border-radius|box-shadow|width|min-width|max-width|height|min-height|max-height|opacity|display|position|top|right|bottom|left|gap|column-gap|row-gap|object-fit|object-position)$/.test(key) && safePublishedCssValue(key,value)) (el as HTMLElement).style.setProperty(key,value);
