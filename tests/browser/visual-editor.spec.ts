@@ -147,7 +147,7 @@ test('image editing replaces, crops, filters, backgrounds, and removes images in
  await expect(main).toHaveCSS('background-image', 'none');
 });
 
-test('undo and redo restore the edited canvas text', async ({ page }) => {
+test('undo and redo restore the edited canvas text with buttons and keyboard shortcuts', async ({ page }) => {
  await page.goto(fixture + '?edit=1');
  const headline = page.locator('#headline');
  await headline.fill('Temporary undo test');
@@ -155,6 +155,10 @@ test('undo and redo restore the edited canvas text', async ({ page }) => {
  await page.getByRole('button', { name: 'Undo', exact: true }).click();
  await expect(headline).toHaveText('White text that should be editable');
  await page.getByRole('button', { name: 'Redo', exact: true }).click();
+ await expect(headline).toHaveText('Temporary undo test');
+ await page.keyboard.press('Control+z');
+ await expect(headline).toHaveText('White text that should be editable');
+ await page.keyboard.press('Control+Shift+z');
  await expect(headline).toHaveText('Temporary undo test');
 });
 
@@ -339,6 +343,7 @@ test('text conversion and existing-button dropdown actions work', async ({ page 
 
 test('server controls fail clearly without a preview server API', async ({ page }) => {
  await page.goto(fixture + '?edit=1');
+ await expect(page.locator('#ggmc-visual-editor')).toBeVisible();
  await page.evaluate(() => { Reflect.deleteProperty(window, '__GGMC_EDITOR_API__'); });
  for (const name of ['Sign in', 'Refresh', 'Load draft', 'Save server draft']) {
   await page.getByRole('button', { name, exact: true }).click();
@@ -498,6 +503,37 @@ test('server draft pointer survives reload and publishing starts a separate copy
 });
 
 
+
+test('server autosave reuses the same draft, increments versions, and preserves edits on conflicts', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ await expect(page.locator('#ggmc-visual-editor')).toBeVisible();
+ const headline = page.locator('#headline');
+ await headline.fill('Autosave version one');
+ await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]').length), { timeout: 8000 }).toBe(1);
+ await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Server autosaved version 1.', { timeout: 8000 });
+ const first = await page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]')[0]);
+ expect(first.version).toBe(1);
+ const draftId = first.id;
+
+ await headline.fill('Autosave version two');
+ await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]')[0]?.version), { timeout: 8000 }).toBe(2);
+ const second = await page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]'));
+ expect(second).toHaveLength(1);
+ expect(second[0].id).toBe(draftId);
+ expect(second[0].payload.text['#headline'].after).toBe('Autosave version two');
+
+ await page.evaluate(() => {
+  const rows = JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]');
+  rows[0].version = 20;
+  localStorage.setItem('fixture-server-drafts', JSON.stringify(rows));
+ });
+ await headline.fill('Keep this conflicting edit locally');
+ await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Save conflict:', { timeout: 8000 });
+ const localDraft = await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2') || '{}'));
+ expect(localDraft.text['#headline'].after).toBe('Keep this conflicting edit locally');
+ expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]'))).toHaveLength(1);
+});
+
 test('AI-generated copy is reviewed first and applied only after explicit acceptance', async ({ page }) => {
  await page.goto(fixture + '?edit=1');
  await page.getByRole('button', { name: 'Select element', exact: true }).click();
@@ -532,11 +568,14 @@ test('Creative Studio module exposes design tokens, reusable templates, AI revie
  await panel.getByLabel('Template name').fill('Mission template');
  await panel.getByRole('button', { name: 'Select element', exact: true }).click();
  await page.locator('#root [data-ve-block-id]').click();
+ await expect(panel).toContainText('Shared server library: changes are available across authorized sessions and devices.');
+ await expect(panel.getByRole('button', { name: 'Save selected block as template', exact: true })).toBeEnabled();
  await panel.getByRole('button', { name: 'Save selected block as template', exact: true }).click();
  await expect(panel).toContainText('Mission template');
  // Saved templates must survive a full editor reload before they can be reused.
  await page.reload();
  await expect(panel).toBeVisible();
+ await expect(panel).toContainText('Shared server library: changes are available across authorized sessions and devices.');
  await expect(panel).toContainText('Mission template');
  await panel.getByRole('button', { name: 'Insert', exact: true }).click();
  await expect(page.locator('#root [data-ve-block-id]')).toHaveCount(2);

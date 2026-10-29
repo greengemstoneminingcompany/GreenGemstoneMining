@@ -185,6 +185,8 @@ export function mountCreativeStudio(api) {
     finally { libraryBusy = false; saveSelected.disabled = false; }
   });
   async function loadSavedTemplates() {
+    libraryBusy = true;
+    saveSelected.disabled = true;
     try {
       if (editorApi?.getSession && editorApi?.listTemplates) {
         const session = await editorApi.getSession();
@@ -194,6 +196,8 @@ export function mountCreativeStudio(api) {
           libraryMode = 'server';
           libraryStatus.textContent = 'Shared server library: changes are available across authorized sessions and devices.';
           renderLibrary();
+          libraryBusy = false;
+          saveSelected.disabled = false;
           return;
         }
         libraryStatus.textContent = 'Sign in with an authorized preview account to manage shared templates. Browser-local templates remain available below.';
@@ -202,6 +206,8 @@ export function mountCreativeStudio(api) {
       libraryStatus.textContent = 'Could not load the shared library: ' + (error instanceof Error ? error.message : 'server unavailable') + '. Local templates remain available; shared changes were not attempted.';
     }
     libraryMode = 'local'; savedTemplates = readLibrary(); renderLibrary();
+    libraryBusy = false;
+    saveSelected.disabled = false;
   }
   librarySection.append(field('Starter layout', starter), starterInfo, addStarter, field('Template name', templateName), saveSelected, libraryStatus, savedList);
   panel.append(librarySection); renderLibrary(); void loadSavedTemplates();
