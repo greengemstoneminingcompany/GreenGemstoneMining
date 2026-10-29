@@ -165,7 +165,7 @@ export function mountCreativeStudio(api) {
     if (!aiWrite) return say('AI writing is not connected on this preview.');
     generate.disabled = true; review.value = 'Generating a reviewable section proposal…'; accept.disabled = true;
     try {
-      const result = await aiWrite({ mode: 'expand', tone: tone.value, text: 'Write concise website section copy for Green Gemstone Mining Company based only on this brief. Do not invent facts, certifications, locations, statistics, reserves, or claims. Return a short headline on the first line, then a blank line, then body copy. Brief: ' + source });
+      const result = await aiWrite({ mode: 'section_copy', tone: tone.value, text: 'Write concise website section copy for Green Gemstone Mining Company based only on this brief. Do not invent facts, certifications, locations, statistics, reserves, or claims. Return a short headline on the first line, then a blank line, then body copy. Brief: ' + source });
       const lines = result.split('\n').map(line => line.trim()).filter(Boolean);
       proposalTitle.value = safeText((lines[0] || 'New section').replace(/^(headline|title)\s*:\s*/i,''), 120);
       review.value = lines.slice(1).join('\n') || result;
@@ -193,7 +193,6 @@ export function mountCreativeStudio(api) {
   panel.append(aiSection);
 
   const compareSection = section('', 'Version comparison', 'Compare a loaded saved version with the current local draft. Restoring still creates a separate draft.');
-  const compareVersion = select('Compare saved version', [['none','Load versions in Secure server drafts first']]);
   const compare = button('Compare selected version with draft', () => {
     const serverVersions = panel.querySelector('[aria-label="Saved versions"]');
     const selected = serverVersions?.selectedOptions?.[0];
@@ -207,7 +206,7 @@ export function mountCreativeStudio(api) {
       say(changes.length ? 'Draft differs from selected saved version in: ' + changes.join(', ') + '. Original saved version was not changed.' : 'No differences found between this draft and the selected saved version.');
     } catch { say('Could not compare this version.'); }
   }, true);
-  compareSection.append(compareVersion, compare);
+  compareSection.append(compare);
   panel.append(compareSection);
 
   return () => {
