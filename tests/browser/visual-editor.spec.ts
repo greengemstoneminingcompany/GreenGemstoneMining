@@ -14,6 +14,7 @@ test('actual preview opens the editor from its trigger without a query parameter
  expect(new URL(page.url()).searchParams.has('edit')).toBe(false);
  await trigger.click();
  await expect(page.locator('#ggmc-editor-auth-gate')).toBeVisible();
+ await expect(page.locator('#ggmc-editor-auth-gate input[type="email"]')).toBeFocused();
  await expect(page.locator('#ggmc-visual-editor')).toHaveCount(0);
  await expect(page.locator('#ggmc-editor-auth-gate')).toContainText('Opening this URL does not grant access');
  await expect(page.locator('#root')).toBeVisible();
@@ -33,9 +34,10 @@ test('preview-only trigger opens and closes the editor without changing page con
  await expect(trigger).toBeVisible();
  await trigger.click();
  await expect(page.locator('#ggmc-visual-editor')).toBeVisible();
+ await expect(page.locator('#ggmc-visual-editor button').first()).toBeFocused();
  page.on('dialog', dialog => dialog.accept());
  await page.getByRole('button', { name: 'Close', exact: true }).click();
- await expect(page.getByRole('button', { name: 'Open Preview Editor' })).toBeVisible();
+ await expect(page.getByRole('button', { name: 'Open Preview Editor' })).toBeFocused();
  await expect(page.locator('#headline')).toHaveText('White text that should be editable');
 });
 
@@ -64,6 +66,18 @@ test('studio can be resized horizontally, vertically, and diagonally', async ({ 
  await page.mouse.move(cbox.x - 70, cbox.y + 70); await page.mouse.up();
  expect(await page.evaluate(() => localStorage.getItem('ggmc-ve-height'))).not.toBeNull();
  expect(await page.evaluate(() => localStorage.getItem('ggmc-ve-width'))).not.toBeNull();
+});
+
+test('resize handles are keyboard operable', async ({ page }) => {
+ await page.setViewportSize({ width: 1280, height: 900 });
+ await page.goto(fixture + '?edit=1');
+ const panel = page.locator('#ggmc-visual-editor');
+ const before = (await panel.boundingBox())!.width;
+ const handle = panel.getByRole('separator', { name: 'Resize width', exact: true });
+ await expect(handle).toHaveAttribute('tabindex', '0');
+ await handle.focus();
+ await handle.press('ArrowRight');
+ await expect.poll(async () => (await panel.boundingBox())!.width).toBeGreaterThan(before);
 });
 
 test('edit=1 mounts editor, saves white text locally, survives reload and reopen', async ({ page }) => {
