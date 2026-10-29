@@ -36,8 +36,14 @@ Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') return fail(origin, 405, 'method_not_allowed', 'Use POST.');
   if (!originOk(origin)) return fail(origin, 403, 'origin_not_allowed', 'This site is not allowed to use AI writing.');
 
+  const declaredLength = Number(req.headers.get('content-length') ?? '0');
+  if (Number.isFinite(declaredLength) && declaredLength > 20000) return fail(origin, 413, 'body_too_large', 'Request body is too large.');
   let raw: unknown;
-  try { raw = await req.json(); } catch { return fail(origin, 400, 'bad_json', 'Request was not valid JSON.'); }
+  try {
+    const rawText = await req.text();
+    if (rawText.length > 20000) return fail(origin, 413, 'body_too_large', 'Request body is too large.');
+    raw = JSON.parse(rawText);
+  } catch { return fail(origin, 400, 'bad_json', 'Request was not valid JSON.'); }
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return fail(origin, 400, 'bad_body', 'Request body must be a JSON object.');
   const body = raw as { mode?: unknown; tone?: unknown; text?: unknown };
   const mode = typeof body.mode === 'string' ? body.mode : '';
@@ -103,8 +109,11 @@ Deno.serve(async (req: Request) => {
     let result: unknown;
     try { result = await response.json(); } catch { return fail(origin, 502, 'bad_provider_response', 'The AI service returned an invalid response.'); }
     if (!result || typeof result !== 'object') return fail(origin, 502, 'bad_provider_response', 'The AI service returned an invalid response.');
-    const data = result as Record<string, any>;
-    const output = provider === 'anthropic' ? data.content?.[0]?.text : provider === 'n8n' ? (data.text ?? data.output) : data.choices?.[0]?.message?.content;
+    const data = result as Record<string, unknown>;
+    const firstContent = Array.isArray(data.content) && data.content[0] && typeof data.content[0] === 'object' ? data.content[0] as Record<string, unknown> : undefined;
+    const firstChoice = Array.isArray(data.choices) && data.choices[0] && typeof data.choices[0] === 'object' ? data.choices[0] as Record<string, unknown> : undefined;
+    const message = firstChoice?.message && typeof firstChoice.message === 'object' ? firstChoice.message as Record<string, unknown> : undefined;
+    const output = provider === 'anthropic' ? firstContent?.text : provider === 'n8n' ? (typeof data.text === 'string' ? data.text : data.output) : message?.content;
     if (typeof output !== 'string' || !output.trim()) return fail(origin, 502, 'empty_result', 'The AI returned nothing. Your text was not changed.');
     if (output.length > 10000) return fail(origin, 502, 'result_too_long', 'The AI returned an unexpectedly long result.');
     return new Response(JSON.stringify({ text: output.trim(), mode }), { headers: headersFor(origin) });
