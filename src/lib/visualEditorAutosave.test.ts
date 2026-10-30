@@ -74,7 +74,7 @@ describe('createServerAutosaveController', () => {
   });
 
   it('creates the first server draft when no server draft id exists', async () => {
-    const ctx = setup(vi.fn(async (input: { id: string | null; expectedVersion: number; name: string; payload: unknown }) => ({ id: 'new-draft', version: 1, status: 'draft' as const })));
+    const ctx = setup(vi.fn(async () => ({ id: 'new-draft', version: 1, status: 'draft' as const })));
     ctx.state.id = null; ctx.state.version = 0;
     ctx.controller.schedule(); await vi.advanceTimersByTimeAsync(1800);
     expect(ctx.api.saveDraft).toHaveBeenCalledWith({ id: null, expectedVersion: 0, name: 'Exploration draft', payload: { title: 'Initial title' } });

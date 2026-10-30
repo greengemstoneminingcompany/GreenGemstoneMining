@@ -179,7 +179,7 @@ jobs:
             BEGIN
               PERFORM public.save_visual_editor_template(NULL, 'Missing kind', '{"title":"No kind"}'::jsonb);
               RAISE EXCEPTION 'template without kind was unexpectedly accepted';
-            EXCEPTION WHEN check_violation THEN
+            EXCEPTION WHEN SQLSTATE '22023' THEN
               NULL;
             END;
           END $$;
