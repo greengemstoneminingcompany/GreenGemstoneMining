@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { Atom, ArrowRight, ArrowUpRight, ChevronDown, Gem, Hammer, Linkedin, Mail, MapPin, Menu, Mountain, X } from 'lucide-react';
 import Gallery from '@/components/Gallery';
 import CompanyContent from '@/components/CompanyContent';
@@ -13,14 +13,30 @@ import { useReveals } from '@/hooks/useReveals';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
 import { useUploads } from '@/hooks/useUploads';
 import { supabaseConfigured } from '@/lib/supabase';
+import CompanyPages, { type CompanyPage } from '@/components/CompanyPages';
 
 const DEPOSIT_ICONS = { gem: Gem, atom: Atom, hammer: Hammer, mountain: Mountain } as const;
 const METALS = MINERALS.filter((m) => m.cat === 'Metal' || m.cat === 'Precious');
+
+const readPage = (): CompanyPage => {
+  const route = window.location.hash.replace(/^#\/?/, '').split(/[/?]/)[0];
+  return (['home', 'about', 'projects', 'minerals', 'gallery', 'contact'].includes(route) ? route : 'home') as CompanyPage;
+};
 
 const MediaPanel = lazy(() => import('@/components/MediaPanel'));
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState<CompanyPage>(readPage);
+  useEffect(() => {
+    const syncRoute = () => {
+      setCurrentPage(readPage());
+      setMenuOpen(false);
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    };
+    window.addEventListener('hashchange', syncRoute);
+    return () => window.removeEventListener('hashchange', syncRoute);
+  }, []);
   const [mediaOpen, setMediaOpen] = useState(false);
   const { t } = useI18n();
   const scrolled = useScrollHeader();
@@ -34,11 +50,11 @@ export default function App() {
       <ScrollProgress />
 
       <header className={`hdr ${scrolled || menuOpen ? 'scrolled' : ''}`}>
-        <a className="hdr-brand" href="#top"><Gem size={22} aria-hidden="true" /><span>Green Gemstone Mining Company</span></a>
+        <a className="hdr-brand" href="#/home"><Gem size={22} aria-hidden="true" /><span>Green Gemstone Mining Company</span></a>
         <nav id="main-nav" className={`hdr-nav ${menuOpen ? 'open' : ''}`} aria-label={t.ui.mainNav}>
-          <a href="#top" onClick={() => setMenuOpen(false)}>{t.nav.overview}</a>
+          <a href="#/home" onClick={() => setMenuOpen(false)}>{t.nav.overview}</a>
           <div className="nav-menu-item">
-            <a href="#company" onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
+            <a href="#/about" onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
             <details className="nav-dropdown"><summary aria-label="Open company submenu"><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#/about" onClick={() => setMenuOpen(false)}>Company profile</a>
               <a href="#/about" onClick={() => setMenuOpen(false)}>Vision &amp; mission</a>
@@ -47,7 +63,7 @@ export default function App() {
             </div></details>
           </div>
           <div className="nav-menu-item">
-            <a href="#resources" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
+            <a href="#/minerals" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
             <details className="nav-dropdown"><summary aria-label="Open portfolio submenu"><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#/minerals" onClick={() => setMenuOpen(false)}>Gemstones</a>
               <a href="#/minerals" onClick={() => setMenuOpen(false)}>Industrial &amp; precious metals</a>
@@ -55,17 +71,17 @@ export default function App() {
             </div></details>
           </div>
           <div className="nav-menu-item">
-            <a href="#projects" onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
+            <a href="#/projects" onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
             <details className="nav-dropdown"><summary aria-label="Open projects submenu"><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#/projects" onClick={() => setMenuOpen(false)}>Mining development</a>
               <a href="#/about" onClick={() => setMenuOpen(false)}>Rural development &amp; community support</a>
               <a href="#/about" onClick={() => setMenuOpen(false)}>Operations &amp; equipment</a>
             </div></details>
           </div>
-          <a href="#gallery" onClick={() => setMenuOpen(false)}>{t.nav.gallery}</a>
-          <a href="#contact" onClick={() => setMenuOpen(false)}>{t.nav.contact}</a>
+          <a href="#/gallery" onClick={() => setMenuOpen(false)}>{t.nav.gallery}</a>
+          <a href="#/contact" onClick={() => setMenuOpen(false)}>{t.nav.contact}</a>
           <LanguageSwitcher />
-          <a className="hdr-cta" href="#contact" onClick={() => setMenuOpen(false)}>{t.nav.cta} <ArrowUpRight size={14} aria-hidden="true" /></a>
+          <a className="hdr-cta" href="#/contact" onClick={() => setMenuOpen(false)}>{t.nav.cta} <ArrowUpRight size={14} aria-hidden="true" /></a>
         </nav>
         <button type="button" className="hdr-burger" aria-expanded={menuOpen} aria-controls="main-nav" onClick={() => setMenuOpen((v) => !v)} aria-label={menuOpen ? t.ui.menuClose : t.ui.menuOpen}>
           {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
@@ -79,6 +95,7 @@ export default function App() {
       )}
 
       <main id="main">
+        {currentPage === 'home' ? (<>
         <section id="top" className="hero">
           <img className="hero-bg" src={IMAGES.company} alt="" width={806} height={536} fetchPriority="high" />
           <div className="hero-overlay" />
@@ -269,6 +286,7 @@ export default function App() {
             </div>
           </div>
         </section>
+        </>) : <CompanyPages page={currentPage} uploads={uploads} />}
       </main>
 
       <footer className="footer">
