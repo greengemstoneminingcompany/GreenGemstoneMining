@@ -542,7 +542,7 @@ test('server autosave reuses the same draft, increments versions, and preserves 
   localStorage.setItem('fixture-server-drafts', JSON.stringify(rows));
  });
  await headline.fill('Keep this conflicting edit locally');
- await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Save conflict:', { timeout: 8000 });
+ await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Autosave paused to protect newer server changes.', { timeout: 8000 });
  const localDraft = await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2') || '{}'));
  expect(localDraft.text['#headline'].after).toBe('Keep this conflicting edit locally');
  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]'))).toHaveLength(1);
