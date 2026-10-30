@@ -6,7 +6,7 @@ export interface ServerAutosaveState {
 export interface ServerAutosaveApi {
   getSession(): Promise<{ isAdmin: boolean } | null>;
   saveDraft(input: {
-    id: string;
+    id: string | null;
     expectedVersion: number;
     name: string;
     payload: Record<string, unknown>;
@@ -17,6 +17,7 @@ export interface ServerAutosaveControllerOptions {
   getApi(): ServerAutosaveApi | null | undefined;
   getDraft(): Record<string, unknown>;
   getState(): ServerAutosaveState;
+  setId(id: string): void;
   setVersion(version: number): void;
   setStatus(status: ServerAutosaveState['status']): void;
   getName(): string;
@@ -33,5 +34,6 @@ export interface ServerAutosaveController {
   cancel(): void;
   isInFlight(): boolean;
   run(): Promise<void>;
+  dispose(): void;
 }
 export function createServerAutosaveController(options: ServerAutosaveControllerOptions): ServerAutosaveController;

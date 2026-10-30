@@ -6,6 +6,8 @@
 const LIBRARY_KEY = 'ggmc-preview-creative-library-v1';
 const MAX_LIBRARY_ITEMS = 40;
 const MAX_LIBRARY_BYTES = 500_000;
+const TEMPLATE_BLOCK_KINDS = new Set(['section','text','card','grid','image','video','link','divider','spacer']);
+const isTemplateBlock = block => Boolean(block && typeof block === 'object' && !Array.isArray(block) && TEMPLATE_BLOCK_KINDS.has(block.kind));
 const BUILT_INS = [
   { id: 'mining-hero', name: 'Mining hero', description: 'Headline, supporting copy and clear next step.', block: { kind: 'section', title: 'Responsible mineral development', text: 'Build a clearer story about your operation, your standards, and the value you bring to partners.' } },
   { id: 'mission-story', name: 'Mission story', description: 'A focused section for mission and operating principles.', block: { kind: 'section', title: 'Built on responsible practice', text: 'Explain your approach, the people behind the work, and the standards that guide each decision.' } },
@@ -19,7 +21,7 @@ const safeText = (value, max = 3000) => typeof value === 'string' ? value.trim()
 const readLibrary = () => {
   try {
     const value = JSON.parse(localStorage.getItem(LIBRARY_KEY) || '[]');
-    return Array.isArray(value) ? value.filter(item => item && typeof item.id === 'string' && typeof item.name === 'string' && item.block && typeof item.block === 'object').slice(0, MAX_LIBRARY_ITEMS) : [];
+    return Array.isArray(value) ? value.filter(item => item && typeof item.id === 'string' && typeof item.name === 'string' && isTemplateBlock(item.block)).slice(0, MAX_LIBRARY_ITEMS) : [];
   } catch { return []; }
 };
 const writeLibrary = value => {
@@ -57,7 +59,7 @@ const textInput = (label, value = '') => {
 };
 
 export function mountCreativeStudio(api) {
-  const { panel, root, getDraft, saveHistory, applyChange, say, getSelected, aiWrite } = api;
+  const { panel, root, getDraft, saveHistory, applyChange, say, getSelected, aiWrite, editorApi } = api;
   if (!panel || !root || typeof getDraft !== 'function') return () => {};
   const originalTokens = new Map(['--ggmc-brand','--ggmc-accent','--ggmc-surface','--ggmc-copy','--ggmc-radius','--ggmc-section-space','--ggmc-content-width'].map(key => [key, root.style.getPropertyValue(key)]));
   const tokenStyle = document.createElement('style');
@@ -131,21 +133,21 @@ export function mountCreativeStudio(api) {
   let savedTemplates = readLibrary();
   let libraryMode = 'local';
   let libraryBusy = false;
-  const editorApi = api.editorApi;
   function renderLibrary() {
     savedList.replaceChildren();
     if (!savedTemplates.length) { const empty = document.createElement('p'); empty.className='ve-note'; empty.textContent='No saved templates yet. Select a block and save it here.'; savedList.append(empty); return; }
     savedTemplates.forEach(item => {
       const row = document.createElement('div'); row.style.cssText='display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:5px;align-items:center';
       const name = document.createElement('span'); name.textContent=item.name; name.style.cssText='overflow-wrap:anywhere;color:#f2eee4;font-size:11px';
-      const insert = button('Insert', () => { saveHistory(); getDraft().blocks.push({ ...clone(item.block), id: makeId() }); applyChange('Inserted reusable template "' + item.name + '" as a new draft block.'); });
+      const insert = button('Insert', () => { if (!isTemplateBlock(item.block)) { libraryStatus.textContent = 'This saved template has an unsupported block type and cannot be inserted.'; return; } saveHistory(); getDraft().blocks.push({ ...clone(item.block), id: makeId() }); applyChange('Inserted reusable template "' + item.name + '" as a new draft block.'); });
       const remove = button('Delete', async () => {
         if (libraryBusy) return;
         if (libraryMode === 'server' && !confirm('Delete the shared template "' + item.name + '" for all authorized editors?')) return;
         libraryBusy = true; remove.disabled = true;
         try {
           if (libraryMode === 'server') {
-            await editorApi.deleteTemplate(item.id);
+            const removed = await editorApi.deleteTemplate(item.id);
+            if (!removed) throw new Error('This shared template was already removed. Reload the shared library.');
             savedTemplates = savedTemplates.filter(entry => entry.id !== item.id);
             libraryStatus.textContent = 'Deleted shared template. Other page blocks were not changed.';
           } else {
@@ -166,6 +168,7 @@ export function mountCreativeStudio(api) {
     const id = selected?.dataset?.veBlockId || selected?.closest?.('[data-ve-block-id]')?.dataset?.veBlockId;
     const block = id ? getDraft().blocks.find(item => item.id === id) : null;
     if (!block) return say('Select an editor-added block on the page before saving it as a template.');
+    if (!isTemplateBlock(block)) return say('This block type cannot be saved as a reusable template.');
     const name = safeText(templateName.value, 80);
     if (!name) return say('Give this template a name first.');
     libraryBusy = true; saveSelected.disabled = true;
@@ -192,7 +195,7 @@ export function mountCreativeStudio(api) {
         const session = await editorApi.getSession();
         if (session?.isAdmin) {
           const rows = await editorApi.listTemplates();
-          savedTemplates = (rows || []).map(item => ({ id:item.id, name:item.name, savedAt:item.updated_at || item.created_at, block:item.block }));
+          savedTemplates = (rows || []).filter(item => isTemplateBlock(item?.block)).map(item => ({ id:item.id, name:item.name, savedAt:item.updated_at || item.created_at, block:item.block }));
           libraryMode = 'server';
           libraryStatus.textContent = 'Shared server library: changes are available across authorized sessions and devices.';
           renderLibrary();

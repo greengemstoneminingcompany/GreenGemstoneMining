@@ -6,6 +6,8 @@
 const LIBRARY_KEY = 'ggmc-preview-creative-library-v1';
 const MAX_LIBRARY_ITEMS = 40;
 const MAX_LIBRARY_BYTES = 500_000;
+const TEMPLATE_BLOCK_KINDS = new Set(['section','text','card','grid','image','video','link','divider','spacer']);
+const isTemplateBlock = block => Boolean(block && typeof block === 'object' && !Array.isArray(block) && TEMPLATE_BLOCK_KINDS.has(block.kind));
 const BUILT_INS = [
   { id: 'mining-hero', name: 'Mining hero', description: 'Headline, supporting copy and clear next step.', block: { kind: 'section', title: 'Responsible mineral development', text: 'Build a clearer story about your operation, your standards, and the value you bring to partners.' } },
   { id: 'mission-story', name: 'Mission story', description: 'A focused section for mission and operating principles.', block: { kind: 'section', title: 'Built on responsible practice', text: 'Explain your approach, the people behind the work, and the standards that guide each decision.' } },
@@ -19,7 +21,7 @@ const safeText = (value, max = 3000) => typeof value === 'string' ? value.trim()
 const readLibrary = () => {
   try {
     const value = JSON.parse(localStorage.getItem(LIBRARY_KEY) || '[]');
-    return Array.isArray(value) ? value.filter(item => item && typeof item.id === 'string' && typeof item.name === 'string' && item.block && typeof item.block === 'object').slice(0, MAX_LIBRARY_ITEMS) : [];
+    return Array.isArray(value) ? value.filter(item => item && typeof item.id === 'string' && typeof item.name === 'string' && isTemplateBlock(item.block)).slice(0, MAX_LIBRARY_ITEMS) : [];
   } catch { return []; }
 };
 const writeLibrary = value => {
@@ -115,8 +117,8 @@ export function mountCreativeStudio(api) {
   panel.append(sectionDraft);
   applyTokens();
 
-  const librarySection = section('', 'Creative library', 'Use starter layouts, browser-local templates, or secure server templates shared across your authorised preview editing sessions.');
-  const starter = select('Starter template', BUILT_INS.map(item => [item.id, item.name]));
+  const librarySection = section('', 'Creative library', 'Use starter layouts or save your own sections as reusable templates. When the secured server library is available, templates sync across sessions and devices.');
+  const starter = select('Starter layout', BUILT_INS.map(item => [item.id, item.name]));
   const starterInfo = document.createElement('p'); starterInfo.className='ve-note';
   const updateStarterInfo = () => { starterInfo.textContent = BUILT_INS.find(item => item.id === starter.value)?.description || ''; };
   starter.addEventListener('change', updateStarterInfo); updateStarterInfo();
@@ -126,89 +128,92 @@ export function mountCreativeStudio(api) {
     applyChange('Added "' + item.name + '" to the draft. Review it on the page before publishing.');
   }, true);
   const templateName = textInput('Template name', 'My reusable section');
-  const saveSelected = button('Save selected block as template', () => {
-    const selected = getSelected();
-    const id = selected?.dataset?.veBlockId;
-    const block = id ? getDraft().blocks.find(item => item.id === id) : null;
-    if (!block) return say('Select an editor-added block on the page before saving it as a template.');
-    const name = safeText(templateName.value, 80);
-    if (!name) return say('Give this template a name first.');
-    try {
-      const library = readLibrary();
-      library.unshift({ id: makeId(), name, savedAt: new Date().toISOString(), block: clone(block) });
-      writeLibrary(library); renderLibrary();
-      say('Saved "' + name + '" to your local creative library.');
-    } catch (error) { say(error instanceof Error ? error.message : 'Could not save this template.'); }
-  });
   const savedList = document.createElement('div'); savedList.style.cssText='display:grid;gap:6px;margin-top:8px';
+  const libraryStatus = document.createElement('p'); libraryStatus.className='ve-note'; libraryStatus.setAttribute('role','status');
+  let savedTemplates = readLibrary();
+  let libraryMode = 'local';
+  let libraryBusy = false;
   function renderLibrary() {
     savedList.replaceChildren();
-    const items = readLibrary();
-    if (!items.length) { const empty = document.createElement('p'); empty.className='ve-note'; empty.textContent='No saved templates yet. Select a block and save it here.'; savedList.append(empty); return; }
-    items.forEach(item => {
+    if (!savedTemplates.length) { const empty = document.createElement('p'); empty.className='ve-note'; empty.textContent='No saved templates yet. Select a block and save it here.'; savedList.append(empty); return; }
+    savedTemplates.forEach(item => {
       const row = document.createElement('div'); row.style.cssText='display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:5px;align-items:center';
       const name = document.createElement('span'); name.textContent=item.name; name.style.cssText='overflow-wrap:anywhere;color:#f2eee4;font-size:11px';
-      const insert = button('Insert', () => { saveHistory(); getDraft().blocks.push({ ...clone(item.block), id: makeId() }); applyChange('Inserted reusable template "' + item.name + '" as a new draft block.'); });
-      const remove = button('Delete', () => { try { writeLibrary(readLibrary().filter(entry => entry.id !== item.id)); renderLibrary(); say('Removed template from this browser library. Existing page blocks are unchanged.'); } catch { say('Could not update the template library.'); } });
+      const insert = button('Insert', () => { if (!isTemplateBlock(item.block)) { libraryStatus.textContent = 'This saved template has an unsupported block type and cannot be inserted.'; return; } saveHistory(); getDraft().blocks.push({ ...clone(item.block), id: makeId() }); applyChange('Inserted reusable template "' + item.name + '" as a new draft block.'); });
+      const remove = button('Delete', async () => {
+        if (libraryBusy) return;
+        if (libraryMode === 'server' && !confirm('Delete the shared template "' + item.name + '" for all authorized editors?')) return;
+        libraryBusy = true; remove.disabled = true;
+        try {
+          if (libraryMode === 'server') {
+            const removed = await editorApi.deleteTemplate(item.id);
+            if (!removed) throw new Error('This shared template was already removed. Reload the shared library.');
+            savedTemplates = savedTemplates.filter(entry => entry.id !== item.id);
+            libraryStatus.textContent = 'Deleted shared template. Other page blocks were not changed.';
+          } else {
+            writeLibrary(savedTemplates.filter(entry => entry.id !== item.id));
+            savedTemplates = readLibrary();
+            libraryStatus.textContent = 'Removed template from this browser library. Existing page blocks are unchanged.';
+          }
+          renderLibrary();
+        } catch (error) { libraryStatus.textContent = error instanceof Error ? error.message : 'Could not delete this template.'; }
+        finally { libraryBusy = false; }
+      });
       row.append(name, insert, remove); savedList.append(row);
     });
   }
-  const serverTemplateHeading = document.createElement('div');
-  serverTemplateHeading.className = 've-label';
-  serverTemplateHeading.textContent = 'Shared server templates';
-  const serverTemplateNote = document.createElement('p');
-  serverTemplateNote.className = 've-note';
-  serverTemplateNote.textContent = 'These templates are stored in the preview database and are available across devices to authorised editor admins. Sign in to load, save, or delete them.';
-  const serverTemplateList = document.createElement('div');
-  serverTemplateList.style.cssText = 'display:grid;gap:6px;margin-top:8px';
-  const loadServerTemplates = async () => {
-    if (!editorApi?.listTemplates) return say('Shared server templates are not connected on this preview.');
-    try {
-      const items = await editorApi.listTemplates();
-      serverTemplateList.replaceChildren();
-      if (!items.length) {
-        const empty = document.createElement('p'); empty.className = 've-note';
-        empty.textContent = 'No shared templates saved yet.'; serverTemplateList.append(empty);
-      }
-      items.forEach(item => {
-        const row = document.createElement('div');
-        row.style.cssText = 'display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:5px;align-items:center';
-        const name = document.createElement('span'); name.textContent = item.name;
-        name.style.cssText = 'overflow-wrap:anywhere;color:#f2eee4;font-size:11px';
-        const insert = button('Insert', () => {
-          if (!item.block || typeof item.block !== 'object') return say('This saved template is invalid and cannot be inserted.');
-          saveHistory(); getDraft().blocks.push({ ...clone(item.block), id: makeId() });
-          applyChange('Inserted shared server template "' + item.name + '" as a new draft block.');
-        });
-        const remove = button('Delete', async () => {
-          if (!confirm('Delete the shared template "' + item.name + '"? Existing page blocks are unchanged.')) return;
-          try { const removed = await editorApi.deleteTemplate(item.id); if (!removed) throw new Error('This template was already removed. Reload the shared template list.'); await loadServerTemplates(); say('Deleted shared template "' + item.name + '".'); }
-          catch (error) { say(error instanceof Error ? error.message : 'Could not delete the shared template.'); }
-        });
-        row.append(name, insert, remove); serverTemplateList.append(row);
-      });
-      say('Loaded ' + items.length + ' shared server template(s).');
-    } catch (error) {
-      say(error instanceof Error ? error.message : 'Could not load shared server templates. Sign in with an authorised preview editor account.');
-    }
-  };
-  const saveSelectedServer = button('Save selected block to server', async () => {
-    if (!editorApi?.saveTemplate) return say('Shared server templates are not connected on this preview.');
+  const saveSelected = button('Save selected block as template', async () => {
+    if (libraryBusy) return;
     const selected = getSelected();
-    const id = selected?.dataset?.veBlockId;
+    const id = selected?.dataset?.veBlockId || selected?.closest?.('[data-ve-block-id]')?.dataset?.veBlockId;
     const block = id ? getDraft().blocks.find(item => item.id === id) : null;
-    if (!block) return say('Select an editor-added block on the page before saving it as a shared template.');
+    if (!block) return say('Select an editor-added block on the page before saving it as a template.');
+    if (!isTemplateBlock(block)) return say('This block type cannot be saved as a reusable template.');
     const name = safeText(templateName.value, 80);
-    if (!name) return say('Give this shared template a name first.');
+    if (!name) return say('Give this template a name first.');
+    libraryBusy = true; saveSelected.disabled = true;
     try {
-      const saved = await editorApi.saveTemplate({ id: null, name, block: clone(block) });
-      await loadServerTemplates();
-      say('Saved "' + saved.name + '" to shared server templates.');
-    } catch (error) { say(error instanceof Error ? error.message : 'Could not save the shared template.'); }
-  }, true);
-  const loadServerButton = button('Load shared templates', loadServerTemplates);
-  librarySection.append(field('Starter layout', starter), starterInfo, addStarter, field('Template name', templateName), saveSelected, savedList, serverTemplateHeading, serverTemplateNote, loadServerButton, saveSelectedServer, serverTemplateList);
-  panel.append(librarySection); renderLibrary();
+      if (libraryMode === 'server') {
+        const saved = await editorApi.saveTemplate({ id: null, name, block: clone(block) });
+        savedTemplates = [saved, ...savedTemplates.filter(item => item.id !== saved.id)];
+        libraryStatus.textContent = 'Saved shared template. It is available to authorized editors on other sessions and devices.';
+      } else {
+        savedTemplates.unshift({ id: makeId(), name, savedAt: new Date().toISOString(), block: clone(block) });
+        writeLibrary(savedTemplates); savedTemplates = readLibrary();
+        libraryStatus.textContent = 'Saved to this browser only. Sign in to the preview server to share templates across devices.';
+      }
+      renderLibrary();
+      say('Saved "' + name + '" as a reusable template.');
+    } catch (error) { libraryStatus.textContent = error instanceof Error ? error.message : 'Could not save this template.'; }
+    finally { libraryBusy = false; saveSelected.disabled = false; }
+  });
+  async function loadSavedTemplates() {
+    libraryBusy = true;
+    saveSelected.disabled = true;
+    try {
+      if (editorApi?.getSession && editorApi?.listTemplates) {
+        const session = await editorApi.getSession();
+        if (session?.isAdmin) {
+          const rows = await editorApi.listTemplates();
+          savedTemplates = (rows || []).filter(item => isTemplateBlock(item?.block)).map(item => ({ id:item.id, name:item.name, savedAt:item.updated_at || item.created_at, block:item.block }));
+          libraryMode = 'server';
+          libraryStatus.textContent = 'Shared server library: changes are available across authorized sessions and devices.';
+          renderLibrary();
+          libraryBusy = false;
+          saveSelected.disabled = false;
+          return;
+        }
+        libraryStatus.textContent = 'Sign in with an authorized preview account to manage shared templates. Browser-local templates remain available below.';
+      }
+    } catch (error) {
+      libraryStatus.textContent = 'Could not load the shared library: ' + (error instanceof Error ? error.message : 'server unavailable') + '. Local templates remain available; shared changes were not attempted.';
+    }
+    libraryMode = 'local'; savedTemplates = readLibrary(); renderLibrary();
+    libraryBusy = false;
+    saveSelected.disabled = false;
+  }
+  librarySection.append(field('Starter layout', starter), starterInfo, addStarter, field('Template name', templateName), saveSelected, libraryStatus, savedList);
+  panel.append(librarySection); renderLibrary(); void loadSavedTemplates();
 
   const aiSection = section('', 'AI section workshop', 'Turn a brief into a proposed section. AI output is review-only until you explicitly add it to the draft; no existing links or images are replaced.');
   const brief = document.createElement('textarea'); brief.rows=3; brief.setAttribute('aria-label','AI section brief'); brief.placeholder='Describe the section you want, e.g. explain our responsible sourcing approach to international partners.';

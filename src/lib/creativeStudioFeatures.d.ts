@@ -21,6 +21,7 @@ export interface CreativeStudioAdapter {
   say(message: string): void;
   getSelected(): HTMLElement | null;
   editorApi?: {
+    getSession?: () => Promise<{ email: string | null; isAdmin: boolean }>;
     listTemplates?: () => Promise<CreativeStudioServerTemplate[]>;
     saveTemplate?: (input: { id: string | null; name: string; block: Record<string, unknown> }) => Promise<CreativeStudioServerTemplate>;
     deleteTemplate?: (id: string) => Promise<boolean>;

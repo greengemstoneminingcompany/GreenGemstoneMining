@@ -44,6 +44,21 @@ describe('modular Creative Studio', () => {
   expect(applyChange).toHaveBeenCalledTimes(2);
  });
 
+ it('filters malformed or unsupported blocks from the browser template library', () => {
+  localStorage.setItem('ggmc-preview-creative-library-v1', JSON.stringify([
+   { id: 'valid', name: 'Valid card', block: { kind: 'card', title: 'Valid' } },
+   { id: 'array', name: 'Invalid array', block: [{ kind: 'card' }] },
+   { id: 'unsupported', name: 'Unsupported HTML', block: { kind: 'html', html: 'bad' } },
+  ]));
+  const isolatedPanel = document.createElement('aside'); document.body.append(isolatedPanel);
+  const isolatedDispose = mountCreativeStudio({ panel: isolatedPanel, root, getDraft: () => draft, saveHistory, applyChange, say, getSelected: () => selected, aiWrite });
+  try {
+   expect(isolatedPanel.textContent).toContain('Valid card');
+   expect(isolatedPanel.textContent).not.toContain('Invalid array');
+   expect(isolatedPanel.textContent).not.toContain('Unsupported HTML');
+  } finally { isolatedDispose(); isolatedPanel.remove(); }
+ });
+
  it('requires review before applying AI section content and preserves existing blocks', async () => {
   draft.blocks.push({ id: 'existing', kind: 'image', src: 'https://example.com/keep.webp', alt: 'Keep image' });
   const brief = panel.querySelector<HTMLTextAreaElement>('[aria-label="AI section brief"]')!;
@@ -63,6 +78,7 @@ describe('modular Creative Studio', () => {
  it('loads and saves shared server templates through the editor adapter', async () => {
   const shared = { id: 'template-1', name: 'Partner card', block: { kind: 'card', title: 'Partner with us', text: 'Start a conversation.' }, created_at: '2026-10-29T00:00:00Z', updated_at: '2026-10-29T00:00:00Z' };
   const editorApi = {
+   getSession: vi.fn(async () => ({ email: 'admin@example.com', isAdmin: true })),
    listTemplates: vi.fn(async () => [shared]),
    saveTemplate: vi.fn(async () => shared),
    deleteTemplate: vi.fn(async () => true),
@@ -71,30 +87,43 @@ describe('modular Creative Studio', () => {
   document.body.append(serverPanel);
   const serverDispose = mountCreativeStudio({ panel: serverPanel, root, getDraft: () => draft, saveHistory, applyChange, say, getSelected: () => selected, aiWrite, editorApi });
   try {
-   const load = Array.from(serverPanel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Load shared templates')!;
-   load.click();
+   await vi.waitFor(() => expect(editorApi.listTemplates).toHaveBeenCalledTimes(1));
    await vi.waitFor(() => expect(serverPanel.textContent).toContain('Partner card'));
    const insert = Array.from(serverPanel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Insert')!;
    insert.click();
    expect(draft.blocks[0]).toMatchObject({ kind: 'card', title: 'Partner with us' });
    draft.blocks.push({ id: 'existing', kind: 'card', title: 'Saved card', text: 'Reusable copy' });
-   selected = document.createElement('div');
-   selected.dataset.veBlockId = 'existing';
+   const selectedWrapper = document.createElement('div');
+   selectedWrapper.dataset.veBlockId = 'existing';
+   selected = document.createElement('span');
+   selectedWrapper.append(selected);
+   document.body.append(selectedWrapper);
    serverPanel.querySelector<HTMLInputElement>('[aria-label="Template name"]')!.value = 'Saved card';
-   Array.from(serverPanel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Save selected block to server')!.click();
+   Array.from(serverPanel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Save selected block as template')!.click();
    await vi.waitFor(() => expect(editorApi.saveTemplate).toHaveBeenCalledWith(expect.objectContaining({ id: null, name: 'Saved card', block: expect.objectContaining({ id: 'existing' }) })));
 
    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
    try {
     Array.from(serverPanel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Delete')!.click();
     await vi.waitFor(() => expect(editorApi.deleteTemplate).toHaveBeenCalledWith('template-1'));
-   } finally {
-    confirmSpy.mockRestore();
-   }
-  } finally {
-   serverDispose();
-   serverPanel.remove();
-  }
+    await vi.waitFor(() => expect(serverPanel.textContent).toContain('Deleted shared template'));
+   } finally { confirmSpy.mockRestore(); }
+  } finally { serverDispose(); serverPanel.remove(); document.querySelector('[data-ve-block-id="existing"]')?.remove(); }
+ });
+
+ it('does not claim a shared template was deleted when the server returns false', async () => {
+  const shared = { id: 'template-2', name: 'Keep me', block: { kind: 'card' }, created_at: '2026-10-29T00:00:00Z', updated_at: '2026-10-29T00:00:00Z' };
+  const editorApi = { getSession: vi.fn(async () => ({ email: 'admin@example.com', isAdmin: true })), listTemplates: vi.fn(async () => [shared]), deleteTemplate: vi.fn(async () => false) };
+  const serverPanel = document.createElement('aside'); document.body.append(serverPanel);
+  const serverDispose = mountCreativeStudio({ panel: serverPanel, root, getDraft: () => draft, saveHistory, applyChange, say, getSelected: () => selected, aiWrite, editorApi });
+  const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+  try {
+   await vi.waitFor(() => expect(serverPanel.textContent).toContain('Keep me'));
+   serverPanel.querySelector<HTMLButtonElement>('button:last-of-type')?.click();
+   await vi.waitFor(() => expect(editorApi.deleteTemplate).toHaveBeenCalledWith('template-2'));
+   await vi.waitFor(() => expect(serverPanel.textContent).toContain('already removed'));
+   expect(serverPanel.textContent).toContain('Keep me');
+  } finally { confirmSpy.mockRestore(); serverDispose(); serverPanel.remove(); }
  });
 
  it('restores token styles on teardown', () => {

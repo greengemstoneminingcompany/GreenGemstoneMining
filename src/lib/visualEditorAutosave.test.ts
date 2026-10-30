@@ -6,14 +6,15 @@ describe('createServerAutosaveController', () => {
   afterEach(() => vi.useRealTimers());
 
   type ServerAutosaveResult = { id: string; version: number; status: 'draft' | 'published' | 'archived' };
-  type SaveDraft = (input: { id: string; expectedVersion: number; name: string; payload: unknown }) => Promise<ServerAutosaveResult>;
+  type ServerAutosaveState = { id: string | null; version: number; status: 'draft' | 'published' | 'archived' };
+  type SaveDraft = (input: { id: string | null; expectedVersion: number; name: string; payload: unknown }) => Promise<ServerAutosaveResult>;
 
-  function setup(saveDraft: SaveDraft = vi.fn(async (input: { id: string; expectedVersion: number; name: string; payload: unknown }) => ({
-    id: input.id,
+  function setup(saveDraft: SaveDraft = vi.fn(async (input: { id: string | null; expectedVersion: number; name: string; payload: unknown }) => ({
+    id: input.id || 'draft-1',
     version: input.expectedVersion + 1,
     status: 'draft' as const,
   }))) {
-    const state: ServerAutosaveResult = { id: 'draft-1', version: 4, status: 'draft' };
+    const state: ServerAutosaveState = { id: 'draft-1', version: 4, status: 'draft' };
     let draft: Record<string, unknown> = { title: 'Initial title' };
     let name = 'Exploration draft';
     let dirty = true;
@@ -26,6 +27,7 @@ describe('createServerAutosaveController', () => {
       getApi: () => api,
       getDraft: () => draft,
       getState: () => ({ ...state }),
+      setId: (id: string) => { state.id = id; },
       setVersion: (version: number) => { state.version = version; },
       setStatus: (status: 'draft' | 'published' | 'archived') => { state.status = status; },
       getName: () => name,
@@ -69,6 +71,24 @@ describe('createServerAutosaveController', () => {
     expect(ctx.state.version).toBe(5);
     expect(ctx.isDirty()).toBe(false);
     expect(ctx.say).toHaveBeenLastCalledWith('Server autosaved version 5.');
+  });
+
+  it('creates the first server draft when no server draft id exists', async () => {
+    const ctx = setup(vi.fn(async (input: { id: string | null; expectedVersion: number; name: string; payload: unknown }) => ({ id: 'new-draft', version: 1, status: 'draft' as const })));
+    ctx.state.id = null; ctx.state.version = 0;
+    ctx.controller.schedule(); await vi.advanceTimersByTimeAsync(1800);
+    expect(ctx.api.saveDraft).toHaveBeenCalledWith({ id: null, expectedVersion: 0, name: 'Exploration draft', payload: { title: 'Initial title' } });
+    expect(ctx.state.id).toBe('new-draft'); expect(ctx.state.version).toBe(1);
+  });
+
+  it('does not begin a server write when disposed while the session check is pending', async () => {
+    let resolveSession!: (value: { isAdmin: boolean }) => void;
+    const ctx = setup();
+    ctx.api.getSession.mockImplementation(() => new Promise(resolve => { resolveSession = resolve; }));
+    const running = ctx.controller.run(); await Promise.resolve();
+    ctx.controller.dispose(); resolveSession({ isAdmin: true }); await running;
+    expect(ctx.api.saveDraft).not.toHaveBeenCalled();
+    expect(ctx.persistServerState).not.toHaveBeenCalled();
   });
 
   it('pauses on a version conflict instead of retrying and overwriting newer work', async () => {

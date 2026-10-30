@@ -5,10 +5,33 @@ vi.mock('@/lib/supabase',()=>({getSupabase:vi.fn(async()=>({auth:{getSession:moc
 import {applyPublishedVisualEditorPayload,installVisualEditorBridge} from './visualEditorBridge';
 describe('visual editor server bridge',()=>{
  beforeEach(()=>{document.body.innerHTML='<div id="root"><main></main></div>';document.getElementById('ggmc-published-design-tokens')?.remove();vi.clearAllMocks();vi.stubEnv('VITE_VISUAL_EDITOR_ENABLED','true');vi.stubEnv('VITE_VISUAL_EDITOR_SUPABASE_REF','previewref');vi.stubEnv('VITE_SUPABASE_URL','https://previewref.supabase.co');installVisualEditorBridge();});
- it('exposes expected server operations without privileged keys',()=>{expect(window.__GGMC_EDITOR_API__).toBeDefined();expect(Object.keys(window.__GGMC_EDITOR_API__??{})).toEqual(expect.arrayContaining(['saveDraft','publishDraft','listDrafts','listVersions','restoreVersion']));expect(JSON.stringify(window.__GGMC_EDITOR_API__)).not.toMatch(/service.role|secret.key/i);});
+ it('exposes expected server operations without privileged keys',()=>{expect(window.__GGMC_EDITOR_API__).toBeDefined();expect(Object.keys(window.__GGMC_EDITOR_API__??{})).toEqual(expect.arrayContaining(['saveDraft','publishDraft','listDrafts','listVersions','restoreVersion','listTemplates','saveTemplate','deleteTemplate','getSession']));expect(JSON.stringify(window.__GGMC_EDITOR_API__)).not.toMatch(/service.role|secret.key/i);});
  it('fails closed when the configured database is not the dedicated preview project',async()=>{vi.stubEnv('VITE_SUPABASE_URL','https://productionref.supabase.co');await expect(window.__GGMC_EDITOR_API__!.listDrafts()).rejects.toThrow('dedicated preview Supabase project');expect(mocks.rpc).not.toHaveBeenCalled();});
  it('rejects unauthenticated access',async()=>{mocks.getSession.mockResolvedValueOnce({data:{session:null}});await expect(window.__GGMC_EDITOR_API__!.listDrafts()).rejects.toThrow('Sign in');});
  it('rejects non-admin sessions',async()=>{mocks.getSession.mockResolvedValueOnce({data:{session:{user:{email:'visitor@example.com'}}}});mocks.rpc.mockResolvedValueOnce({data:false,error:null});await expect(window.__GGMC_EDITOR_API__!.listDrafts()).rejects.toThrow('not authorised');});
+ it('routes shared template CRUD through admin-checked RPCs',async()=>{
+  const template={id:'template-1',name:'Partner card',block:{kind:'card',title:'Partner'},created_at:'2026-10-29T00:00:00Z',updated_at:'2026-10-29T00:00:00Z'};
+  mocks.getSession.mockResolvedValue({data:{session:{user:{email:'owner@example.com'}}}});
+  mocks.rpc.mockResolvedValueOnce({data:true,error:null});
+  mocks.rpc.mockResolvedValueOnce({data:[template],error:null});
+  mocks.rpc.mockResolvedValueOnce({data:true,error:null});
+  mocks.rpc.mockResolvedValueOnce({data:template,error:null});
+  mocks.rpc.mockResolvedValueOnce({data:true,error:null});
+  mocks.rpc.mockResolvedValueOnce({data:true,error:null});
+  const api=window.__GGMC_EDITOR_API__!;
+  expect(await api.listTemplates()).toEqual([template]);
+  expect(await api.saveTemplate({id:null,name:'Partner card',block:template.block})).toEqual(template);
+  expect(await api.deleteTemplate('template-1')).toBe(true);
+  expect(mocks.rpc).toHaveBeenNthCalledWith(2,'list_visual_editor_templates');
+  expect(mocks.rpc).toHaveBeenNthCalledWith(4,'save_visual_editor_template',{p_id:null,p_name:'Partner card',p_block:template.block});
+  expect(mocks.rpc).toHaveBeenNthCalledWith(6,'delete_visual_editor_template',{p_id:'template-1'});
+ });
+ it('preserves a false shared-template delete result',async()=>{
+  mocks.getSession.mockResolvedValue({data:{session:{user:{email:'owner@example.com'}}}});
+  mocks.rpc.mockResolvedValueOnce({data:true,error:null});
+  mocks.rpc.mockResolvedValueOnce({data:false,error:null});
+  await expect(window.__GGMC_EDITOR_API__!.deleteTemplate('already-gone')).resolves.toBe(false);
+ });
  it('uses expected version for conflict-safe saves',async()=>{mocks.getSession.mockResolvedValueOnce({data:{session:{user:{email:'owner@example.com'}}}});mocks.rpc.mockResolvedValueOnce({data:true,error:null});mocks.rpc.mockResolvedValueOnce({data:{id:'draft-id',version:2,status:'draft'},error:null});const saved=await window.__GGMC_EDITOR_API__!.saveDraft({id:'draft-id',expectedVersion:1,name:'Website draft',payload:{text:{}}});expect(saved.version).toBe(2);expect(mocks.rpc).toHaveBeenLastCalledWith('save_visual_editor_draft',expect.objectContaining({p_expected_version:1}));});
  it('restores a selected server version into a new draft',async()=>{mocks.getSession.mockResolvedValueOnce({data:{session:{user:{email:'owner@example.com'}}}});mocks.rpc.mockResolvedValueOnce({data:true,error:null});mocks.rpc.mockResolvedValueOnce({data:{id:'restored-id',version:1,status:'draft',payload:{text:{}}},error:null});const restored=await window.__GGMC_EDITOR_API__!.restoreVersion('draft-id',3);expect(restored.id).toBe('restored-id');expect(mocks.rpc).toHaveBeenLastCalledWith('restore_visual_editor_version',{p_draft_id:'draft-id',p_version:3});});
 
