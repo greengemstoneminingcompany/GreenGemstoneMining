@@ -34,7 +34,7 @@ describe('modular Creative Studio', () => {
   expect(draft.designTokens).toMatchObject({ brand: '#101b15', accent: '#c4a252', radius: 12 });
   expect(root.style.getPropertyValue('--ggmc-accent')).toBe('#c4a252');
 
-  const starter = panel.querySelector<HTMLSelectElement>('[aria-label="Starter template"]')!;
+  const starter = panel.querySelector<HTMLSelectElement>('[aria-label="Starter layout"]')!;
   starter.value = 'mission-story';
   starter.dispatchEvent(new Event('change'));
   Array.from(panel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Add starter section')?.click();
@@ -119,7 +119,7 @@ describe('modular Creative Studio', () => {
   const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
   try {
    await vi.waitFor(() => expect(serverPanel.textContent).toContain('Keep me'));
-   serverPanel.querySelector<HTMLButtonElement>('button:last-of-type')?.click();
+   Array.from(serverPanel.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Delete')?.click();
    await vi.waitFor(() => expect(editorApi.deleteTemplate).toHaveBeenCalledWith('template-2'));
    await vi.waitFor(() => expect(serverPanel.textContent).toContain('already removed'));
    expect(serverPanel.textContent).toContain('Keep me');
