@@ -2,6 +2,7 @@ import { Component, StrictMode, useEffect, type ErrorInfo, type ReactNode } from
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import './approved-design.css';
 import { LanguageProvider } from './i18n/LanguageProvider';
 import { applyPublishedVisualEditorPayload, installVisualEditorBridge } from './lib/visualEditorBridge';
 

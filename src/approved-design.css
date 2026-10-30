@@ -1,0 +1,89 @@
+/* Approved emerald-and-gold design foundation.
+ * This layer refines the existing site without replacing its content or behavior.
+ */
+:root {
+  --bg: #06110d;
+  --bg-2: #0a1a14;
+  --surface: #10251b;
+  --surface-2: #173326;
+  --green: #14543b;
+  --green-dp: #08251a;
+  --gold: #c9a64d;
+  --gold-br: #ead28a;
+  --gold-dp: #80662d;
+  --line: rgba(201, 166, 77, .22);
+  --line-soft: rgba(234, 244, 237, .10);
+}
+
+:focus-visible {
+  outline: 3px solid var(--gold-br);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.hdr {
+  background: linear-gradient(180deg, rgba(4, 18, 13, .88), rgba(4, 18, 13, .18));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.hdr.scrolled {
+  background: rgba(5, 20, 14, .94);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .18);
+}
+.hdr-brand { letter-spacing: .015em; }
+.hdr-nav a { transition: color .2s ease, opacity .2s ease; }
+.hdr-nav a:hover, .hdr-nav a:focus-visible { color: var(--gold-br); }
+
+.hero { min-height: min(900px, 100svh); }
+.hero-bg {
+  opacity: .48;
+  filter: saturate(.92) contrast(1.08);
+}
+.hero-overlay {
+  background:
+    radial-gradient(ellipse at 74% 46%, rgba(20, 84, 59, .20), transparent 56%),
+    linear-gradient(105deg, rgba(4, 17, 12, .90) 0%, rgba(4, 17, 12, .56) 48%, rgba(4, 17, 12, .12) 100%),
+    linear-gradient(0deg, rgba(4, 17, 12, .68), transparent 46%);
+}
+.hero h1 { max-width: 900px; text-wrap: balance; }
+.hero-sub { max-width: 650px; }
+
+.pillar-card, .mission-card, .mineral, .content-card {
+  border-color: rgba(201, 166, 77, .16);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .12);
+}
+.pillar-card { background: linear-gradient(145deg, rgba(19, 48, 35, .92), rgba(11, 29, 21, .94)); }
+.pillar-card:hover, .mission-card:hover, .mineral:hover, .content-card:hover {
+  border-color: rgba(234, 210, 138, .52);
+  box-shadow: 0 22px 52px rgba(0, 0, 0, .22);
+}
+.deposit { box-shadow: 0 18px 48px rgba(0, 0, 0, .20); }
+.deposit-tag { background: rgba(5, 22, 15, .78); }
+.btn-gold, .hdr-cta { box-shadow: 0 8px 24px rgba(201, 166, 77, .12); }
+.btn-gold:hover { transform: translateY(-2px); }
+.gallery-filters button:focus-visible,
+.gallery-filters button.active { box-shadow: 0 0 0 3px rgba(234, 210, 138, .22); }
+.g-item { box-shadow: 0 14px 40px rgba(0, 0, 0, .24); }
+.contact-form input, .contact-form textarea, .contact-form select,
+.field input, .field textarea, .field select {
+  border-radius: 12px;
+}
+.contact-form input:focus, .field input:focus, .field textarea:focus, .field select:focus {
+  border-color: var(--gold-br);
+  box-shadow: 0 0 0 3px rgba(234, 210, 138, .14);
+}
+
+@media (max-width: 900px) {
+  .hero { min-height: 780px; }
+  .hero-bg { opacity: .40; }
+}
+@media (max-width: 600px) {
+  .hero { min-height: 720px; padding-top: 104px; }
+  .hero h1 { font-size: clamp(44px, 13vw, 68px); }
+  .hero-sub { font-size: 16px; }
+  .hero-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hdr-brand { max-width: 220px; font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
