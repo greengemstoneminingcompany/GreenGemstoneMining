@@ -40,26 +40,26 @@ export default function App() {
           <div className="nav-menu-item">
             <a href="#company" onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
             <details className="nav-dropdown"><summary aria-label="Open company submenu"><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
-              <a href="#company-profile" onClick={() => setMenuOpen(false)}>Company profile</a>
-              <a href="#vision-mission" onClick={() => setMenuOpen(false)}>Vision &amp; mission</a>
-              <a href="#leadership" onClick={() => setMenuOpen(false)}>Leadership</a>
-              <a href="#history-details" onClick={() => setMenuOpen(false)}>Company history</a>
+              <a href="#/about" onClick={() => setMenuOpen(false)}>Company profile</a>
+              <a href="#/about" onClick={() => setMenuOpen(false)}>Vision &amp; mission</a>
+              <a href="#/about" onClick={() => setMenuOpen(false)}>Leadership</a>
+              <a href="#/about" onClick={() => setMenuOpen(false)}>Company history</a>
             </div></details>
           </div>
           <div className="nav-menu-item">
             <a href="#resources" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
             <details className="nav-dropdown"><summary aria-label="Open portfolio submenu"><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
-              <a href="#gemstones" onClick={() => setMenuOpen(false)}>Gemstones</a>
-              <a href="#industrial-metals" onClick={() => setMenuOpen(false)}>Industrial &amp; precious metals</a>
-              <a href="#services" onClick={() => setMenuOpen(false)}>Services</a>
+              <a href="#/minerals" onClick={() => setMenuOpen(false)}>Gemstones</a>
+              <a href="#/minerals" onClick={() => setMenuOpen(false)}>Industrial &amp; precious metals</a>
+              <a href="#/about" onClick={() => setMenuOpen(false)}>Services</a>
             </div></details>
           </div>
           <div className="nav-menu-item">
             <a href="#projects" onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
             <details className="nav-dropdown"><summary aria-label="Open projects submenu"><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
-              <a href="#development-projects" onClick={() => setMenuOpen(false)}>Mining development</a>
-              <a href="#rural-development" onClick={() => setMenuOpen(false)}>Rural development &amp; community support</a>
-              <a href="#operations" onClick={() => setMenuOpen(false)}>Operations &amp; equipment</a>
+              <a href="#/projects" onClick={() => setMenuOpen(false)}>Mining development</a>
+              <a href="#/about" onClick={() => setMenuOpen(false)}>Rural development &amp; community support</a>
+              <a href="#/about" onClick={() => setMenuOpen(false)}>Operations &amp; equipment</a>
             </div></details>
           </div>
           <a href="#gallery" onClick={() => setMenuOpen(false)}>{t.nav.gallery}</a>
@@ -88,8 +88,8 @@ export default function App() {
             <h1>{t.hero.h1a} <span className="h1-line">{t.hero.h1b}</span></h1>
             <p className="hero-sub">{t.hero.sub}</p>
             <div className="hero-cta">
-              <a className="btn btn-gold" href="#contact">{t.hero.primary} <ArrowRight size={16} aria-hidden="true" /></a>
-              <a className="btn-ghost" href="#resources">{t.hero.secondary} <ChevronDown size={16} aria-hidden="true" /></a>
+              <a className="btn btn-gold" href="#/contact">{t.hero.primary} <ArrowRight size={16} aria-hidden="true" /></a>
+              <a className="btn-ghost" href="#/minerals">{t.hero.secondary} <ChevronDown size={16} aria-hidden="true" /></a>
             </div>
             <div className="hero-metrics">
               {t.hero.metrics.map((metric) => (
@@ -119,7 +119,7 @@ export default function App() {
               <p className="body-lg">{t.company.lead}</p>
               <p className="body-text">{t.company.p1}</p>
               <p className="body-text">{t.company.p2}</p>
-              <a className="link-go" href="#mission">{t.company.link} <ArrowRight size={15} /></a>
+              <a className="link-go" href="#/about">{t.company.link} <ArrowRight size={15} /></a>
             </div>
           </div>
         </section>
@@ -143,7 +143,7 @@ export default function App() {
                   <div className="deposit-body">
                     <h3>{text.name}</h3>
                     <p>{text.desc}</p>
-                    <a href="#contact">{t.resources.discuss} <ArrowUpRight size={14} /></a>
+                    <a href="#/contact">{t.resources.discuss} <ArrowUpRight size={14} /></a>
                   </div>
                 </article>
               );
@@ -164,7 +164,7 @@ export default function App() {
                 <Counter value={6} label={t.industrial.stats[1]} plus={false} />
                 <Counter value={2018} label={t.industrial.stats[2]} plus={false} />
               </div>
-              <a className="btn btn-gold" href="#projects">{t.industrial.cta} <ArrowRight size={16} /></a>
+              <a className="btn btn-gold" href="#/projects">{t.industrial.cta} <ArrowRight size={16} /></a>
             </div>
           </div>
         </section>
@@ -279,21 +279,21 @@ export default function App() {
           </div>
           <div className="footer-col">
             <h3>{t.footer.company}</h3>
-            <a href="#company">{t.footer.about}</a>
-            <a href="#mission">{t.footer.mission}</a>
-            <a href="#projects">{t.footer.projects}</a>
+            <a href="#/about">{t.footer.about}</a>
+            <a href="#/about">{t.footer.mission}</a>
+            <a href="#/projects">{t.footer.projects}</a>
           </div>
           <div className="footer-col">
             <h3>{t.footer.resources}</h3>
-            <a href="#resources">{t.footer.deposits}</a>
-            <a href="#gallery">{t.footer.gallery}</a>
-            <a href="#contact">{t.footer.contact}</a>
+            <a href="#/minerals">{t.footer.deposits}</a>
+            <a href="#/gallery">{t.footer.gallery}</a>
+            <a href="#/contact">{t.footer.contact}</a>
           </div>
           <div className="footer-col">
             <h3>{t.footer.connect}</h3>
             <a href={`mailto:${SITE.email}`}>{t.footer.email}</a>
             {SITE.linkedin && <a href={SITE.linkedin} rel="noopener noreferrer" target="_blank">LinkedIn</a>}
-            <a href="#contact">{t.footer.partner}</a>
+            <a href="#/contact">{t.footer.partner}</a>
           </div>
         </div>
         <div className="footer-base">
