@@ -56,4 +56,28 @@ describe('published visual editor payload safety', () => {
   expect((document.querySelector('.unsafe') as HTMLImageElement).getAttribute('src')).toBeNull();
  });
 
+ it('renders a published structured Builder page without HTML injection', () => {
+  document.body.innerHTML = '<div id="root"><main></main></div>';
+  applyPublishedVisualEditorPayload({ pageBuilder: { version: 1, activePageId: 'home', pages: [{ id: 'home', slug: 'home', components: [
+   { id: 'hero', kind: 'hero', props: { title: 'Builder heading', text: '<script>bad()</script>' }, style: { background: '#123456' } },
+   { id: 'link', kind: 'button', props: { title: 'Contact', href: 'javascript:alert(1)' }, style: {} },
+  ] }] } }, document.getElementById('root')!);
+  expect(document.querySelector('main')?.textContent).toContain('Builder heading');
+  expect(document.querySelector('main')?.textContent).toContain('<script>bad()</script>');
+  expect(document.querySelector('script')).toBeNull();
+  expect(document.querySelector<HTMLAnchorElement>('.builder-button')?.getAttribute('href')).toBe('#');
+ });
+
+ it('uses published Builder SEO and adds safe page navigation links', () => {
+  document.body.innerHTML = '<header><nav class="hdr-nav"></nav></header><div id="root"><main></main></div>';
+  window.location.hash = '#/contact';
+  applyPublishedVisualEditorPayload({ pageBuilder: { activePageId: 'home', pages: [
+   { id: 'home', name: 'Home', slug: 'home', seo: { title: 'Builder home', description: 'Home description' }, components: [] },
+   { id: 'contact', name: 'Contact us', slug: 'contact', seo: { title: 'Builder contact', description: 'Contact description' }, components: [{ id: 'heading', kind: 'heading', props: { title: 'Contact' }, style: {} }] },
+  ] } }, document.getElementById('root')!);
+  expect(document.title).toBe('Builder contact');
+  expect(document.querySelectorAll('[data-builder-page-link]')).toHaveLength(2);
+  expect(document.querySelector<HTMLAnchorElement>('[data-builder-page-link][href="#/contact"]')?.textContent).toBe('Contact us');
+ });
+
 });

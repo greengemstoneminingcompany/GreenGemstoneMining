@@ -645,3 +645,41 @@ test('Creative Studio module exposes design tokens, reusable templates, AI revie
  await expect(page.locator('#root [data-ve-block-id]')).toHaveCount(2);
 });
 
+test('Builder workspace creates pages and components in the local editor draft', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ const panel = page.locator('#ggmc-visual-editor');
+ await expect(panel.getByText('Builder workspace')).toBeVisible();
+ await panel.getByRole('button', { name: 'New page', exact: true }).click();
+ await expect(panel).toContainText('New page');
+ await panel.getByRole('button', { name: 'Add section', exact: true }).click();
+ await expect(panel.locator('.ve-builder-layer')).toHaveCount(2);
+ await panel.locator('.ve-builder-layer').last().getByRole('button').first().click();
+ const heading = panel.locator('.ve-builder-properties input').nth(1);
+ await heading.fill('Custom builder section');
+ await heading.press('Tab');
+ await expect(panel.locator('.ve-builder-canvas')).toContainText('Custom builder section');
+ const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2') || '{}'));
+ expect(saved.pageBuilder.pages).toHaveLength(2);
+ expect(saved.pageBuilder.pages[1].components).toHaveLength(2);
+});
+
+test('Builder templates, responsive properties, and history persist in the local draft', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ const panel = page.locator('#ggmc-visual-editor');
+ await panel.getByLabel('Builder page template').selectOption('contact');
+ await panel.getByRole('button', { name: 'Create from template', exact: true }).click();
+ await expect(panel).toContainText('Contact page');
+ await panel.getByLabel('Page slug').fill('talk-to-us');
+ await panel.getByLabel('Page slug').press('Tab');
+ await panel.getByLabel('Builder component type').selectOption('cardGrid');
+ await panel.getByRole('button', { name: 'Add section', exact: true }).click();
+ await panel.getByLabel('Builder breakpoint').selectOption('mobile');
+ await panel.getByLabel('Font size').fill('22');
+ await panel.getByLabel('Font size').press('Tab');
+ await panel.getByRole('button', { name: 'Builder undo', exact: true }).click();
+ await panel.getByRole('button', { name: 'Builder redo', exact: true }).click();
+ const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2') || '{}'));
+ const created = saved.pageBuilder.pages.find((entry: { slug: string }) => entry.slug === 'talk-to-us');
+ expect(created.components.some((entry: { kind: string }) => entry.kind === 'cardGrid')).toBe(true);
+});
+

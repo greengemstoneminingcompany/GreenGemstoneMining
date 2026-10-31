@@ -1,0 +1,21 @@
+{
+  "name": "GreenGemstoneMining (Node 22.22.2)",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "remoteUser": "pwuser",
+  "forwardPorts": [
+    5173,
+    4173
+  ],
+  "postCreateCommand": "npm ci",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "openai.chatgpt",
+        "dbaeumer.vscode-eslint",
+        "ms-playwright.playwright"
+      ]
+    }
+  }
+}

@@ -144,6 +144,67 @@ function applyPublishedDesignTokens(payload: Record<string, unknown>, root: HTML
   '@media(max-width:640px){#root .ve-added-grid{grid-template-columns:1fr}}'
  ].join('\n');
 }
+/** Render a safely bounded Builder document when an editor snapshot contains one.
+ * Existing payloads continue through the legacy visual-editor renderer below. */
+function renderPublishedPageBuilder(payload: Record<string, unknown>, root: HTMLElement): boolean {
+ const raw = payload.pageBuilder;
+ if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return false;
+ const documentModel = raw as { pages?: unknown; activePageId?: unknown };
+ if (!Array.isArray(documentModel.pages) || documentModel.pages.length === 0 || documentModel.pages.length > 100) return false;
+ const safeText = (value: unknown, max = 4000) => typeof value === 'string' ? value.slice(0, max) : '';
+ const route = window.location.hash.replace(/^#\/?/, '').split(/[/?]/)[0] || 'home';
+ const pages = documentModel.pages.filter((page): page is Record<string, unknown> => Boolean(page) && typeof page === 'object' && !Array.isArray(page));
+ const page = pages.find(candidate => candidate.slug === route) ?? pages.find(candidate => candidate.id === documentModel.activePageId) ?? pages[0];
+ if (!page || !Array.isArray(page.components) || page.components.length > 200) return false;
+ const seo = page.seo && typeof page.seo === 'object' && !Array.isArray(page.seo) ? page.seo as Record<string, unknown> : {};
+ const title = safeText(seo.title, 160); const description = safeText(seo.description, 320);
+ if (title) document.title = title;
+ if (description) document.querySelectorAll('meta[name="description"],meta[property="og:description"],meta[name="twitter:description"]').forEach(meta => meta.setAttribute('content', description));
+ document.querySelectorAll('[data-builder-page-link]').forEach(link => link.remove());
+ const navigation = document.querySelector('.hdr-nav');
+ if (navigation) for (const candidate of pages) {
+  const candidateSlug = typeof candidate.slug === 'string' && /^[a-z0-9-]{1,80}$/.test(candidate.slug) ? candidate.slug : '';
+  const candidateName = safeText(candidate.name, 120); if (!candidateSlug || !candidateName) continue;
+  const link = document.createElement('a'); link.dataset.builderPageLink = 'true'; link.href = `#/${candidateSlug}`; link.textContent = candidateName; navigation.append(link);
+ }
+ const main = root.querySelector('main'); if (!main) return false;
+ const safeColor = (value: unknown) => typeof value === 'string' && /^#[0-9a-f]{3,8}$/i.test(value) ? value : '';
+ const safeUrl = (value: unknown) => safePublishedImageSrc(value) ? value : '';
+ const fragment = document.createDocumentFragment();
+ for (const rawComponent of page.components) {
+  if (!rawComponent || typeof rawComponent !== 'object' || Array.isArray(rawComponent)) continue;
+  const component = rawComponent as Record<string, unknown>; if (component.visible === false) continue;
+  const kind = typeof component.kind === 'string' ? component.kind : 'section';
+  if (!['hero','section','heading','richText','image','video','button','card','cardGrid','gallery','contactForm','map','divider','spacer'].includes(kind)) continue;
+  const props = component.props && typeof component.props === 'object' && !Array.isArray(component.props) ? component.props as Record<string, unknown> : {};
+  const style = component.style && typeof component.style === 'object' && !Array.isArray(component.style) ? component.style as Record<string, unknown> : {};
+  const block = document.createElement(kind === 'divider' ? 'hr' : kind === 'button' ? 'a' : kind === 'image' ? 'figure' : 'section');
+  block.className = `builder-published builder-${kind}`;
+  const background = safeColor(style.background), color = safeColor(style.color);
+  if (background) (block as HTMLElement).style.backgroundColor = background;
+  if (color) (block as HTMLElement).style.color = color;
+  const responsive = style.responsive && typeof style.responsive === 'object' && !Array.isArray(style.responsive) ? style.responsive as Record<string, unknown> : {};
+  const desktop = responsive.desktop && typeof responsive.desktop === 'object' && !Array.isArray(responsive.desktop) ? responsive.desktop as Record<string, unknown> : {};
+  const size = Number(desktop.fontSize), padding = Number(desktop.padding), columns = Number(desktop.columns);
+  if (Number.isFinite(size) && size >= 10 && size <= 120) (block as HTMLElement).style.fontSize = `${size}px`;
+  if (Number.isFinite(padding) && padding >= 0 && padding <= 160) (block as HTMLElement).style.padding = `${padding}px`;
+  if (Number.isFinite(columns) && columns >= 1 && columns <= 6) (block as HTMLElement).style.setProperty('--builder-columns', String(columns));
+  const radius = Number(style.radius); if (Number.isFinite(radius) && radius >= 0 && radius <= 80) (block as HTMLElement).style.borderRadius = `${radius}px`;
+  if (style.shadow === true) (block as HTMLElement).style.boxShadow = '0 12px 28px rgba(4,54,39,.2)';
+  const title = safeText(props.title, 500); const text = safeText(props.text);
+  if (kind === 'image') { const src = safeUrl(props.src); if (src) { const image = document.createElement('img'); image.src = src; image.alt = safeText(props.alt, 500); block.append(image); } }
+  else if (kind === 'video') { const src = safePublishedMediaSrc(props.src) ? props.src as string : ''; if (src) { const video = document.createElement('video'); video.src = src; video.controls = true; video.preload = 'metadata'; block.append(video); } }
+  else if (kind === 'button') { const anchor = block as HTMLAnchorElement; anchor.href = safePublishedHref(props.href); anchor.textContent = title || 'Learn more'; }
+  else if (kind === 'divider') { /* structural divider has no child content */ }
+  else if (kind === 'spacer') { (block as HTMLElement).style.minHeight = '48px'; }
+  else if (kind === 'gallery') { if (title) { const heading = document.createElement('h2'); heading.textContent = title; block.append(heading); } const grid = document.createElement('div'); grid.className = 'builder-gallery-grid'; for (let index = 0; index < 6; index += 1) { const item = document.createElement('div'); item.className = 'builder-gallery-item'; grid.append(item); } block.append(grid); }
+  else if (kind === 'contactForm') { if (title) { const heading = document.createElement('h2'); heading.textContent = title; block.append(heading); } const form = document.createElement('form'); form.addEventListener('submit', event => event.preventDefault()); ['Name','Email','Message'].forEach(label => { const field = label === 'Message' ? document.createElement('textarea') : document.createElement('input'); field.setAttribute('aria-label', label); field.setAttribute('placeholder', label); form.append(field); }); const submit = document.createElement('button'); submit.type = 'submit'; submit.textContent = 'Send message'; form.append(submit); block.append(form); }
+  else if (kind === 'map') { if (title) { const heading = document.createElement('h2'); heading.textContent = title; block.append(heading); } const map = document.createElement('div'); map.className = 'builder-map'; map.textContent = 'Map'; block.append(map); }
+  else if (kind !== 'divider' && kind !== 'spacer') { if (title) { const heading = document.createElement(kind === 'hero' ? 'h1' : 'h2'); heading.textContent = title; block.append(heading); } if (text) { const copy = document.createElement('p'); copy.textContent = text; block.append(copy); } }
+  fragment.append(block);
+ }
+ main.replaceChildren(fragment); return true;
+}
 function safePublishedSelector(selector: string): boolean {
  return typeof selector === 'string' && selector.length > 0 && selector.length <= 500 && !/^(?:html|body|#root|#ggmc-visual-editor)$/i.test(selector.trim());
 }
@@ -156,6 +217,7 @@ function safePublishedCssValue(prop: string, value: unknown): value is string {
 /** Apply a published snapshot. Inserted content is rendered with textContent and safe URL checks. */
 export function applyPublishedVisualEditorPayload(payload: Record<string, unknown> | null, root: HTMLElement | null = document.getElementById('root')) {
  if (!payload || !root || typeof payload !== 'object') return;
+ if (renderPublishedPageBuilder(payload, root)) { applyPublishedDesignTokens(payload, root); return; }
  const text = payload.text && typeof payload.text === 'object' ? payload.text as Record<string, {after?:unknown}> : {};
  for (const [selector, change] of Object.entries(text)) {
   if (!change || typeof change.after !== 'string' || change.after.length > 10000 || !safePublishedSelector(selector)) continue;

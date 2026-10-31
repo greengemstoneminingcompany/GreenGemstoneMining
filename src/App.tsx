@@ -1,7 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { Atom, ArrowRight, ArrowUpRight, ChevronDown, Gem, Hammer, Linkedin, Mail, MapPin, Menu, Mountain, X } from 'lucide-react';
+import { Atom, ArrowRight, ArrowUpRight, ChevronDown, Gem, Hammer, Handshake, Linkedin, Mail, MapPin, Menu, Mountain, ShieldCheck, Sparkles, X } from 'lucide-react';
 import Gallery from '@/components/Gallery';
-import CompanyContent from '@/components/CompanyContent';
 import ContactForm from '@/components/ContactForm';
 import SomalilandMap from '@/components/SomalilandMap';
 import { Counter, Crystal3D, ScrollProgress } from '@/components/Effects';
@@ -45,6 +44,11 @@ export default function App() {
     return () => window.removeEventListener('hashchange', syncRoute);
   }, []);
   const [mediaOpen, setMediaOpen] = useState(false);
+  useEffect(() => {
+    const openMedia = () => setMediaOpen(true);
+    window.addEventListener('ggmc-open-media', openMedia);
+    return () => window.removeEventListener('ggmc-open-media', openMedia);
+  }, []);
   const { t } = useI18n();
   const scrolled = useScrollHeader();
   const { uploads, refresh } = useUploads();
@@ -125,6 +129,12 @@ export default function App() {
             </div>
           </div>
           <div className="hero-foot"><span>{t.hero.foot}</span></div>
+        </section>
+
+        <section className="showcase-values" aria-label="Company principles">
+          <div><ShieldCheck aria-hidden="true" /><strong>{t.mission.points[0].t}</strong><span>{t.mission.points[0].d}</span></div>
+          <div><Handshake aria-hidden="true" /><strong>{t.mission.points[1].t}</strong><span>{t.mission.points[1].d}</span></div>
+          <div><Sparkles aria-hidden="true" /><strong>{t.mission.points[2].t}</strong><span>{t.mission.points[2].d}</span></div>
         </section>
 
         <section className="marquee">
@@ -241,8 +251,6 @@ export default function App() {
             </div>
           </div>
         </section>
-
-        <CompanyContent />
 
         <section id="gallery" className="sec sec-dark">
           <div className="sec-container">

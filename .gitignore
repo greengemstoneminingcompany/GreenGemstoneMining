@@ -7,3 +7,7 @@ dist/
 npm-debug.log*
 .vite/
 coverage/
+
+# Browser test artifacts
+/test-results/
+/playwright-report/

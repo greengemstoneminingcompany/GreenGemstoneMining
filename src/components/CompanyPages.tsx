@@ -1,9 +1,11 @@
 import { Gem, ArrowUpRight, MapPin, Mail } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import Gallery from '@/components/Gallery';
 import CompanyContent from '@/components/CompanyContent';
 import ContactForm from '@/components/ContactForm';
 import SomalilandMap from '@/components/SomalilandMap';
 import { MINERALS, SITE } from '@/data/site';
+import { PROJECTS } from '@/data/company';
 import { useI18n } from '@/i18n/core';
 import { companyPageCopy } from '@/i18n/company-pages';
 
@@ -31,6 +33,10 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
         <div className="page-section-heading"><p className="eyebrow">{t.projects.eyebrow}</p><h2 className="display light">{t.projects.h2a} {t.projects.h2b}</h2><p className="body-text">{cp.map}</p></div>
         <SomalilandMap />
         <div className="page-info-grid"><article><span>01 / {cp.development}</span><h3>{cp.opportunities}</h3><p>{cp.opportunitiesDesc}</p></article><article><span>02 / {cp.partnerships}</span><h3>{cp.partners}</h3><p>{cp.partnersDesc}</p></article><article><span>03 / {cp.communities}</span><h3>{cp.participation}</h3><p>{cp.participationDesc}</p></article></div>
+        <section className="project-directory" aria-label="Company field records">
+          <div className="project-directory-head"><p className="eyebrow">Field records</p><h2>Project areas and <em>evidence.</em></h2><p>These cards summarize company field records. They are not licences, resource estimates, or proof of commercial viability.</p></div>
+          <div className="project-card-grid">{PROJECTS.map((project, index) => <article className="project-card" key={project.id}><div className="project-card-art" style={{ '--card-index': index } as CSSProperties}><span>{String(index + 1).padStart(2, '0')}</span></div><div className="project-card-body"><p>{project.region}</p><h3>{project.name}</h3><div className="project-findings">{project.findings.slice(0, 4).map((finding) => <span key={`${finding.mineral}-${finding.evidence}`}>{finding.mineral} · {finding.evidence}</span>)}</div></div></article>)}</div>
+        </section>
       </div></section>}
       {page === 'minerals' && <section className="sec"><div className="sec-container">
         <div className="page-section-heading"><p className="eyebrow">{t.catalogue.eyebrow}</p><h2 className="display">{t.catalogue.h2a} {t.catalogue.h2b}</h2><p className="body-text">{cp.directory}</p></div>

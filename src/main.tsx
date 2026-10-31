@@ -4,6 +4,7 @@ import App from './App.tsx';
 import './index.css';
 import './approved-design.css';
 import './company-pages.css';
+import './showcase-design.css';
 import { LanguageProvider } from './i18n/LanguageProvider';
 import { applyPublishedVisualEditorPayload, installVisualEditorBridge } from './lib/visualEditorBridge';
 
