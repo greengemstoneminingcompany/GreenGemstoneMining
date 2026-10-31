@@ -30,6 +30,8 @@ export interface ComponentStyle {
   radius?: number;
   columns?: ResponsiveValue<number>;
   minHeight?: ResponsiveValue<number>;
+  shadow?: boolean;
+  responsive?: Partial<Record<'desktop' | 'tablet' | 'mobile', { fontSize?: number; padding?: number; columns?: number }>>;
 }
 
 export interface BuilderComponent {
@@ -58,6 +60,7 @@ export interface PageBuilderDocument {
   pages: BuilderPage[];
   activePageId: string;
   updatedAt: string;
+  globals?: { headerText?: string; footerText?: string; navigation?: string[]; background?: string; color?: string; fontFamily?: 'system-ui' | 'Georgia' | 'Arial' };
 }
 
 const safeId = () => globalThis.crypto?.randomUUID?.() ?? `builder-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;

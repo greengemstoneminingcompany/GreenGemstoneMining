@@ -149,7 +149,7 @@ function applyPublishedDesignTokens(payload: Record<string, unknown>, root: HTML
 function renderPublishedPageBuilder(payload: Record<string, unknown>, root: HTMLElement): boolean {
  const raw = payload.pageBuilder;
  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return false;
- const documentModel = raw as { pages?: unknown; activePageId?: unknown };
+ const documentModel = raw as { pages?: unknown; activePageId?: unknown; globals?: unknown };
  if (!Array.isArray(documentModel.pages) || documentModel.pages.length === 0 || documentModel.pages.length > 100) return false;
  const safeText = (value: unknown, max = 4000) => typeof value === 'string' ? value.slice(0, max) : '';
  const route = window.location.hash.replace(/^#\/?/, '').split(/[/?]/)[0] || 'home';
@@ -168,8 +168,27 @@ function renderPublishedPageBuilder(payload: Record<string, unknown>, root: HTML
   const link = document.createElement('a'); link.dataset.builderPageLink = 'true'; link.href = `#/${candidateSlug}`; link.textContent = candidateName; navigation.append(link);
  }
  const main = root.querySelector('main'); if (!main) return false;
+ const globals = documentModel.globals && typeof documentModel.globals === 'object' && !Array.isArray(documentModel.globals) ? documentModel.globals as Record<string, unknown> : {};
+ const headerText = safeText(globals.headerText, 2000), footerText = safeText(globals.footerText, 2000);
+ const brand = root.querySelector('.hdr-brand span'); if (brand && headerText) brand.textContent = headerText;
+ const footer = root.querySelector('footer');
+ footer?.querySelector('[data-builder-footer]')?.remove();
+ if (footer && footerText) { const copy = document.createElement('p'); copy.dataset.builderFooter = 'true'; copy.textContent = footerText; footer.append(copy); }
+ if (navigation && Array.isArray(globals.navigation) && globals.navigation.length > 0 && globals.navigation.length <= 30) {
+  const entries = globals.navigation.filter((entry): entry is string => typeof entry === 'string' && /^[^|]{1,120}\|#\/[a-z0-9-]{1,80}$/.test(entry));
+  if (entries.length === globals.navigation.length) { const controls = Array.from(navigation.querySelectorAll('.owner-menu,.lang-switch')); navigation.replaceChildren(); for (const entry of entries) { const [label, href] = entry.split('|'); const link = document.createElement('a'); link.href = href; link.textContent = label; navigation.append(link); } navigation.append(...controls); }
+ }
+
  const safeColor = (value: unknown) => typeof value === 'string' && /^#[0-9a-f]{3,8}$/i.test(value) ? value : '';
  const safeUrl = (value: unknown) => safePublishedImageSrc(value) ? value : '';
+ for (const key of ['background', 'color'] as const) { const value = safeColor(globals[key]); if (value) root.style.setProperty(key === 'background' ? '--builder-background' : '--builder-color', value); }
+ if (typeof globals.fontFamily === 'string' && ['system-ui','Georgia','Arial'].includes(globals.fontFamily)) root.style.setProperty('--builder-font', globals.fontFamily);
+ const imageStyle = (image: HTMLImageElement, props: Record<string, unknown>) => {
+  const percent = (value: unknown) => Math.max(0, Math.min(100, Number(value) || 0));
+  image.style.objectFit = props.fit === 'contain' ? 'contain' : 'cover';
+  image.style.objectPosition = `${percent(props.focalX ?? 50)}% ${percent(props.focalY ?? 50)}%`;
+  if (typeof props.aspect === 'string' && ['1/1','4/3','16/9','3/4'].includes(props.aspect)) { image.style.aspectRatio = props.aspect; image.style.width = '100%'; image.style.height = 'auto'; }
+ };
  const fragment = document.createDocumentFragment();
  for (const rawComponent of page.components) {
   if (!rawComponent || typeof rawComponent !== 'object' || Array.isArray(rawComponent)) continue;
@@ -192,13 +211,13 @@ function renderPublishedPageBuilder(payload: Record<string, unknown>, root: HTML
   const radius = Number(style.radius); if (Number.isFinite(radius) && radius >= 0 && radius <= 80) (block as HTMLElement).style.borderRadius = `${radius}px`;
   if (style.shadow === true) (block as HTMLElement).style.boxShadow = '0 12px 28px rgba(4,54,39,.2)';
   const title = safeText(props.title, 500); const text = safeText(props.text);
-  if (kind === 'image') { const src = safeUrl(props.src); if (src) { const image = document.createElement('img'); image.src = src; image.alt = safeText(props.alt, 500); block.append(image); } }
+  if (kind === 'image') { const src = safeUrl(props.src); if (src) { const image = document.createElement('img'); image.src = src; image.alt = safeText(props.alt, 500); imageStyle(image, props); block.append(image); } }
   else if (kind === 'video') { const src = safePublishedMediaSrc(props.src) ? props.src as string : ''; if (src) { const video = document.createElement('video'); video.src = src; video.controls = true; video.preload = 'metadata'; block.append(video); } }
   else if (kind === 'button') { const anchor = block as HTMLAnchorElement; anchor.href = safePublishedHref(props.href); anchor.textContent = title || 'Learn more'; }
   else if (kind === 'divider') { /* structural divider has no child content */ }
   else if (kind === 'spacer') { (block as HTMLElement).style.minHeight = '48px'; }
-  else if (kind === 'gallery') { if (title) { const heading = document.createElement('h2'); heading.textContent = title; block.append(heading); } const grid = document.createElement('div'); grid.className = 'builder-gallery-grid'; for (let index = 0; index < 6; index += 1) { const item = document.createElement('div'); item.className = 'builder-gallery-item'; grid.append(item); } block.append(grid); }
-  else if (kind === 'contactForm') { if (title) { const heading = document.createElement('h2'); heading.textContent = title; block.append(heading); } const form = document.createElement('form'); form.addEventListener('submit', event => event.preventDefault()); ['Name','Email','Message'].forEach(label => { const field = label === 'Message' ? document.createElement('textarea') : document.createElement('input'); field.setAttribute('aria-label', label); field.setAttribute('placeholder', label); form.append(field); }); const submit = document.createElement('button'); submit.type = 'submit'; submit.textContent = 'Send message'; form.append(submit); block.append(form); }
+  else if (kind === 'gallery') { if (title) { const heading = document.createElement('h2'); heading.textContent = title; block.append(heading); } const grid = document.createElement('div'); grid.className = 'builder-gallery-grid'; for (const src of (Array.isArray(props.images) ? props.images.slice(0, 100) : [])) { if (!safePublishedImageSrc(src)) continue; const image = document.createElement('img'); image.src = src; image.alt = ''; imageStyle(image, props); grid.append(image); } block.append(grid); }
+  else if (kind === 'contactForm') { if (title) { const heading = document.createElement('h2'); heading.textContent = title; block.append(heading); } const form = document.createElement('form'); form.addEventListener('submit', event => event.preventDefault()); const notice = document.createElement('p'); notice.textContent = 'Form preview — submissions are not connected.'; form.append(notice); const fields = Array.isArray(props.fields) ? props.fields.slice(0, 20) : ['Name|text|required','Email|email|required','Message|textarea|required']; fields.forEach((entry, index) => { if (typeof entry !== 'string') return; const [label, type, required] = entry.split('|'); if (!label?.trim() || !['text','email','tel','textarea'].includes(type)) return; const field = type === 'textarea' ? document.createElement('textarea') : document.createElement('input'); if (field instanceof HTMLInputElement) field.type = type; field.name = `field-${index}`; field.required = required === 'required'; field.setAttribute('aria-label', label.slice(0, 120)); field.setAttribute('placeholder', label.slice(0, 120)); form.append(field); }); const submit = document.createElement('button'); submit.type = 'submit'; submit.textContent = safeText(props.submitLabel, 100) || 'Send message'; submit.disabled = true; form.append(submit); block.append(form); }
   else if (kind === 'map') { if (title) { const heading = document.createElement('h2'); heading.textContent = title; block.append(heading); } const map = document.createElement('div'); map.className = 'builder-map'; map.textContent = 'Map'; block.append(map); }
   else if (kind !== 'divider' && kind !== 'spacer') { if (title) { const heading = document.createElement(kind === 'hero' ? 'h1' : 'h2'); heading.textContent = title; block.append(heading); } if (text) { const copy = document.createElement('p'); copy.textContent = text; block.append(copy); } }
   fragment.append(block);

@@ -443,7 +443,7 @@ h2.display.light em { color: var(--gold-br); }
 .g-video-icon { position: absolute; top: 16px; right: 16px; z-index: 2; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: rgba(7, 10, 8, 0.72); border: 1px solid rgba(196, 162, 82, 0.4); color: var(--gold-br); }
 .lightbox-video { max-width: 92vw; max-height: 88vh; border-radius: 12px; }
 
-.media-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(4, 6, 5, 0.92); backdrop-filter: blur(8px); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; }
+.media-overlay { position: fixed; inset: 0; z-index: 2147483647; background: rgba(4, 6, 5, 0.92); backdrop-filter: blur(8px); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; }
 .media-modal { background: var(--bg-2); border: 1px solid var(--line); border-radius: 20px; width: 100%; max-width: 900px; margin: 20px 0; }
 .media-modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 28px 32px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg-2); }
 .media-modal-header h2 { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 22px; font-weight: 600; color: var(--cream); }

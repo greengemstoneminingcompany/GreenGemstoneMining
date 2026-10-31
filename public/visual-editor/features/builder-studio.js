@@ -19,6 +19,9 @@ const ensure = draft => {
   }
   return draft.pageBuilder;
 };
+const percent = value => Math.max(0, Math.min(100, Number(value) || 0));
+const mediaStyle = (image, props) => { image.style.objectFit = props.fit === 'contain' ? 'contain' : 'cover'; image.style.objectPosition = `${percent(props.focalX ?? 50)}% ${percent(props.focalY ?? 50)}%`; if (['1/1','4/3','16/9','3/4'].includes(props.aspect)) { image.style.aspectRatio = props.aspect; image.style.height = 'auto'; } };
+const formFields = props => Array.isArray(props.fields) ? props.fields.slice(0, 20) : ['Name|text|required', 'Email|email|required', 'Message|textarea|required'];
 const el = (tag, attrs = {}, text = '') => { const node = document.createElement(tag); Object.entries(attrs).forEach(([key, value]) => { if (key === 'class') node.className = value; else if (key === 'type') node.type = value; else node.setAttribute(key, value); }); if (text) node.textContent = text; return node; };
 
 function drawCanvas(documentModel, canvas, selectedPageId, selectedComponentId, onPick, viewport = 'desktop') {
@@ -28,7 +31,7 @@ function drawCanvas(documentModel, canvas, selectedPageId, selectedComponentId, 
   const title = el('div', { class: 've-builder-canvas-head' }, `${active.name} · /#/${active.slug}`);
   const pageNode = el('article', { class: 've-builder-page' });
   active.components.filter(item => item.visible !== false).forEach(item => {
-    const block = el('button', { class: `ve-builder-block ${item.id === selectedComponentId ? 'is-selected' : ''}`, type: 'button' });
+    const block = el('div', { tabindex: '0', role: 'button', class: `ve-builder-block ${item.id === selectedComponentId ? 'is-selected' : ''}`, type: 'button' });
     block.dataset.componentId = item.id;
     const heading = String(item.props?.title || item.name || item.kind);
     const copy = String(item.props?.text || '');
@@ -41,19 +44,19 @@ function drawCanvas(documentModel, canvas, selectedPageId, selectedComponentId, 
     if (Number.isFinite(Number(item.style?.radius))) block.style.borderRadius = `${Math.max(0, Math.min(80, Number(item.style.radius)))}px`;
     if (item.style?.shadow === true) block.style.boxShadow = '0 12px 28px rgba(4,54,39,.2)';
     block.append(el('small', {}, item.kind));
-    if (item.kind === 'image' && /^https?:\/\//.test(String(item.props?.src || ''))) { const image = el('img', { src: String(item.props.src), alt: String(item.props.alt || heading) }); block.append(image); }
+    if (item.kind === 'image' && /^https?:\/\//.test(String(item.props?.src || ''))) { const image = el('img', { src: String(item.props.src), alt: String(item.props.alt || heading) }); mediaStyle(image, item.props); block.append(image); }
     else if (item.kind === 'video' && /^https?:\/\//.test(String(item.props?.src || ''))) { const video = el('video', { src: String(item.props.src), controls: 'controls' }); block.append(video); }
     else if (item.kind === 'button') block.append(el('span', { class: 've-builder-button-preview' }, heading || 'Button'));
     else if (item.kind === 'divider') block.append(el('hr'));
     else if (item.kind === 'spacer') block.append(el('div', { class: 've-builder-spacer-preview' }));
-    else if (item.kind === 'gallery') { const grid = el('div', { class: 've-builder-gallery-preview' }); for (let index = 0; index < 6; index += 1) grid.append(el('i')); block.append(el('strong', {}, heading), grid); }
+    else if (item.kind === 'gallery') { const grid = el('div', { class: 've-builder-gallery-preview' }); for (const src of (Array.isArray(item.props.images) ? item.props.images : [])) { if (!/^https?:\/\//.test(src)) continue; const image = el('img', { src, alt: '' }); mediaStyle(image, item.props); grid.append(image); } block.append(el('strong', {}, heading), grid); }
     else if (item.kind === 'cardGrid') { const grid = el('div', { class: 've-builder-card-grid-preview' }); for (let index = 0; index < 3; index += 1) grid.append(el('i')); block.append(el('strong', {}, heading), grid); }
-    else if (item.kind === 'contactForm') block.append(el('strong', {}, heading), el('input', { placeholder: 'Name' }), el('input', { placeholder: 'Email' }), el('span', { class: 've-builder-button-preview' }, 'Send message'));
+    else if (item.kind === 'contactForm') { block.append(el('strong', {}, heading)); formFields(item.props).forEach(field => { const [label, type] = field.split('|'); block.append(el(type === 'textarea' ? 'textarea' : 'input', { placeholder: label, disabled: 'disabled', 'aria-label': label })); }); block.append(el('span', { class: 've-builder-button-preview' }, item.props.submitLabel || 'Send message')); }
     else if (item.kind === 'map') block.append(el('strong', {}, heading), el('div', { class: 've-builder-map-preview' }, 'Map component'));
     else block.append(el('strong', {}, heading), copy ? el('span', {}, copy) : el('span', {}, 'Select to edit properties'));
-    block.addEventListener('click', () => onPick(item.id)); pageNode.append(block);
+    block.addEventListener('keydown', event => { if (event.target === block && ['Enter', ' '].includes(event.key)) { event.preventDefault(); onPick(item.id); } }); block.addEventListener('click', () => { if (item.id !== selectedComponentId) onPick(item.id); }); pageNode.append(block);
   });
-  canvas.append(title, pageNode);
+  const globals = documentModel.globals || {}; if (/^#[0-9a-f]{3,8}$/i.test(globals.background || '')) pageNode.style.setProperty('--builder-background', globals.background); if (/^#[0-9a-f]{3,8}$/i.test(globals.color || '')) pageNode.style.setProperty('--builder-color', globals.color); if (['system-ui','Georgia','Arial'].includes(globals.fontFamily)) pageNode.style.setProperty('--builder-font', globals.fontFamily); if (globals.headerText) pageNode.prepend(el('header', {}, globals.headerText)); if (Array.isArray(globals.navigation)) { const nav = el('nav', { 'aria-label': 'Site navigation preview' }); globals.navigation.forEach(entry => nav.append(el('span', {}, entry.split('|')[0] + ' '))); pageNode.prepend(nav); } if (globals.footerText) pageNode.append(el('footer', {}, globals.footerText)); canvas.append(title, pageNode);
 }
 
 export function mountBuilderStudio(api) {
@@ -66,13 +69,32 @@ export function mountBuilderStudio(api) {
   const pagesPanel = el('div', { class: 've-builder-pane ve-builder-pages' });
   const canvas = el('div', { class: 've-builder-canvas', role: 'region', 'aria-label': 'Builder canvas' });
   const properties = el('div', { class: 've-builder-pane ve-builder-properties' });
-  let selectedPageId = '', selectedComponentId = '', viewport = 'desktop';
+  let selectedPageId = '', selectedComponentId = '', viewport = 'desktop', pendingMedia = null;
+  const pickMedia = (selected, gallery = false) => { pendingMedia = { requestId: id(), componentId: selected.id, pageId: selectedPageId, gallery, mediaType: gallery ? 'image' : selected.kind }; window.dispatchEvent(new CustomEvent('ggmc-open-media', { detail: { requestId: pendingMedia.requestId, mediaType: pendingMedia.mediaType } })); };
+  const receiveMedia = event => { const detail = event.detail; if (!pendingMedia || detail?.requestId !== pendingMedia.requestId || detail.mediaType !== pendingMedia.mediaType || !/^https?:\/\//.test(detail.url)) return; const target = ensure(getDraft()).pages.find(item => item.id === pendingMedia.pageId)?.components.find(item => item.id === pendingMedia.componentId); if (!target) { pendingMedia = null; return; } saveHistory(); if (pendingMedia.gallery) target.props.images = [...new Set([...(target.props.images || []), detail.url])].slice(0, 100); else { target.props.src = detail.url; target.props.alt ||= detail.title || ''; } pendingMedia = null; change('Inserted selected library asset.'); };
+  window.addEventListener('ggmc-media-selected', receiveMedia);
   const change = (message) => { const doc = ensure(getDraft()); doc.updatedAt = new Date().toISOString(); applyChange(message); render(); };
   const button = (label, fn, primary = false) => { const node = el('button', { type: 'button', class: primary ? 'primary' : '' }, label); node.addEventListener('click', fn); return node; };
   const historyRow = el('div', { class: 've-row' }); historyRow.append(button('Builder undo', () => { undo?.(); render(); }, true), button('Builder redo', () => { redo?.(); render(); }), el('span', { class: 've-builder-save-state' }, 'Draft changes save locally and are included in server versions.'));
   workspace.append(pagesPanel, canvas, properties); host.append(heading, note, historyRow, workspace); panel.append(host);
   const render = () => {
-    const doc = ensure(getDraft());
+    const doc = getDraft().pageBuilder;
+    if (!doc || typeof doc !== 'object' || !Array.isArray(doc.pages)) {
+      pagesPanel.replaceChildren(
+        el('strong', {}, 'Pages'),
+        el('p', { class: 've-note' }, 'Start Builder to add a structured page document to this draft. Existing editor drafts remain unchanged until you do.'),
+        button('Start Builder workspace', () => {
+          saveHistory();
+          const created = ensure(getDraft());
+          selectedPageId = created.activePageId;
+          selectedComponentId = created.pages[0]?.components[0]?.id || '';
+          change('Started a Builder workspace in this draft.');
+        }, true),
+      );
+      canvas.replaceChildren(el('div', { class: 've-builder-canvas-head' }, 'Builder is ready when you start a workspace.'));
+      properties.replaceChildren(el('strong', {}, 'Properties'), el('p', { class: 've-note' }, 'Start Builder to configure pages, components, and site-wide settings.'));
+      return;
+    }
     if (!doc.pages.some(item => item.id === selectedPageId)) selectedPageId = doc.activePageId || doc.pages[0]?.id || '';
     const active = doc.pages.find(item => item.id === selectedPageId) || doc.pages[0];
     if (active && !active.components.some(item => item.id === selectedComponentId)) selectedComponentId = active.components[0]?.id || '';
@@ -100,7 +122,22 @@ export function mountBuilderStudio(api) {
       if (selected.kind === 'image' || selected.kind === 'video') {
         addField('Media URL', selected.props.src, value => { selected.props.src = value.slice(0, 2000); });
         addField('Alt text', selected.props.alt, value => { selected.props.alt = value.slice(0, 500); });
-        properties.append(button('Open media library', () => window.dispatchEvent(new Event('ggmc-open-media'))));
+        properties.append(button('Open media library', () => pickMedia(selected)));
+      }
+      if (selected.kind === 'image' || selected.kind === 'gallery') {
+        const choice = (label, values, value, setter) => { const input = el('select', { 'aria-label': label }); values.forEach(option => input.append(el('option', { value: option }, option))); input.value = value; input.addEventListener('change', () => { saveHistory(); setter(input.value); change(`Updated ${label.toLowerCase()}.`); }); properties.append(el('label', {}, label), input); };
+        choice('Image fit', ['cover','contain'], selected.props.fit || 'cover', value => { selected.props.fit = value; });
+        choice('Crop aspect ratio', ['original','1/1','4/3','16/9','3/4'], selected.props.aspect || 'original', value => { selected.props.aspect = value; });
+        addField('Focal point X (%)', selected.props.focalX ?? 50, value => { selected.props.focalX = percent(value); });
+        addField('Focal point Y (%)', selected.props.focalY ?? 50, value => { selected.props.focalY = percent(value); });
+      }
+      if (selected.kind === 'gallery') {
+        properties.append(button('Add image from library', () => pickMedia(selected, true)));
+        (selected.props.images || []).forEach((url, index) => { properties.append(el('p', { class: 've-note' }, `Image ${index + 1}: ${url}`), button(`Remove image ${index + 1}`, () => { saveHistory(); selected.props.images.splice(index, 1); change('Removed gallery image.'); }), button(`Move image ${index + 1} up`, () => { if (!index) return; saveHistory(); [selected.props.images[index - 1], selected.props.images[index]] = [selected.props.images[index], selected.props.images[index - 1]]; change('Reordered gallery.'); })); });
+      }
+      if (selected.kind === 'contactForm') {
+        properties.append(el('p', { class: 've-note' }, 'Fields: one per line as Label|type|required. Types: text, email, tel, textarea. Form is a layout preview; submissions are not connected.'));
+        const fields = el('textarea', { 'aria-label': 'Form fields' }); fields.value = formFields(selected.props).join('\n'); fields.addEventListener('change', () => { const entries = fields.value.split('\n').filter(Boolean); if (entries.length > 20 || entries.some(line => { const [label, type, required, ...extra] = line.split('|'); return !label?.trim() || !['text','email','tel','textarea'].includes(type) || (required && required !== 'required') || extra.length; })) return say('Use up to 20 fields: Label|text/email/tel/textarea|required.'); saveHistory(); selected.props.fields = entries; change('Updated form fields.'); }); properties.append(fields); addField('Submit label', selected.props.submitLabel || 'Send message', value => { selected.props.submitLabel = value.slice(0, 100); });
       }
       if (selected.kind === 'button') addField('Link URL', selected.props.href, value => { selected.props.href = value.slice(0, 1000); });
       const breakpoint = el('select', { 'aria-label': 'Builder breakpoint' }); [['desktop','Desktop'],['tablet','Tablet'],['mobile','Mobile']].forEach(([value, label]) => breakpoint.append(el('option', { value }, label))); breakpoint.value = viewport; breakpoint.addEventListener('change', () => { viewport = breakpoint.value; render(); }); properties.append(el('label', { class: 've-builder-field' }, 'Responsive preview'), breakpoint);
@@ -110,10 +147,16 @@ export function mountBuilderStudio(api) {
       addField('Columns', responsiveStyle().columns, value => { responsiveStyle().columns = Number(value) || 1; });
       properties.append(button(selected.visible === false ? 'Show section' : 'Hide section', () => { saveHistory(); selected.visible = selected.visible === false; change('Updated section visibility.'); }), button('Delete section', () => { if (selected.locked) return say('This protected section cannot be deleted.'); if (!confirm(`Delete “${selected.name}”?`)) return; saveHistory(); active.components = active.components.filter(item => item.id !== selected.id); selectedComponentId = active.components[0]?.id || ''; change('Deleted section from page draft.'); }));
     }
+    const globals = doc.globals || {};
+    properties.append(el('strong', {}, 'Site-wide settings'));
+    const globalField = (label, key) => { const wrap = el('label', { class: 've-builder-field' }, label); const input = el('input', { type: 'text', 'aria-label': label }); input.value = globals[key] || ''; input.addEventListener('change', () => { saveHistory(); doc.globals ||= {}; doc.globals[key] = input.value.slice(0, 2000); change(`Updated ${label.toLowerCase()}.`); }); wrap.append(input); properties.append(wrap); };
+    globalField('Global header text', 'headerText'); globalField('Global footer text', 'footerText'); globalField('Site background', 'background'); globalField('Site text color', 'color'); globalField('Site font (system-ui, Georgia, Arial)', 'fontFamily');
+    properties.append(el('p', { class: 've-note' }, 'Blank header/footer values preserve existing company content. Navigation: Label|#/page, one per line.'));
+    const navigation = el('textarea', { 'aria-label': 'Global navigation' }); navigation.value = (globals.navigation || []).join('\n'); navigation.addEventListener('change', () => { const entries = navigation.value.split('\n').filter(Boolean); if (entries.length > 30 || entries.some(line => !/^[^|]{1,120}\|#\/[a-z0-9-]{1,80}$/.test(line))) return say('Use Label|#/page for each navigation entry (up to 30).'); saveHistory(); doc.globals ||= {}; doc.globals.navigation = entries; change('Updated global navigation.'); }); properties.append(navigation);
     drawCanvas(doc, canvas, selectedPageId, selectedComponentId, (componentId) => { selectedComponentId = componentId; render(); }, viewport);
   };
   render();
-  return () => host.remove();
+  return () => { window.removeEventListener('ggmc-media-selected', receiveMedia); host.remove(); };
 }
 
 function uniqueSlug(pages, wanted) { const base = slug(wanted); const used = new Set(pages.map(item => item.slug)); if (!used.has(base)) return base; for (let n = 2; n < 1000; n += 1) if (!used.has(`${base}-${n}`)) return `${base}-${n}`; return `${base}-${Date.now().toString(36)}`; }

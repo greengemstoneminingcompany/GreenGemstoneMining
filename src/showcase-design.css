@@ -223,7 +223,7 @@ h2.display.light em, .display.light em { color: var(--emerald); }
 #ggmc-visual-editor .ve-builder-canvas { display: grid; grid-template-rows: auto 1fr; gap: 8px; background: #0e3c2d; }
 #ggmc-visual-editor .ve-builder-canvas-head { color: #d8eadf; font-size: 10px; letter-spacing: .06em; }
 #ggmc-visual-editor .ve-builder-page { display: grid; align-content: start; gap: 7px; min-height: 230px; padding: 12px; background: #f5f8f5; border-radius: 3px; }
-#ggmc-visual-editor .ve-builder-block { display: grid; gap: 3px; min-height: 56px; padding: 10px; border: 1px dashed #589178 !important; color: #143a2b !important; background: #fff !important; text-align: left; }
+#ggmc-visual-editor .ve-builder-block { display: grid; gap: 3px; min-height: 56px; padding: 10px; border: 1px dashed #589178 !important; color: #143a2b; background: #fff; text-align: left; }
 #ggmc-visual-editor .ve-builder-block.is-selected { border: 2px solid #d8ad45 !important; box-shadow: 0 0 0 2px rgba(216,173,69,.22); }
 #ggmc-visual-editor .ve-builder-block small { color: #007150; font-size: 9px; text-transform: uppercase; }
 #ggmc-visual-editor .ve-builder-block strong { font: 600 14px Georgia,serif; }
@@ -286,4 +286,24 @@ h2.display.light em, .display.light em { color: var(--emerald); }
   .company-page-gallery .gallery-track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .company-page-gallery .g-item:nth-child(5n + 1) { grid-column: auto; }
   .company-page-gallery .g-item:nth-child(7n + 3) { grid-row: auto; height: 188px; }
+}
+
+#ggmc-visual-editor .ve-builder-block { cursor: pointer; }
+#ggmc-visual-editor .ve-builder-block img { max-height: none; }
+#ggmc-visual-editor .ve-builder-block video { cursor: auto; }
+#ggmc-visual-editor .ve-builder-properties textarea { width: 100%; min-height: 100px; box-sizing: border-box; }
+#ggmc-visual-editor .ve-builder-page header,#ggmc-visual-editor .ve-builder-page footer { padding: 12px; }
+.builder-gallery-grid img { width: 100%; }
+
+#ggmc-visual-editor .ve-builder-page { background: var(--builder-background,#f5f8f5); color: var(--builder-color,#143a2b); font-family: var(--builder-font,system-ui); }
+#ggmc-visual-editor .ve-builder-block { background: var(--builder-background,#fff); color: var(--builder-color,#143a2b); font-family: inherit; }
+#ggmc-visual-editor .ve-builder-block strong { font-family: var(--builder-font,Georgia); }
+#ggmc-visual-editor .ve-builder-block span { color: inherit; }
+.builder-published { background: var(--builder-background,var(--paper)); color: var(--builder-color,var(--ink)); font-family: var(--builder-font,inherit); }
+.builder-published h1,.builder-published h2 { font-family: var(--builder-font,var(--display)); }
+
+#ggmc-visual-editor .ve-builder-studio { container-type: inline-size; }
+@container (max-width: 700px) {
+  #ggmc-visual-editor .ve-builder-workspace { grid-template-columns: minmax(0,1fr); }
+  #ggmc-visual-editor .ve-builder-canvas { min-height: 260px; }
 }

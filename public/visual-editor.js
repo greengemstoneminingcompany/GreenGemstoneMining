@@ -9,7 +9,8 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
   const previewEnabled = document.querySelector('meta[name="ggmc-preview-editor"]')?.content === 'enabled';
   const allowedPreviewHost = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || (location.hostname.startsWith('green-gemstone-mining-') && location.hostname.endsWith('-green-gemstone-mining-company.vercel.app'));
   if (!previewEnabled || !allowedPreviewHost) return;
-  const showPreviewTrigger = () => {
+  const showPreviewTrigger = async (restoreFocus = false) => {
+    try { if ((await window.__GGMC_EDITOR_API__?.getSession?.())?.isAdmin !== true) return; } catch { return; }
     if (!previewEnabled || document.getElementById('ggmc-preview-editor-trigger')) return;
     const trigger = document.createElement('button');
     trigger.type = 'button'; trigger.id = 'ggmc-preview-editor-trigger'; trigger.textContent = 'Preview Editor';
@@ -17,6 +18,7 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
     trigger.style.cssText = 'position:fixed;z-index:2147483646;right:18px;bottom:18px;padding:12px 18px;border:1px solid #e4c87c;border-radius:999px;background:#0d1310;color:#f2eee4;font:700 14px system-ui,sans-serif;box-shadow:0 8px 28px #0008;cursor:pointer';
     trigger.addEventListener('click', () => { trigger.remove(); void startEditor(); });
     document.body.append(trigger);
+    if (restoreFocus) trigger.focus();
   };
   const startEditor = async () => {
   const editorApi = window.__GGMC_EDITOR_API__;
@@ -25,13 +27,13 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
   if (!authorized) {
     const gate = document.createElement('section'); gate.id = 'ggmc-editor-auth-gate'; gate.setAttribute('aria-label','Preview editor sign in');
     gate.style.cssText='position:fixed;z-index:2147483647;right:18px;bottom:18px;width:min(360px,calc(100vw - 36px));padding:20px;background:#0d1310;color:#f2eee4;border:1px solid #c4a252;border-radius:14px;font:14px system-ui,sans-serif;box-shadow:0 12px 36px #0009';
-    const title=document.createElement('h2');title.textContent='Preview editor sign in';title.style.cssText='margin:0 0 8px;color:#e4c87c;font-size:18px';
+    const title=document.createElement('h2');title.textContent='Employee portal sign-in';title.style.cssText='margin:0 0 8px;color:#e4c87c;font-size:18px';
     const note=document.createElement('p');note.textContent='Sign in with an authorised preview editor account. Opening this URL does not grant access.';
     const form=document.createElement('form');
-    const email=document.createElement('input');email.type='email';email.required=true;email.autocomplete='username';email.placeholder='Owner email';email.setAttribute('aria-label','Owner email');email.style.cssText='display:block;box-sizing:border-box;width:100%;margin:8px 0;padding:10px';
+    const email=document.createElement('input');email.type='email';email.required=true;email.autocomplete='username';email.placeholder='Employee email';email.setAttribute('aria-label','Employee email');email.style.cssText='display:block;box-sizing:border-box;width:100%;margin:8px 0;padding:10px';
     const password=document.createElement('input');password.type='password';password.required=true;password.autocomplete='current-password';password.placeholder='Password';password.setAttribute('aria-label','Password');password.style.cssText=email.style.cssText;
     const submit=document.createElement('button');submit.type='submit';submit.textContent='Sign in';submit.style.cssText='padding:10px 14px;background:#c4a252;color:#07100b;border:0;border-radius:6px;font-weight:700';
-    const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Close';cancel.style.cssText='padding:10px 14px;margin-left:8px';cancel.addEventListener('click',()=>{const u=new URL(location.href);u.searchParams.delete('edit');history.replaceState({},'',u);gate.remove();showPreviewTrigger();document.getElementById('ggmc-preview-editor-trigger')?.focus();});
+    const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Close';cancel.style.cssText='padding:10px 14px;margin-left:8px';cancel.addEventListener('click',()=>{const u=new URL(location.href);u.searchParams.delete('edit');history.replaceState({},'',u);gate.remove();void showPreviewTrigger(true);});
     const message=document.createElement('p');message.setAttribute('role','status');message.setAttribute('aria-live','polite');
     form.append(email,password,submit,cancel,message);form.addEventListener('submit',async event=>{event.preventDefault();submit.disabled=true;message.textContent='Checking preview editor permissions…';try{const api=window.__GGMC_EDITOR_API__;if(!api?.signIn||!api?.getSession)throw Error('Preview sign-in is not ready. Reload this preview and try again.');await api.signIn(email.value.trim(),password.value);const session=await api.getSession();if(session?.isAdmin!==true)throw Error('This account is not authorised to edit the preview.');gate.remove();void startEditor();}catch(error){password.value='';message.textContent=error instanceof Error?error.message:'Sign-in failed.';}finally{submit.disabled=false;}});
     gate.append(title,note,form);document.body.append(gate);email.focus();return;
@@ -568,8 +570,7 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
     try { featureTeardown?.(); } catch {} featureTeardown = null;
     if(panel)panel.remove();style.remove();panel=null;mode='closed';selected=null;textStart=null;lastSelection=null;
     const u=new URL(location.href);u.searchParams.delete('edit');history.replaceState({},'',u);
-    showPreviewTrigger();
-    document.getElementById('ggmc-preview-editor-trigger')?.focus();
+    void showPreviewTrigger(true);
   }
   function setMode(next){if(!panel||!panel.isConnected)return;mode=next;document.body.classList.toggle('ggmc-ve-text',mode==='text');document.body.classList.toggle('ggmc-ve-select',mode==='select');panel.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));refresh();say(mode==='text'?'Click outlined text and type. Your edits save locally.':'Click an element on the page to change its styling, visibility, or position.');}
   function flushActiveText(){const active=document.activeElement;if(active instanceof HTMLElement&&active.isContentEditable)active.blur();}
@@ -584,5 +585,11 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
   observer=new MutationObserver(()=>{if(panel&&panel.isConnected){refresh();renderLayers();}});observer.observe(root,{childList:true,subtree:true});
   say('Draft only. No website or production changes are published from this panel.');
   };
+  window.addEventListener('ggmc-open-editor', () => {
+    const existing = document.getElementById('ggmc-editor-auth-gate') || document.getElementById('ggmc-visual-editor');
+    if (existing) { existing.querySelector('input,button')?.focus(); return; }
+    document.getElementById('ggmc-preview-editor-trigger')?.remove();
+    void startEditor();
+  });
   if (params.get('edit') === '1') void startEditor(); else showPreviewTrigger();
 })();

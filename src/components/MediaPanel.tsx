@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { MEDIA_BUCKET, type MediaUpload, type MediaCategory } from '@/lib/supabase';
@@ -20,6 +21,8 @@ interface MediaPanelProps {
   onClose: () => void;
   onUploaded: () => void;
   admin: AdminSession;
+  selectionType?: 'image' | 'video';
+  onSelect?: (asset: MediaUpload) => void;
 }
 
 interface UploadProgressItem {
@@ -79,7 +82,7 @@ const deriveFolders = (rows: MediaUpload[], category: MediaCategory) => {
   return Array.from(map.values()).sort((a, b) => a.path.localeCompare(b.path));
 };
 
-function MediaManager({ open, onClose, onUploaded, admin }: MediaPanelProps) {
+function MediaManager({ open, onClose, onUploaded, admin, selectionType, onSelect }: MediaPanelProps) {
   const sb = admin.client as SupabaseClient;
   const [allMedia, setAllMedia] = useState<MediaUpload[]>([]);
   const [loading, setLoading] = useState(false);
@@ -165,7 +168,7 @@ function MediaManager({ open, onClose, onUploaded, admin }: MediaPanelProps) {
       : '';
 
   const visibleMedia = allMedia.filter((item) => {
-    if (item.category !== uploadCategory) return false;
+    if (item.category !== uploadCategory || (selectionType && item.media_type !== selectionType)) return false;
     if (!activeFolder) return true;
     return item.storage_path.startsWith(`${uploadCategory}/${activeFolder}/`);
   });
@@ -559,6 +562,7 @@ function MediaManager({ open, onClose, onUploaded, admin }: MediaPanelProps) {
 
                             <div className="media-thumb-overlay">
                               <div className="media-thumb-actions">
+                                {onSelect && <button type="button" className="media-thumb-btn" onClick={() => onSelect(item)} aria-label={`Use ${item.title || 'uploaded asset'}`}>Use</button>}
                                 <button
                                   onClick={() => handleToggleActive(item)}
                                   className="media-thumb-btn"
@@ -646,6 +650,5 @@ function OwnerLogin({ onClose, admin }: Pick<MediaPanelProps, 'onClose' | 'admin
 
 export default function MediaPanel(props: MediaPanelProps) {
   if (!props.open) return null;
-  if (!props.admin.client || !props.admin.isAdmin) return <OwnerLogin onClose={props.onClose} admin={props.admin} />;
-  return <MediaManager {...props} />;
+  return createPortal(!props.admin.client || !props.admin.isAdmin ? <OwnerLogin onClose={props.onClose} admin={props.admin} /> : <MediaManager {...props} />, document.body);
 }

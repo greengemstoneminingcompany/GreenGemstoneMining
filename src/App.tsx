@@ -44,8 +44,13 @@ export default function App() {
     return () => window.removeEventListener('hashchange', syncRoute);
   }, []);
   const [mediaOpen, setMediaOpen] = useState(false);
+  const [mediaRequest, setMediaRequest] = useState<{ requestId: string; mediaType: 'image' | 'video' } | null>(null);
   useEffect(() => {
-    const openMedia = () => setMediaOpen(true);
+    const openMedia = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      setMediaRequest(detail && typeof detail.requestId === 'string' && ['image', 'video'].includes(detail.mediaType) ? detail : null);
+      setMediaOpen(true);
+    };
     window.addEventListener('ggmc-open-media', openMedia);
     return () => window.removeEventListener('ggmc-open-media', openMedia);
   }, []);
@@ -91,6 +96,11 @@ export default function App() {
           </div>
           <a href="#/gallery" onClick={() => setMenuOpen(false)}>{t.nav.gallery}</a>
           <a href="#/contact" onClick={() => setMenuOpen(false)}>{t.nav.contact}</a>
+          {document.querySelector('meta[name="ggmc-preview-editor"]')?.getAttribute('content') === 'enabled' && (
+            <details className="nav-dropdown owner-menu"><summary>Employee portal</summary><div className="nav-dropdown-panel">
+              <a href="?edit=1" onClick={(event) => { event.preventDefault(); setMenuOpen(false); event.currentTarget.closest('details')?.removeAttribute('open'); window.dispatchEvent(new Event('ggmc-open-editor')); }}>Employee portal sign-in</a>
+            </div></details>
+          )}
           <LanguageSwitcher />
           <a className="hdr-cta" href="#/contact" onClick={() => setMenuOpen(false)}>{t.nav.cta} <ArrowUpRight size={14} aria-hidden="true" /></a>
         </nav>
@@ -101,7 +111,10 @@ export default function App() {
 
       {mediaOpen && (
         <Suspense fallback={null}>
-          <MediaPanel open={mediaOpen} onClose={() => setMediaOpen(false)} onUploaded={refresh} admin={admin} />
+          <MediaPanel open={mediaOpen} onClose={() => { setMediaOpen(false); setMediaRequest(null); }} onUploaded={refresh} admin={admin} selectionType={mediaRequest?.mediaType} onSelect={mediaRequest ? (asset) => {
+            window.dispatchEvent(new CustomEvent('ggmc-media-selected', { detail: { requestId: mediaRequest.requestId, url: asset.public_url, title: asset.title, mediaType: asset.media_type } }));
+            setMediaOpen(false); setMediaRequest(null);
+          } : undefined} />
         </Suspense>
       )}
 

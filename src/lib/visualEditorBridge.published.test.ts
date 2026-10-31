@@ -81,3 +81,25 @@ describe('published visual editor payload safety', () => {
  });
 
 });
+
+it('renders configured gallery, image crop, form fields and shared chrome safely', () => {
+ document.body.innerHTML = '<div id="root"><header><a class="hdr-brand"><span>Original</span></a><nav class="hdr-nav"><details class="owner-menu"><summary>Owner</summary></details><div class="lang-switch">EN</div></nav></header><main></main><footer>Existing contact</footer></div>';
+ applyPublishedVisualEditorPayload({ pageBuilder: { globals: { headerText: 'Approved header', footerText: 'Approved footer', navigation: ['Home|#/home'], background: '#123456' }, pages: [{ slug: 'home', components: [
+  { kind: 'image', props: { src: 'https://example.com/a.webp', aspect: '16/9', focalX: 25, focalY: 200 } },
+  { kind: 'gallery', props: { images: ['javascript:alert(1)', 'https://example.com/b.webp'] } },
+  { kind: 'contactForm', props: { fields: ['Phone|tel|required', 'Question|textarea', 'Bad|script'], submitLabel: 'Request contact' } },
+ ] }] } }, document.getElementById('root')!);
+ expect(document.querySelector<HTMLImageElement>('.builder-image img')?.style.objectPosition).toBe('25% 100%');
+ expect(document.querySelector<HTMLImageElement>('.builder-image img')?.style.aspectRatio).toBe('16/9');
+ expect(document.querySelectorAll('.builder-gallery-grid img')).toHaveLength(1);
+ expect(document.querySelector<HTMLInputElement>('form input')?.type).toBe('tel');
+ expect(document.querySelector<HTMLInputElement>('form input')?.required).toBe(true);
+ expect(document.querySelectorAll('form textarea')).toHaveLength(1);
+ expect(document.querySelector<HTMLButtonElement>('form button')?.disabled).toBe(true);
+ expect(document.querySelector('.hdr-brand span')?.textContent).toBe('Approved header');
+ expect(document.querySelector('footer')?.textContent).toBe('Existing contactApproved footer');
+ expect(document.querySelectorAll('.hdr-nav a')).toHaveLength(1);
+ expect(document.querySelector('.owner-menu summary')?.textContent).toBe('Owner');
+ expect(document.querySelector('.lang-switch')?.textContent).toBe('EN');
+ document.body.innerHTML = '';
+});

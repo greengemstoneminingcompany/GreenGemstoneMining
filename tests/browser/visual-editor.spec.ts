@@ -3,16 +3,17 @@ import path from 'node:path';
 
 const fixture = '/tests/fixtures/visual-editor.html';
 
-test('actual preview opens the editor from its trigger without a query parameter and still requires admin sign-in', async ({ page }) => {
+test('actual preview employee dropdown opens sign-in while editor controls stay hidden for visitors', async ({ page }) => {
  const pageErrors: string[] = [];
  page.on('pageerror', error => pageErrors.push(error.message));
  await page.goto('/');
  await expect.poll(() => page.locator('#root').evaluate(el => el.childElementCount)).toBeGreaterThan(0);
  await expect(page.locator('#ggmc-visual-editor')).toHaveCount(0);
  const trigger = page.getByRole('button', { name: 'Open Preview Editor' });
- await expect(trigger).toBeVisible();
+ await expect(trigger).toHaveCount(0);
  expect(new URL(page.url()).searchParams.has('edit')).toBe(false);
- await trigger.click();
+ await page.locator('.owner-menu summary').click();
+ await page.getByRole('link', { name: 'Employee portal sign-in', exact: true }).click();
  await expect(page.locator('#ggmc-editor-auth-gate')).toBeVisible();
  await expect(page.locator('#ggmc-editor-auth-gate input[type="email"]')).toBeFocused();
  await expect(page.locator('#ggmc-visual-editor')).toHaveCount(0);
@@ -164,6 +165,7 @@ test('image editing replaces, crops, filters, backgrounds, and removes images in
 test('undo and redo restore the edited canvas text with buttons and keyboard shortcuts', async ({ page }) => {
  await page.goto(fixture + '?edit=1');
  const headline = page.locator('#headline');
+ await expect(headline).toHaveAttribute('contenteditable', 'true');
  await headline.fill('Temporary undo test');
  await expect(headline).toHaveText('Temporary undo test');
  await page.getByRole('button', { name: 'Undo', exact: true }).click();
@@ -648,7 +650,8 @@ test('Creative Studio module exposes design tokens, reusable templates, AI revie
 test('Builder workspace creates pages and components in the local editor draft', async ({ page }) => {
  await page.goto(fixture + '?edit=1');
  const panel = page.locator('#ggmc-visual-editor');
- await expect(panel.getByText('Builder workspace')).toBeVisible();
+ await expect(panel.getByText('Builder workspace', { exact: true })).toBeVisible();
+ await panel.getByRole('button', { name: 'Start Builder workspace', exact: true }).click();
  await panel.getByRole('button', { name: 'New page', exact: true }).click();
  await expect(panel).toContainText('New page');
  await panel.getByRole('button', { name: 'Add section', exact: true }).click();
@@ -663,9 +666,18 @@ test('Builder workspace creates pages and components in the local editor draft',
  expect(saved.pageBuilder.pages[1].components).toHaveLength(2);
 });
 
+test('Builder workspace does not alter an existing draft until it is started', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ const panel = page.locator('#ggmc-visual-editor');
+ await expect(panel.getByRole('button', { name: 'Start Builder workspace', exact: true })).toBeVisible();
+ const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2') || '{}'));
+ expect(saved.pageBuilder).toBeUndefined();
+});
+
 test('Builder templates, responsive properties, and history persist in the local draft', async ({ page }) => {
  await page.goto(fixture + '?edit=1');
  const panel = page.locator('#ggmc-visual-editor');
+ await panel.getByRole('button', { name: 'Start Builder workspace', exact: true }).click();
  await panel.getByLabel('Builder page template').selectOption('contact');
  await panel.getByRole('button', { name: 'Create from template', exact: true }).click();
  await expect(panel).toContainText('Contact page');
@@ -683,3 +695,39 @@ test('Builder templates, responsive properties, and history persist in the local
  expect(created.components.some((entry: { kind: string }) => entry.kind === 'cardGrid')).toBe(true);
 });
 
+test('Builder media selection is scoped and image crop, galleries, forms and globals survive reload', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ const panel = page.locator('#ggmc-visual-editor');
+ await panel.getByRole('button', { name: 'Start Builder workspace', exact: true }).click();
+ const setField = async (name: string, value: string) => { await panel.getByLabel(name, { exact: true }).fill(value); await panel.getByLabel(name, { exact: true }).press('Tab'); };
+ const add = async (kind: string) => { await panel.getByLabel('Builder component type').selectOption(kind); await panel.getByRole('button', { name: 'Add section', exact: true }).click(); };
+ const choose = async (button: string, mediaType: string, url: string) => {
+  await page.evaluate(() => { window.addEventListener('ggmc-open-media', event => { (window as unknown as { request: unknown }).request = (event as CustomEvent).detail; }, { once: true }); });
+  await panel.getByRole('button', { name: button, exact: true }).click();
+  await page.evaluate(({ mediaType, url }) => { const request = (window as unknown as { request: { requestId: string } }).request; window.dispatchEvent(new CustomEvent('ggmc-media-selected', { detail: { ...request, requestId: 'unrelated', mediaType, url } })); window.dispatchEvent(new CustomEvent('ggmc-media-selected', { detail: { ...request, mediaType, url, title: 'Test asset' } })); }, { mediaType, url });
+ };
+ await add('image');
+ await choose('Open media library', 'image', 'https://example.com/test.webp');
+ await expect(panel.getByLabel('Media URL', { exact: true })).toHaveValue('https://example.com/test.webp');
+ await panel.getByLabel('Crop aspect ratio').selectOption('16/9');
+ await setField('Focal point X (%)', '25');
+ await expect(panel.locator('.ve-builder-canvas img')).toHaveCSS('object-position', '25% 50%');
+ await add('video');
+ await choose('Open media library', 'video', 'https://example.com/test.mp4');
+ await expect(panel.locator('.ve-builder-canvas video')).toHaveAttribute('src', 'https://example.com/test.mp4');
+ await add('gallery');
+ await choose('Add image from library', 'image', 'https://example.com/gallery.webp');
+ await expect(panel.locator('.ve-builder-gallery-preview img')).toHaveCount(1);
+ await add('contactForm');
+ await setField('Form fields', 'Phone|tel|required\nQuestion|textarea');
+ await setField('Submit label', 'Request contact');
+ await setField('Global header text', 'Test header');
+ await setField('Global footer text', 'Test footer');
+ await setField('Global navigation', 'Home|#/home');
+ await page.reload();
+ await expect(panel.getByLabel('Global header text')).toHaveValue('Test header');
+ await expect(panel.locator('.ve-builder-canvas')).toContainText('Test footer');
+ const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2') || '{}'));
+ expect(saved.pageBuilder.pages[0].components.find((item: { kind: string }) => item.kind === 'image').props.focalX).toBe(25);
+ expect(saved.pageBuilder.pages[0].components.find((item: { kind: string }) => item.kind === 'contactForm').props.fields).toEqual(['Phone|tel|required', 'Question|textarea']);
+});
