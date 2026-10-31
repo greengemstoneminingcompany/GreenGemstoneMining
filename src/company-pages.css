@@ -29,3 +29,6 @@
 .page-cta { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:42px max(6vw,calc((100vw - 1240px)/2)); background:linear-gradient(110deg,#073a29,#071a12); border-top:1px solid rgba(201,166,77,.28); }
 .page-cta h2 { color:#f5f0e4; font:600 clamp(22px,3vw,34px) var(--display); margin:8px 0 0; }
 @media(max-width:760px){.page-info-grid,.page-mineral-grid,.page-contact-grid{grid-template-columns:1fr}.page-contact-grid{gap:28px}.page-cta{align-items:flex-start;flex-direction:column}.page-hero{min-height:390px;padding-bottom:58px}.page-hero-content>p:not(.eyebrow){font-size:16px}}
+
+/* Keep deep-linked sections visible below the fixed navigation. */
+.company-content section[id] { scroll-margin-top: 100px; }

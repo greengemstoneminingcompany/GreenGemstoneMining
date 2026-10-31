@@ -41,6 +41,7 @@ export default function App() {
       }));
     };
     window.addEventListener('hashchange', syncRoute);
+    syncRoute();
     return () => window.removeEventListener('hashchange', syncRoute);
   }, []);
   const [mediaOpen, setMediaOpen] = useState(false);
@@ -304,7 +305,7 @@ export default function App() {
           <div className="footer-col">
             <h3>{t.footer.company}</h3>
             <a href="#/about">{t.footer.about}</a>
-            <a href="#/about">{t.footer.mission}</a>
+            <a href="#/about?section=vision-mission">{t.footer.mission}</a>
             <a href="#/projects">{t.footer.projects}</a>
           </div>
           <div className="footer-col">

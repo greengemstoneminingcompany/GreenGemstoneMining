@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { useI18n } from '@/i18n/core';
 
 const mineralInterests = [
   'Gold', 'Mica muscovite', 'Lithium', 'Copper', 'Tin', 'Tungsten',
@@ -17,13 +18,14 @@ function Card({ label, title, children }: { label: string; title: string; childr
 }
 
 export default function CompanyContent() {
+  const { t } = useI18n();
   return (
     <div className="company-content">
       <section id="company-profile" className="sec">
         <div className="sec-container">
           <div className="content-intro reveal in">
-            <p className="eyebrow center">Company profile</p>
-            <h2 className="display">Local knowledge.<br /><em>Global opportunity.</em></h2>
+            <p className="eyebrow center">{t.company.eyebrow}</p>
+            <h2 className="display">{t.company.h2a}<br /><em>{t.company.h2b}</em></h2>
             <p className="body-text">Green Gemstone Mining Company is a local mining and development company based in Hargeisa, Somaliland. Its stated interests span gemstones, metals and industrial minerals. Mineral evidence and project stages vary, and no resource or reserve estimates are presented in this profile.</p>
           </div>
           <div className="content-grid">
@@ -69,7 +71,7 @@ export default function CompanyContent() {
       <section id="industrial-metals" className="sec">
         <div className="sec-container">
           <div className="content-intro reveal in">
-            <p className="eyebrow center">Mineral portfolio</p>
+            <p className="eyebrow center">{t.nav.portfolio}</p>
             <h2 className="display">Metals and mineral<br /><em>interests.</em></h2>
             <p className="body-text">These are mineral interests identified as areas of company interest. The list reflects company-stated interests. It does not represent independently verified reserves or confirm that every material is currently being mined.</p>
           </div>
@@ -130,7 +132,7 @@ export default function CompanyContent() {
       <section id="development-projects" className="sec sec-dark">
         <div className="sec-container">
           <div className="content-intro reveal in">
-            <p className="eyebrow center">Mining projects</p>
+            <p className="eyebrow center">{t.nav.projects}</p>
             <h2 className="display light">Mining development<br /><em>opportunities.</em></h2>
             <p className="body-text">The company reports more than six mining opportunities and says additional funding is needed to advance its plans and service its contracts. Their technical readiness has not been established in the material reviewed here. This section covers mining opportunities; the company's wider rural-development and community-support work is described separately below.</p>
           </div>
