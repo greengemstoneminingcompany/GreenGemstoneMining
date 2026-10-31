@@ -76,7 +76,14 @@ export function mountBuilderStudio(api) {
   const change = (message) => { const doc = ensure(getDraft()); doc.updatedAt = new Date().toISOString(); applyChange(message); render(); };
   const button = (label, fn, primary = false) => { const node = el('button', { type: 'button', class: primary ? 'primary' : '' }, label); node.addEventListener('click', fn); return node; };
   const historyRow = el('div', { class: 've-row' }); historyRow.append(button('Builder undo', () => { undo?.(); render(); }, true), button('Builder redo', () => { redo?.(); render(); }), el('span', { class: 've-builder-save-state' }, 'Draft changes save locally and are included in server versions.'));
-  workspace.append(pagesPanel, canvas, properties); host.append(heading, note, historyRow, workspace); panel.append(host);
+  const layoutRow = el('div', { class: 've-row' });
+  const studioLayout = button('Open studio layout', () => {
+    const wide = panel.classList.toggle('ve-studio-wide');
+    studioLayout.textContent = wide ? 'Use compact layout' : 'Open studio layout';
+    say(wide ? 'Studio layout open: pages, canvas, and properties are shown side by side.' : 'Compact editor layout restored.');
+  });
+  layoutRow.append(studioLayout, el('span', { class: 've-builder-save-state' }, 'Studio layout changes the workspace only; it does not change the published page.'));
+  workspace.append(pagesPanel, canvas, properties); host.append(heading, note, historyRow, layoutRow, workspace); panel.append(host);
   const render = () => {
     const doc = getDraft().pageBuilder;
     if (!doc || typeof doc !== 'object' || !Array.isArray(doc.pages)) {
@@ -156,7 +163,7 @@ export function mountBuilderStudio(api) {
     drawCanvas(doc, canvas, selectedPageId, selectedComponentId, (componentId) => { selectedComponentId = componentId; render(); }, viewport);
   };
   render();
-  return () => { window.removeEventListener('ggmc-media-selected', receiveMedia); host.remove(); };
+  return () => { panel.classList.remove('ve-studio-wide'); window.removeEventListener('ggmc-media-selected', receiveMedia); host.remove(); };
 }
 
 function uniqueSlug(pages, wanted) { const base = slug(wanted); const used = new Set(pages.map(item => item.slug)); if (!used.has(base)) return base; for (let n = 2; n < 1000; n += 1) if (!used.has(`${base}-${n}`)) return `${base}-${n}`; return `${base}-${Date.now().toString(36)}`; }

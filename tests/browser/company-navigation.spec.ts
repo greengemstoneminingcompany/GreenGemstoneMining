@@ -22,4 +22,16 @@ test.describe('company navigation', () => {
     await page.goto('/#/contact');
     await expect(page.locator('.company-page-contact')).toBeVisible();
   });
+
+  test('filters the shared project directory without changing the route', async ({ page }) => {
+    await page.goto('/#/projects');
+    const cards = page.locator('.project-card');
+    await expect(cards).toHaveCount(14);
+    await page.getByRole('button', { name: 'Port sites' }).click();
+    await expect(cards).toHaveCount(1);
+    await expect(cards.first()).toContainText('Lughaya port site');
+    await page.getByRole('button', { name: 'All records' }).click();
+    await expect(cards).toHaveCount(14);
+    await expect(page).toHaveURL(/#\/projects$/);
+  });
 });

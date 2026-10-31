@@ -26,6 +26,10 @@
 
 body { background: var(--paper); color: var(--ink); }
 .app { overflow: hidden; }
+/* Public content must be present in an initial/full-page render. The prior
+   viewport-only reveal effect created large blank bands in screenshots, print,
+   keyboard navigation, and slow devices. Motion remains available elsewhere. */
+.reveal, .reveal.in { opacity: 1; transform: none; }
 .hdr { height: 82px; background: linear-gradient(180deg, rgba(3, 42, 30, .95), rgba(3, 42, 30, .72)); border-bottom: 1px solid rgba(225, 244, 235, .16); }
 .hdr.scrolled { height: 68px; background: rgba(3, 42, 30, .97); border-color: rgba(225, 244, 235, .18); }
 .hdr-brand { max-width: 330px; color: #fff; font-size: 16px; line-height: 1.05; text-transform: uppercase; letter-spacing: .06em; }
@@ -135,6 +139,22 @@ h2.display.light em, .display.light em { color: var(--emerald); }
 .company-page-gallery .g-item:nth-child(5n + 1) { grid-column: span 2; }
 .company-page-gallery .g-item:nth-child(7n + 3) { grid-row: span 2; height: 390px; }
 
+/* Reference-template density: the public site uses compact editorial cards,
+   deliberate image framing, and a legible responsive page grid. */
+.project-card-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.project-card-art { height: 154px; }
+.project-card-body { min-height: 156px; display: grid; align-content: start; }
+.project-findings { margin-top: auto; }
+.page-info-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.page-info-grid article { min-height: 210px; }
+.page-contact-grid { align-items: stretch; }
+.page-contact-form { box-shadow: 0 16px 40px rgba(9,72,49,.1); }
+
+@media (max-width: 760px) {
+  .page-info-grid { grid-template-columns: 1fr; }
+  .project-card-art { height: 138px; }
+}
+
 .contact-sec { min-height: 620px; background: #eaf3ed; }
 .contact-visual { background: linear-gradient(125deg, rgba(2,47,34,.28), rgba(2,47,34,.82)), url('/assets/images/company-field.webp') center/cover; }
 .contact-panel { background: var(--forest); padding: clamp(56px, 7vw, 96px); }
@@ -172,6 +192,9 @@ h2.display.light em, .display.light em { color: var(--emerald); }
 .project-directory-head h2 em { color: var(--emerald); font-style: italic; }
 .project-directory-head > p:last-child { color: var(--ink-muted); line-height: 1.65; }
 .project-card-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.project-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+.project-filters button { border: 1px solid var(--line); border-radius: 999px; padding: 8px 13px; background: #fff; color: var(--emerald-deep); font: 700 10px system-ui,sans-serif; letter-spacing: .05em; cursor: pointer; }
+.project-filters button:hover, .project-filters button.active { background: var(--emerald-deep); border-color: var(--emerald-deep); color: #fff; }
 .project-card { overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 22px rgba(9,72,49,.07); transition: transform .25s ease, box-shadow .25s ease; }
 .project-card:hover { transform: translateY(-4px); box-shadow: 0 18px 34px rgba(9,72,49,.13); }
 .project-card-art { position: relative; height: 136px; display: flex; justify-content: flex-end; padding: 14px; overflow: hidden; background: linear-gradient(130deg, rgba(3,49,35,.2), rgba(3,49,35,.72)), url('/assets/images/company-field.webp') center/cover; }
@@ -303,7 +326,18 @@ h2.display.light em, .display.light em { color: var(--emerald); }
 .builder-published h1,.builder-published h2 { font-family: var(--builder-font,var(--display)); }
 
 #ggmc-visual-editor .ve-builder-studio { container-type: inline-size; }
+#ggmc-visual-editor.ve-studio-wide { left: 16px !important; right: 16px !important; top: 16px !important; bottom: 16px !important; width: auto !important; min-width: 0 !important; max-width: none !important; transform: none !important; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-workspace { grid-template-columns: minmax(210px,.8fr) minmax(420px,2fr) minmax(230px,.9fr); min-height: min(680px,calc(100vh - 260px)); }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-canvas { min-height: 540px; overflow: auto; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-page { min-height: 500px; max-width: 920px; width: 100%; margin: 0 auto; padding: 24px; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-block { min-height: 88px; padding: 16px; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-pages, #ggmc-visual-editor.ve-studio-wide .ve-builder-properties { max-height: min(680px,calc(100vh - 260px)); overflow: auto; }
 @container (max-width: 700px) {
   #ggmc-visual-editor .ve-builder-workspace { grid-template-columns: minmax(0,1fr); }
   #ggmc-visual-editor .ve-builder-canvas { min-height: 260px; }
+}
+@media (max-width: 900px) {
+  #ggmc-visual-editor.ve-studio-wide { left: 8px !important; right: 8px !important; top: 8px !important; bottom: 8px !important; }
+  #ggmc-visual-editor.ve-studio-wide .ve-builder-workspace { grid-template-columns: 1fr; }
+  #ggmc-visual-editor.ve-studio-wide .ve-builder-canvas { min-height: 320px; }
 }
