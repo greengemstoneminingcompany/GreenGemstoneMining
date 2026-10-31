@@ -62,7 +62,7 @@ function drawCanvas(documentModel, canvas, selectedPageId, selectedComponentId, 
 export function mountBuilderStudio(api) {
   const { panel, getDraft, saveHistory, applyChange, say, undo, redo } = api;
   if (!panel || typeof getDraft !== 'function') return () => {};
-  const host = el('section', { class: 've-builder-studio' });
+  const host = el('section', { class: 've-builder-studio ve-studio-shell' });
   const heading = el('div', { class: 've-label' }, 'Builder workspace');
   const note = el('p', { class: 've-note' }, 'Create pages and sections on this protected preview. Changes remain a draft until saved and published through the existing workflow.');
   const workspace = el('div', { class: 've-builder-workspace' });
@@ -75,6 +75,42 @@ export function mountBuilderStudio(api) {
   window.addEventListener('ggmc-media-selected', receiveMedia);
   const change = (message) => { const doc = ensure(getDraft()); doc.updatedAt = new Date().toISOString(); applyChange(message); render(); };
   const button = (label, fn, primary = false) => { const node = el('button', { type: 'button', class: primary ? 'primary' : '' }, label); node.addEventListener('click', fn); return node; };
+  const studioBar = el('div', { class: 've-builder-studio-bar' });
+  studioBar.append(el('strong', {}, 'Website builder'), el('span', { class: 've-builder-draft-state' }, 'Draft workspace'));
+  const studioTabs = el('div', { class: 've-builder-tabs', role: 'tablist', 'aria-label': 'Builder tools' });
+  [['Pages', pagesPanel], ['Canvas', canvas], ['Properties', properties]].forEach(([label, target]) => {
+    const tab = button(label, () => { target.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
+    tab.setAttribute('role', 'tab'); studioTabs.append(tab);
+  });
+  studioBar.append(studioTabs);
+  const toolDock = el('section', { class: 've-builder-tool-dock', 'aria-label': 'More edit tools' });
+  toolDock.append(el('strong', {}, 'More edit tools'), el('span', {}, 'Use these tools without leaving the live workspace.'));
+  const activate = (selector, message) => () => {
+    const target = panel.querySelector(selector);
+    if (!target) return say(`${message} is still loading. Try again in a moment.`);
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (target instanceof HTMLElement) target.focus?.();
+  };
+  toolDock.append(
+    button('Edit text', () => panel.querySelector('[data-mode="text"]')?.click()),
+    button('Style element', () => panel.querySelector('[data-mode="select"]')?.click()),
+    button('Add content', () => [...panel.querySelectorAll('button')].find(item => item.textContent === 'Add content')?.click()),
+    button('Company records', activate('.ve-company-records', 'Company records')),
+    button('Creative Studio', activate('.ve-feature-module', 'Creative Studio')),
+    button('Responsive preview', activate('[aria-label="Responsive preview"]', 'Responsive preview')),
+  );
+  const quickDock = el('section', { class: 've-builder-quick-dock', 'aria-label': 'Quick actions' });
+  quickDock.append(el('strong', {}, 'Quick actions'));
+  const clickNamedButton = name => () => [...panel.querySelectorAll('button')].find(item => item.textContent === name)?.click();
+  quickDock.append(
+    button('Undo', () => { undo?.(); render(); }),
+    button('Redo', () => { redo?.(); render(); }),
+    button('Edit text', () => panel.querySelector('[data-mode="text"]')?.click()),
+    button('Style element', () => panel.querySelector('[data-mode="select"]')?.click()),
+    button('Save draft', clickNamedButton('Save server draft'), true),
+    button('Publish', clickNamedButton('Publish snapshot'), true),
+    button('Export', clickNamedButton('Export JSON')),
+  );
   const historyRow = el('div', { class: 've-row' }); historyRow.append(button('Builder undo', () => { undo?.(); render(); }, true), button('Builder redo', () => { redo?.(); render(); }), el('span', { class: 've-builder-save-state' }, 'Draft changes save locally and are included in server versions.'));
   const layoutRow = el('div', { class: 've-row' });
   const studioLayout = button('Open studio layout', () => {
@@ -83,7 +119,9 @@ export function mountBuilderStudio(api) {
     say(wide ? 'Studio layout open: pages, canvas, and properties are shown side by side.' : 'Compact editor layout restored.');
   });
   layoutRow.append(studioLayout, el('span', { class: 've-builder-save-state' }, 'Studio layout changes the workspace only; it does not change the published page.'));
-  workspace.append(pagesPanel, canvas, properties); host.append(heading, note, historyRow, layoutRow, workspace); panel.append(host);
+  workspace.append(pagesPanel, canvas, properties); host.append(studioBar, heading, note, quickDock, historyRow, layoutRow, workspace, toolDock);
+  panel.insertBefore(host, panel.querySelector('.ve-topbar')?.nextSibling || null);
+  panel.classList.add('ve-studio-wide');
   const render = () => {
     const doc = getDraft().pageBuilder;
     if (!doc || typeof doc !== 'object' || !Array.isArray(doc.pages)) {
@@ -95,6 +133,8 @@ export function mountBuilderStudio(api) {
           const created = ensure(getDraft());
           selectedPageId = created.activePageId;
           selectedComponentId = created.pages[0]?.components[0]?.id || '';
+          panel.classList.add('ve-studio-wide');
+          studioLayout.textContent = 'Use compact layout';
           change('Started a Builder workspace in this draft.');
         }, true),
       );

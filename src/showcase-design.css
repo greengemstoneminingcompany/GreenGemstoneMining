@@ -285,6 +285,71 @@ h2.display.light em, .display.light em { color: var(--emerald); }
   .project-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .company-page-gallery .gallery-track { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* Full editor studio: a structured page tree, real canvas, and property pane
+   mirror the workspace shown in the approved studio reference. */
+#ggmc-visual-editor.ve-studio-wide {
+  top: 0 !important; right: 0 !important; bottom: 0 !important; left: 0 !important;
+  width: 100vw !important; height: 100vh !important; padding: 0 !important;
+  border: 0 !important; border-radius: 0 !important; background: #071c14 !important;
+}
+#ggmc-visual-editor.ve-studio-wide .ve-topbar {
+  position: sticky; top: 0; display: flex; min-height: 54px; align-items: center;
+  padding: 10px 18px !important; background: #06251a !important; border-bottom: 1px solid rgba(215, 173, 69, .32);
+}
+#ggmc-visual-editor.ve-studio-wide .ve-builder-studio { margin: 0; padding: 0 14px 18px; border: 0; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-studio-bar {
+  display: flex; min-height: 50px; align-items: center; gap: 12px; padding: 10px 4px;
+  color: #f5fbf7; border-bottom: 1px solid rgba(202, 231, 215, .15);
+}
+#ggmc-visual-editor.ve-studio-wide .ve-builder-studio-bar strong { font: 700 15px system-ui,sans-serif; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-draft-state { padding: 4px 7px; border-radius: 99px; background: rgba(47, 185, 127, .15); color: #96e4bc; font-size: 10px; font-weight: 700; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-tabs { display: flex; gap: 5px; margin-left: auto; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-tabs button { padding: 6px 10px; font-size: 10px; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-studio > .ve-label,
+#ggmc-visual-editor.ve-studio-wide .ve-builder-studio > .ve-note { display: none; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-studio > .ve-row { margin: 8px 4px; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-quick-dock {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin: 10px 4px 8px; padding: 9px 11px;
+  border: 1px solid rgba(215, 173, 69, .28); border-radius: 7px; background: linear-gradient(90deg, #0a3022, #08261c);
+}
+#ggmc-visual-editor.ve-studio-wide .ve-builder-quick-dock strong { margin-right: 8px; color: #f0d887; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-quick-dock button { padding: 7px 10px; font-size: 10px; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-quick-dock button.primary { background: #d8ad45 !important; color: #173629 !important; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-workspace {
+  grid-template-columns: minmax(220px, .75fr) minmax(430px, 2.1fr) minmax(240px, .85fr);
+  gap: 10px; min-height: 340px; height: calc(100vh - 390px);
+}
+#ggmc-visual-editor.ve-studio-wide .ve-builder-tool-dock {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding: 11px 13px;
+  border: 1px solid rgba(211, 237, 222, .16); border-radius: 7px; background: #08271c;
+}
+#ggmc-visual-editor.ve-studio-wide .ve-builder-tool-dock strong { color: #f0d887; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-tool-dock > span { margin-right: auto; color: #b7d1c5; font-size: 10px; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-tool-dock button { padding: 7px 9px; font-size: 10px; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-pane,
+#ggmc-visual-editor.ve-studio-wide .ve-builder-canvas {
+  overflow: auto; padding: 13px; border: 1px solid rgba(211, 237, 222, .16); border-radius: 7px; background: #0a2c20;
+}
+#ggmc-visual-editor.ve-studio-wide .ve-builder-pages { border-left: 3px solid #d8ad45; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-canvas { padding: 18px; background: #0c4130; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-canvas-head { display: flex; align-items: center; min-height: 26px; color: #bde3d0; font-weight: 700; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-page { max-width: 940px; min-height: 560px; gap: 10px; padding: 24px; box-shadow: 0 18px 42px rgba(0,0,0,.22); }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-block { min-height: 96px; padding: 16px; border-style: solid !important; border-color: rgba(7, 112, 77, .24) !important; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-block:hover { outline: 2px solid rgba(216, 173, 69, .72); outline-offset: 2px; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-properties { border-right: 3px solid #d8ad45; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-pages > strong,
+#ggmc-visual-editor.ve-studio-wide .ve-builder-properties > strong { position: sticky; top: -13px; z-index: 1; display: block; margin: -13px -13px 8px; padding: 13px; background: #0a2c20; color: #f0d887; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+#ggmc-visual-editor.ve-studio-wide .ve-builder-layer button:first-child { min-height: 32px; }
+#ggmc-visual-editor.ve-studio-wide .ve-resize,
+#ggmc-visual-editor.ve-studio-wide .ve-resize-height,
+#ggmc-visual-editor.ve-studio-wide .ve-resize-corner { display: none; }
+@media (max-width: 900px) {
+  #ggmc-visual-editor.ve-studio-wide { inset: 0 !important; width: 100vw !important; height: 100vh !important; }
+  #ggmc-visual-editor.ve-studio-wide .ve-builder-workspace { grid-template-columns: 1fr; height: auto; }
+  #ggmc-visual-editor.ve-studio-wide .ve-builder-pane, #ggmc-visual-editor.ve-studio-wide .ve-builder-canvas { min-height: 300px; max-height: none; }
+  #ggmc-visual-editor.ve-studio-wide .ve-builder-tool-dock > span { width: 100%; }
+}
 @media (max-width: 768px) {
   .hdr { height: 68px; }
   .hdr-brand { max-width: 245px; font-size: 13px; letter-spacing: .025em; }
@@ -340,4 +405,13 @@ h2.display.light em, .display.light em { color: var(--emerald); }
   #ggmc-visual-editor.ve-studio-wide { left: 8px !important; right: 8px !important; top: 8px !important; bottom: 8px !important; }
   #ggmc-visual-editor.ve-studio-wide .ve-builder-workspace { grid-template-columns: 1fr; }
   #ggmc-visual-editor.ve-studio-wide .ve-builder-canvas { min-height: 320px; }
+}
+
+/* Keep the tool dock visible after the original wide-workspace dimensions. */
+#ggmc-visual-editor.ve-studio-wide .ve-builder-workspace {
+  min-height: 340px;
+  height: calc(100vh - 390px);
+}
+@media (max-width: 900px) {
+  #ggmc-visual-editor.ve-studio-wide .ve-builder-workspace { height: auto; }
 }

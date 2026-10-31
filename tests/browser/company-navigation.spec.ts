@@ -35,3 +35,27 @@ test.describe('company navigation', () => {
     await expect(page).toHaveURL(/#\/projects$/);
   });
 });
+
+test('shared About records update detailed sections and office details together', async ({ page }) => {
+  await page.goto('/#/about');
+  await page.evaluate(() => {
+    const records = structuredClone(window.__GGMC_COMPANY_DEFAULT_RECORDS__!);
+    records.about.operations.cards[2].items = ['Verified equipment acceptance'];
+    records.about.development.cards[0].title = 'Verified development acceptance';
+    records.about.community.cards[0].paragraphs = ['Verified community acceptance'];
+    records.about.services.cards[0].title = 'Verified service acceptance';
+    records.about.history.cards[0].paragraphs = ['Verified history acceptance'];
+    records.about.leadership.cards[0].title = 'Verified leadership acceptance';
+    records.profile.officeAddress = 'Verified office acceptance';
+    window.dispatchEvent(new CustomEvent('ggmc-company-records', { detail: records }));
+  });
+  await expect(page.locator('#operations')).toContainText('Verified equipment acceptance');
+  await expect(page.locator('#development-projects')).toContainText('Verified development acceptance');
+  await expect(page.locator('#rural-development')).toContainText('Verified community acceptance');
+  await expect(page.locator('#services')).toContainText('Verified service acceptance');
+  await expect(page.locator('#history-details')).toContainText('Verified history acceptance');
+  await expect(page.locator('#leadership')).toContainText('Verified leadership acceptance');
+  await expect(page.locator('#leadership')).toContainText('Verified office acceptance');
+  await page.getByRole('link', { name: 'Contact', exact: true }).first().click();
+  await expect(page.locator('.page-contact-detail').last()).toContainText('Verified office acceptance');
+});

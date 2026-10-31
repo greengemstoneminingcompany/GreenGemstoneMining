@@ -19,3 +19,24 @@ describe('company records', () => {
     expect(records?.projects[0].findings).toEqual([]);
   });
 });
+
+it('migrates older snapshots without losing detailed company facts', () => {
+  const records = parseCompanyRecords({ version: 1 });
+  expect(records?.about).toEqual(defaultCompanyRecords.about);
+  expect(records?.about.operations.cards[0].paragraphs[0]).toContain('not 600 tonnes of gold');
+  expect(records?.about.operations.cards[2].items).toContain('15×0×250 jaw crusher (notation preserved from the supplied specification)');
+  expect(records?.about.leadership.cards.map(card => card.title)).toEqual(['Mr. Ahmed Saleiman', 'Mr. Saeed Guled']);
+});
+
+it('bounds detailed records and renders content as plain strings', () => {
+  const records = parseCompanyRecords({ about: {
+    operations: { title: 'Verified operations', cards: [{ title: '<script>literal text</script>', label: 'Equipment', paragraphs: ['Verified specification'], items: ['Pump'] }] },
+    history: { title: 'x'.repeat(181), cards: Array(41).fill({ title: 'Over limit' }) },
+    leadership: { cards: [] },
+  } });
+  expect(records?.about.operations.title).toBe('Verified operations');
+  expect(records?.about.operations.cards[0].title).toBe('<script>literal text</script>');
+  expect(records?.about.history).toEqual(defaultCompanyRecords.about.history);
+  expect(records?.about.leadership.cards).toEqual([]);
+  expect(defaultCompanyRecords.about.operations.title).toBe('Real assets.');
+});

@@ -1,11 +1,19 @@
+import { ABOUT } from '@/data/about';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { GALLERY, IMAGES, MINERALS, SITE, TIMELINE } from '@/data/site';
 import { PROJECTS, type ProjectArea } from '@/data/company';
 import type { GalleryItem } from '@/lib/media';
 
+export const ABOUT_SECTION_KEYS = ['operations', 'development', 'community', 'services', 'history', 'leadership'] as const;
+export type AboutSectionKey = typeof ABOUT_SECTION_KEYS[number];
+export type AboutCard = { label: string; title: string; paragraphs: string[]; items: string[]; link?: { label: string; target: AboutSectionKey } };
+export type AboutSection = { eyebrow: string; title: string; emphasis: string; introduction: string; note: string; cards: AboutCard[] };
+export type AboutRecords = Record<AboutSectionKey, AboutSection>;
+
 export type CompanyMetric = { value: string; label: string };
 export type CompanyRecords = {
   version: 1;
+  about: AboutRecords;
   profile: { legalName: string; email: string; linkedin: string; officeAddress: string; publicLocation: string; heroImage: string; companyImage: string };
   metrics: CompanyMetric[];
   industrialStats: CompanyMetric[];
@@ -19,6 +27,7 @@ export type CompanyRecords = {
 
 export const defaultCompanyRecords: CompanyRecords = {
   version: 1,
+  about: ABOUT,
   profile: { legalName: SITE.name, email: SITE.email, linkedin: SITE.linkedin, officeAddress: 'Omar Hashi Building, 4th Floor, Hargeisa, Somaliland.', publicLocation: 'Hargeisa, Somaliland', heroImage: IMAGES.company, companyImage: IMAGES.company },
   metrics: [
     { value: '12', label: 'Mineral interests' }, { value: '6', label: 'Regions of interest' }, { value: '2018', label: 'Established' }, { value: '14', label: 'Field areas' },
@@ -40,6 +49,26 @@ const url = (value: unknown, fallback: string) => typeof value === 'string' && (
 export function parseCompanyRecords(value: unknown): CompanyRecords | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>; const base = clone(defaultCompanyRecords);
+  const about = raw.about && typeof raw.about === 'object' && !Array.isArray(raw.about) ? raw.about as Record<string, unknown> : {};
+  for (const key of ABOUT_SECTION_KEYS) {
+    const candidate = about[key];
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) continue;
+    const row = candidate as Record<string, unknown>; const section = base.about[key];
+    for (const field of ['eyebrow', 'title', 'emphasis', 'introduction', 'note'] as const) {
+      const limit = field === 'introduction' || field === 'note' ? 3000 : 180;
+      if (typeof row[field] === 'string' && row[field].length <= limit) section[field] = row[field].trim();
+    }
+    if (Array.isArray(row.cards) && row.cards.length <= 40) section.cards = row.cards.flatMap(value => {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
+      const card = value as Record<string, unknown>;
+      const strings = (input: unknown) => Array.isArray(input) && input.length <= 30 ? input.map(item => text(item, '', 3000)).filter(Boolean) : [];
+      const title = text(card.title, '', 180);
+      const link = card.link && typeof card.link === 'object' ? card.link as Record<string, unknown> : {};
+      const target = ABOUT_SECTION_KEYS.find(key => key === link.target);
+      const label = text(link.label, '', 180);
+      return title ? [{ title, label: text(card.label, '', 180), paragraphs: strings(card.paragraphs), items: strings(card.items), ...(target && label ? { link: { target, label } } : {}) }] : [];
+    });
+  }
   const profile = raw.profile && typeof raw.profile === 'object' ? raw.profile as Record<string, unknown> : {};
   base.profile = {
     legalName: text(profile.legalName, base.profile.legalName, 160), email: text(profile.email, base.profile.email, 254), linkedin: text(profile.linkedin, base.profile.linkedin, 1000),

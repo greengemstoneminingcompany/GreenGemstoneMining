@@ -2,7 +2,7 @@
 const clone = value => JSON.parse(JSON.stringify(value));
 const node = (tag, attrs = {}, text = '') => { const el = document.createElement(tag); Object.entries(attrs).forEach(([key, value]) => { if (key === 'class') el.className = value; else el.setAttribute(key, value); }); if (text) el.textContent = text; return el; };
 const defaults = () => clone(window.__GGMC_COMPANY_DEFAULT_RECORDS__ || { version: 1, profile: { legalName: 'Green Gemstone Mining Company', email: '', linkedin: '', officeAddress: '', publicLocation: '', heroImage: '', companyImage: '' }, metrics: [], industrialStats: [], projects: [], minerals: [], gallery: [], timeline: [], mineralInterests: [], gemstoneInterests: [] });
-const records = draft => { if (!draft.companyRecords || typeof draft.companyRecords !== 'object' || Array.isArray(draft.companyRecords)) draft.companyRecords = defaults(); return draft.companyRecords; };
+const records = draft => { if (!draft.companyRecords || typeof draft.companyRecords !== 'object' || Array.isArray(draft.companyRecords)) draft.companyRecords = defaults(); const data = draft.companyRecords; const aboutDefaults = defaults().about || {}; if (!data.about || typeof data.about !== 'object' || Array.isArray(data.about)) data.about = clone(aboutDefaults); Object.entries(aboutDefaults).forEach(([key, section]) => { if (!data.about[key]) data.about[key] = clone(section); }); return data; };
 const field = (label, value, onChange, type = 'text') => { const wrap = node('label', { class: 've-field' }); wrap.append(node('span', {}, label)); const input = node('input', { type, 'aria-label': label }); input.value = String(value ?? ''); input.addEventListener('change', () => onChange(input.value)); wrap.append(input); return wrap; };
 
 export function mountCompanyRecords(api) {
@@ -15,7 +15,7 @@ export function mountCompanyRecords(api) {
   const change = message => { applyChange(message); render(); };
   const mutate = (message, fn) => { saveHistory(); fn(records(getDraft())); change(message); };
   const tab = (key, label) => { const button = node('button', { type: 'button' }, label); button.addEventListener('click', () => { active = key; render(); }); tabs.append(button); return button; };
-  const buttons = { profile: tab('profile', 'Profile & contact'), metrics: tab('metrics', 'Statistics'), projects: tab('projects', 'Projects & map'), catalogue: tab('catalogue', 'Catalogue'), media: tab('media', 'Gallery & timeline') };
+  const buttons = { profile: tab('profile', 'Profile & contact'), metrics: tab('metrics', 'Statistics'), projects: tab('projects', 'Projects & map'), catalogue: tab('catalogue', 'Catalogue'), media: tab('media', 'Gallery & timeline'), about: tab('about', 'Detailed About') };
   host.append(tabs, body); panel.append(host);
   const listInput = (title, key, hint) => { body.append(node('p', { class: 've-note' }, hint)); const area = node('textarea', { 'aria-label': title }); area.value = records(getDraft())[key].join('\n'); area.addEventListener('change', () => mutate(`Updated ${title.toLowerCase()}.`, data => { data[key] = area.value.split('\n').map(value => value.trim()).filter(Boolean).slice(0, 80); })); body.append(area); };
   const render = () => {
@@ -33,6 +33,27 @@ export function mountCompanyRecords(api) {
     } else if (active === 'catalogue') {
       body.append(node('p', { class: 've-note' }, 'Mineral catalogue values update the homepage and Portfolio page. Interest lists update the detailed company profile.'));
       const select = node('select', { 'aria-label': 'Mineral record' }); data.minerals.forEach((mineral, index) => select.append(node('option', { value: index }, mineral.name || `Mineral ${index + 1}`))); select.value = String(itemIndex); select.addEventListener('change', () => { itemIndex = Number(select.value); render(); }); body.append(select); const mineral = data.minerals[itemIndex]; if (mineral) { body.append(field('Mineral name', mineral.name, value => mutate('Updated mineral name.', current => { current.minerals[itemIndex].name = value.slice(0, 120); })), field('Category', mineral.cat, value => mutate('Updated mineral category.', current => { current.minerals[itemIndex].cat = value.slice(0, 80); }))); } listInput('Mineral interests', 'mineralInterests', 'One verified interest per line.'); listInput('Gemstone interests', 'gemstoneInterests', 'One verified gemstone interest per line.');
+    } else if (active === 'about') {
+      body.append(node('p', { class: 've-note' }, 'Preserve verified facts and company-reported qualifications. Office details use Profile & contact. Paragraphs and equipment/list items use one entry per line.'));
+      const sections = data.about || {};
+      Object.entries(sections).forEach(([key, section]) => {
+        const details = node('details'); details.append(node('summary', {}, key.charAt(0).toUpperCase() + key.slice(1)));
+        const edit = (label, value, update, multiline = false, max = 3000) => {
+          const wrap = node('label', { class: 've-field' }); wrap.append(node('span', {}, label));
+          const input = node(multiline ? 'textarea' : 'input', { 'aria-label': `${key}: ${label}`, maxlength: max }); input.value = value;
+          input.addEventListener('change', () => mutate(`Updated ${key} ${label.toLowerCase()}.`, current => update(current.about[key], input.value.slice(0, max)))); wrap.append(input); details.append(wrap);
+        };
+        ['eyebrow', 'title', 'emphasis', 'introduction', 'note'].forEach(name => edit(name, section[name], (current, value) => { current[name] = value; }, name === 'introduction' || name === 'note', ['introduction', 'note'].includes(name) ? 3000 : 180));
+        section.cards.forEach((card, index) => {
+          details.append(node('strong', {}, `Record ${index + 1}`));
+          ['label', 'title'].forEach(name => edit(`Record ${index + 1} ${name}`, card[name], (current, value) => { current.cards[index][name] = value; }, false, 180));
+          ['paragraphs', 'items'].forEach(name => edit(`Record ${index + 1} ${name}`, card[name].join('\n'), (current, value) => { current.cards[index][name] = value.split('\n').map(line => line.trim()).filter(Boolean).slice(0, 30).map(line => line.slice(0, 3000)); }, true, 90000));
+          edit(`Record ${index + 1} link label`, card.link?.label || '', (current, value) => { current.cards[index].link = { target: current.cards[index].link?.target || 'community', label: value }; }, false, 180);
+          const destination = node('select', { 'aria-label': `${key}: Record ${index + 1} link destination` }); destination.append(node('option', { value: '' }, 'No section link')); Object.keys(sections).forEach(target => destination.append(node('option', { value: target }, target))); destination.value = card.link?.target || ''; destination.addEventListener('change', () => mutate(`Updated ${key} section link.`, current => { if (destination.value) current.about[key].cards[index].link = { label: card.link?.label || '', target: destination.value }; else delete current.about[key].cards[index].link; })); details.append(destination);
+          const remove = node('button', { type: 'button' }, `Remove ${key} record ${index + 1}`); remove.addEventListener('click', () => mutate(`Removed ${key} record.`, current => current.about[key].cards.splice(index, 1))); details.append(remove);
+        });
+        const add = node('button', { type: 'button' }, `Add ${key} record`); add.addEventListener('click', () => mutate(`Added ${key} record.`, current => { if (current.about[key].cards.length < 40) current.about[key].cards.push({ label: '', title: '', paragraphs: [], items: [] }); })); details.append(add); body.append(details);
+      });
     } else {
       const select = node('select', { 'aria-label': 'Gallery record' });
       data.gallery.forEach((item, index) => select.append(node('option', { value: index }, item.label || `Gallery item ${index + 1}`)));
