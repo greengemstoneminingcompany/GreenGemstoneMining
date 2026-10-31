@@ -236,6 +236,10 @@ function safePublishedCssValue(prop: string, value: unknown): value is string {
 /** Apply a published snapshot. Inserted content is rendered with textContent and safe URL checks. */
 export function applyPublishedVisualEditorPayload(payload: Record<string, unknown> | null, root: HTMLElement | null = document.getElementById('root')) {
  if (!payload || !root || typeof payload !== 'object') return;
+ if (payload.companyRecords && typeof payload.companyRecords === 'object' && !Array.isArray(payload.companyRecords)) {
+  window.__GGMC_COMPANY_RECORDS__ = payload.companyRecords;
+  window.dispatchEvent(new CustomEvent('ggmc-company-records', { detail: payload.companyRecords }));
+ }
  if (renderPublishedPageBuilder(payload, root)) { applyPublishedDesignTokens(payload, root); return; }
  const text = payload.text && typeof payload.text === 'object' ? payload.text as Record<string, {after?:unknown}> : {};
  for (const [selector, change] of Object.entries(text)) {

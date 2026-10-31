@@ -1,17 +1,7 @@
 import type { ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useI18n } from '@/i18n/core';
-
-const mineralInterests = [
-  'Gold', 'Mica muscovite', 'Lithium', 'Copper', 'Tin', 'Tungsten',
-  'Lead', 'Titanium', 'Tantalum', 'Uranium', 'Beryl', 'Molybdenum',
-  'Chromite', 'Beryllium', 'Emerald',
-];
-
-const gemstoneInterests = [
-  'Alexandrite', 'Emerald', 'Sapphire', 'Ruby', 'Aquamarine', 'Tsavorite',
-  'Serendibite', 'Spinel', 'Opal', 'Topaz', 'Tourmaline',
-];
+import { useCompanyRecords } from '@/lib/companyRecords';
 
 function Card({ label, title, children }: { label: string; title: string; children: ReactNode }) {
   return <article className="content-card"><span className="content-label">{label}</span><h3>{title}</h3>{children}</article>;
@@ -19,6 +9,7 @@ function Card({ label, title, children }: { label: string; title: string; childr
 
 export default function CompanyContent() {
   const { t } = useI18n();
+  const { mineralInterests, gemstoneInterests, profile } = useCompanyRecords();
   return (
     <div className="company-content">
       <section id="company-profile" className="sec">
@@ -26,7 +17,7 @@ export default function CompanyContent() {
           <div className="content-intro reveal in">
             <p className="eyebrow center">{t.company.eyebrow}</p>
             <h2 className="display">{t.company.h2a}<br /><em>{t.company.h2b}</em></h2>
-            <p className="body-text">Green Gemstone Mining Company is a local mining and development company based in Hargeisa, Somaliland. Its stated interests span gemstones, metals and industrial minerals. Mineral evidence and project stages vary, and no resource or reserve estimates are presented in this profile.</p>
+            <p className="body-text">{profile.legalName} is a local mining and development company based in {profile.publicLocation}. Its stated interests span gemstones, metals and industrial minerals. Mineral evidence and project stages vary, and no resource or reserve estimates are presented in this profile.</p>
           </div>
           <div className="content-grid">
             <Card label="Our approach" title="A diversified strategy">

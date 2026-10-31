@@ -8,7 +8,7 @@ import { useI18n } from '@/i18n/core';
 const WIDTHS = ['w5', 'w6', 'w7'];
 const FILTERS: GalleryFilter[] = ['All', ...GALLERY_GROUPS];
 
-export default function Gallery({ uploads }: { uploads: MediaUpload[] }) {
+export default function Gallery({ uploads, items = GALLERY }: { uploads: MediaUpload[]; items?: GalleryItem[] }) {
   const { t } = useI18n();
   const tg = t.gallery;
   const itemLabel = (label: string) => tg.items[label] ?? label;
@@ -31,9 +31,9 @@ export default function Gallery({ uploads }: { uploads: MediaUpload[] }) {
   const filters = uploadItems.length ? FILTERS : FILTERS.filter((f) => f !== 'My uploads');
 
   const visible = useMemo(() => {
-    const all = [...GALLERY, ...uploadItems].filter((i) => matchesGalleryFilter(i, filter));
+    const all = [...items, ...uploadItems].filter((i) => matchesGalleryFilter(i, filter));
     return filter === 'My uploads' && folder !== 'All folders' ? all.filter((i) => i.folder === folder) : all;
-  }, [filter, folder, uploadItems]);
+  }, [filter, folder, uploadItems, items]);
 
   useEffect(() => {
     if (!open) return undefined;

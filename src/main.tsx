@@ -7,8 +7,10 @@ import './company-pages.css';
 import './showcase-design.css';
 import { LanguageProvider } from './i18n/LanguageProvider';
 import { applyPublishedVisualEditorPayload, installVisualEditorBridge } from './lib/visualEditorBridge';
+import { CompanyRecordsProvider, defaultCompanyRecords } from './lib/companyRecords';
 
 installVisualEditorBridge();
+window.__GGMC_COMPANY_DEFAULT_RECORDS__ = JSON.parse(JSON.stringify(defaultCompanyRecords));
 
 class PreviewRenderErrorBoundary extends Component<
   { children: ReactNode },
@@ -94,8 +96,10 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <PreviewRenderErrorBoundary>
       <LanguageProvider>
-        <App />
-        <PublishedEditorContent />
+        <CompanyRecordsProvider>
+          <App />
+          <PublishedEditorContent />
+        </CompanyRecordsProvider>
       </LanguageProvider>
     </PreviewRenderErrorBoundary>
   </StrictMode>

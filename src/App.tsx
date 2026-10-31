@@ -5,7 +5,8 @@ import ContactForm from '@/components/ContactForm';
 import SomalilandMap from '@/components/SomalilandMap';
 import { Counter, Crystal3D, ScrollProgress } from '@/components/Effects';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { DEPOSITS, IMAGES, MINERALS, SITE, TIMELINE } from '@/data/site';
+import { DEPOSITS } from '@/data/site';
+import { useCompanyRecords } from '@/lib/companyRecords';
 import { useI18n } from '@/i18n/core';
 import { useAdminSession } from '@/hooks/useAdminSession';
 import { useReveals } from '@/hooks/useReveals';
@@ -15,7 +16,6 @@ import { supabaseConfigured } from '@/lib/supabase';
 import CompanyPages, { type CompanyPage } from '@/components/CompanyPages';
 
 const DEPOSIT_ICONS = { gem: Gem, atom: Atom, hammer: Hammer, mountain: Mountain } as const;
-const METALS = MINERALS.filter((m) => m.cat === 'Metal' || m.cat === 'Precious');
 
 const readPage = (): CompanyPage => {
   const route = window.location.hash.replace(/^#\/?/, '').split(/[/?]/)[0];
@@ -55,6 +55,8 @@ export default function App() {
     return () => window.removeEventListener('ggmc-open-media', openMedia);
   }, []);
   const { t } = useI18n();
+  const records = useCompanyRecords();
+  const metals = records.minerals.filter((m) => m.cat === 'Metal' || m.cat === 'Precious');
   const scrolled = useScrollHeader();
   const { uploads, refresh } = useUploads();
   const admin = useAdminSession(mediaOpen);
@@ -66,7 +68,7 @@ export default function App() {
       <ScrollProgress />
 
       <header className={`hdr ${scrolled || menuOpen ? 'scrolled' : ''}`}>
-        <a className="hdr-brand" href="#/home"><Gem size={22} aria-hidden="true" /><span>Green Gemstone Mining Company</span></a>
+        <a className="hdr-brand" href="#/home"><Gem size={22} aria-hidden="true" /><span>{records.profile.legalName}</span></a>
         <nav id="main-nav" className={`hdr-nav ${menuOpen ? 'open' : ''}`} aria-label={t.ui.mainNav}>
           <a href="#/home" onClick={() => setMenuOpen(false)}>{t.nav.overview}</a>
           <div className="nav-menu-item">
@@ -121,7 +123,7 @@ export default function App() {
       <main id="main">
         {currentPage === 'home' ? (<>
         <section id="top" className="hero">
-          <img className="hero-bg" src={IMAGES.company} alt="" width={806} height={536} fetchPriority="high" />
+          <img className="hero-bg" src={records.profile.heroImage} alt="" width={806} height={536} fetchPriority="high" />
           <div className="hero-overlay" />
           <Crystal3D />
           <div className="hero-inner">
@@ -133,7 +135,7 @@ export default function App() {
               <a className="btn-ghost" href="#/minerals">{t.hero.secondary} <ChevronDown size={16} aria-hidden="true" /></a>
             </div>
             <div className="hero-metrics">
-              {t.hero.metrics.map((metric) => (
+              {records.metrics.map((metric) => (
                 <div key={metric.label} className="metric-card">
                   <strong>{metric.value}</strong>
                   <span>{metric.label}</span>
@@ -157,7 +159,7 @@ export default function App() {
         <section id="company" className="sec">
           <div className="sec-container company">
             <div className="company-visual reveal">
-              <img src={IMAGES.company} alt={t.company.imgAlt} width={806} height={536} loading="lazy" />
+              <img src={records.profile.companyImage} alt={t.company.imgAlt} width={806} height={536} loading="lazy" />
               <div className="company-badge">{t.company.badge1}<br />{t.company.badge2}</div>
             </div>
             <div className="company-text reveal" style={{ transitionDelay: '120ms' }}>
@@ -200,16 +202,14 @@ export default function App() {
         </section>
 
         <section className="split">
-          <div className="split-img split-panel"><ul aria-label={t.industrial.listLabel}>{METALS.map((m) => <li key={m.name}>{t.catalogue.minerals[m.name] ?? m.name}</li>)}</ul></div>
+          <div className="split-img split-panel"><ul aria-label={t.industrial.listLabel}>{metals.map((m) => <li key={m.name}>{t.catalogue.minerals[m.name] ?? m.name}</li>)}</ul></div>
           <div className="split-text">
             <div className="reveal">
               <p className="eyebrow">{t.industrial.eyebrow}</p>
               <h2 className="display light">{t.industrial.h2a}<br /><em>{t.industrial.h2b}</em></h2>
               <p className="body-text">{t.industrial.text}</p>
               <div className="split-stats">
-                <Counter value={12} label={t.industrial.stats[0]} />
-                <Counter value={6} label={t.industrial.stats[1]} plus={false} />
-                <Counter value={2018} label={t.industrial.stats[2]} plus={false} />
+                {records.industrialStats.map((stat, index) => <Counter key={stat.label} value={Number(stat.value) || 0} label={stat.label} plus={index === 0} />)}
               </div>
               <a className="btn btn-gold" href="#/projects">{t.industrial.cta} <ArrowRight size={16} /></a>
             </div>
@@ -242,7 +242,7 @@ export default function App() {
               <h2 className="display light">{t.projects.h2a}<br /><em>{t.projects.h2b}</em></h2>
               <p className="body-text">{t.projects.text}</p>
             </div>
-            <div className="reveal"><SomalilandMap /></div>
+            <div className="reveal"><SomalilandMap projects={records.projects} /></div>
           </div>
         </section>
 
@@ -253,7 +253,7 @@ export default function App() {
               <h2 className="display">{t.history.h2a}<br /><em>{t.history.h2b}</em></h2>
             </div>
             <div className="timeline-rail">
-              {TIMELINE.map((item, index) => (
+              {records.timeline.map((item, index) => (
                 <div className="tl-node reveal" key={item.year} style={{ transitionDelay: `${index * 120}ms` }}>
                   <span className="tl-dot" />
                   <span className="tl-year">{item.year}</span>
@@ -273,7 +273,7 @@ export default function App() {
               <p className="body-text">{t.gallery.text}</p>
             </div>
           </div>
-          <Gallery uploads={uploads} />
+          <Gallery uploads={uploads} items={records.gallery} />
         </section>
 
         <section className="sec">
@@ -284,7 +284,7 @@ export default function App() {
               <p className="body-text">{t.catalogue.text}</p>
             </div>
             <div className="mineral-grid reveal">
-              {MINERALS.map((mineral, index) => (
+              {records.minerals.map((mineral, index) => (
                 <div className="mineral" key={mineral.name}>
                   <span className="mineral-num">{String(index + 1).padStart(2, '0')}</span>
                   <Gem size={18} />
@@ -305,9 +305,9 @@ export default function App() {
               <h2 className="display light">{t.contact.h2a}<br /><em>{t.contact.h2b}</em></h2>
               <p className="body-text">{t.contact.text}</p>
               <div className="contact-info">
-                <a href={`mailto:${SITE.email}`}><Mail size={16} aria-hidden="true" /> {SITE.email}</a>
-                <span><MapPin size={16} aria-hidden="true" /> {t.contact.address}</span>
-                {SITE.linkedin && <a href={SITE.linkedin} rel="noopener noreferrer" target="_blank"><Linkedin size={16} aria-hidden="true" /> LinkedIn</a>}
+                <a href={`mailto:${records.profile.email}`}><Mail size={16} aria-hidden="true" /> {records.profile.email}</a>
+                <span><MapPin size={16} aria-hidden="true" /> {records.profile.officeAddress}</span>
+                {records.profile.linkedin && <a href={records.profile.linkedin} rel="noopener noreferrer" target="_blank"><Linkedin size={16} aria-hidden="true" /> LinkedIn</a>}
               </div>
               <ContactForm />
               <p className="privacy-note">{t.contact.privacyBefore} <a href="#privacy">{t.contact.privacyLink}</a>.</p>
@@ -320,7 +320,7 @@ export default function App() {
       <footer className="footer">
         <div className="footer-grid">
           <div>
-            <div className="footer-brand"><Gem size={20} aria-hidden="true" /> Green Gemstone Mining Company</div>
+            <div className="footer-brand"><Gem size={20} aria-hidden="true" /> {records.profile.legalName}</div>
             <p className="footer-tag">{t.footer.tagline}</p>
           </div>
           <div className="footer-col">
@@ -337,19 +337,19 @@ export default function App() {
           </div>
           <div className="footer-col">
             <h3>{t.footer.connect}</h3>
-            <a href={`mailto:${SITE.email}`}>{t.footer.email}</a>
-            {SITE.linkedin && <a href={SITE.linkedin} rel="noopener noreferrer" target="_blank">LinkedIn</a>}
+            <a href={`mailto:${records.profile.email}`}>{t.footer.email}</a>
+            {records.profile.linkedin && <a href={records.profile.linkedin} rel="noopener noreferrer" target="_blank">LinkedIn</a>}
             <a href="#/contact">{t.footer.partner}</a>
           </div>
         </div>
         <div className="footer-base">
-          <span>© {new Date().getFullYear()} {SITE.name}</span>
-          <span>{t.footer.location}</span>
+          <span>© {new Date().getFullYear()} {records.profile.legalName}</span>
+          <span>{records.profile.publicLocation}</span>
           {supabaseConfigured && <button type="button" className="owner-link" onClick={() => setMediaOpen(true)}>{t.footer.ownerLogin}</button>}
         </div>
         <section id="privacy" className="privacy">
           <h3>{t.footer.privacyTitle}</h3>
-          <p>{t.footer.privacyText} <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+          <p>{t.footer.privacyText} <a href={`mailto:${records.profile.email}`}>{records.profile.email}</a>.</p>
         </section>
       </footer>
     </div>

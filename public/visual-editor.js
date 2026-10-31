@@ -551,11 +551,12 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
     status=document.createElement('div');status.className='ve-status';status.setAttribute('aria-live','polite');panel.append(status);
     counter=document.createElement('div');counter.className='ve-count';panel.append(counter);
     document.body.append(panel);updateCount();inspect(null);panel.querySelector('button')?.focus();
-    Promise.all([import('/visual-editor/features/creative-studio.js'), import('/visual-editor/features/builder-studio.js')]).then(([creative, builder]) => {
+    Promise.all([import('/visual-editor/features/creative-studio.js'), import('/visual-editor/features/builder-studio.js'), import('/visual-editor/features/company-records.js')]).then(([creative, builder, companyRecords]) => {
       if (!panel || !panel.isConnected) return;
       const disposeCreative = creative.mountCreativeStudio({ panel, root, getDraft: () => draft, saveHistory, applyChange, say, getSelected: () => selected, editorApi: window.__GGMC_EDITOR_API__, aiWrite: input => window.__GGMC_EDITOR_API__?.aiWrite?.(input) });
       const disposeBuilder = builder.mountBuilderStudio({ panel, root, getDraft: () => draft, saveHistory, applyChange, say, undo: doUndo, redo: doRedo });
-      featureTeardown = () => { try { disposeBuilder?.(); } finally { disposeCreative?.(); } };
+      const disposeCompanyRecords = companyRecords.mountCompanyRecords({ panel, getDraft: () => draft, saveHistory, applyChange, say });
+      featureTeardown = () => { try { disposeCompanyRecords?.(); } finally { try { disposeBuilder?.(); } finally { disposeCreative?.(); } } };
     }).catch(() => say('Builder workspace did not load. Existing editor tools remain available.'));
   }
   function teardown(){

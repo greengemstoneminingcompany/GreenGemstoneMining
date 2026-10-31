@@ -4,7 +4,7 @@ import { MAP_CORRIDOR, MAP_GEOLOGY, MAP_OUTLINE, MAP_PLACES, MAP_REGIONS, MAP_VI
 import { EVIDENCE, OCCURRENCES, SOURCES } from '@/data/geology';
 import { KM100, project, unproject } from '@/data/geoProject';
 import { REGIONS } from '@/data/site';
-import { PROJECTS } from '@/data/company';
+import { PROJECTS, type ProjectArea } from '@/data/company';
 import { LOCALITIES, MINERAL_COUNT, MINERAL_GROUP, mineralsInRegion, recordsFor } from '@/data/minerals';
 import { FINDER, mineralName } from '@/data/mineralText';
 import { useI18n } from '@/i18n/core';
@@ -37,7 +37,7 @@ const SWEEP = Array.from({ length: 10 }, (_, i) => {
 });
 
 /** Region borders are approximate and the geology layer is generalised, so the map says so in its note. */
-export default function SomalilandMap() {
+export default function SomalilandMap({ projects = PROJECTS }: { projects?: ProjectArea[] }) {
   const { t, lang } = useI18n();
   const F = FINDER[lang];
   const p = t.projects;
@@ -252,7 +252,7 @@ export default function SomalilandMap() {
 
             {showProjects && (
               <g className="gm-projects">
-                {PROJECTS.map((pr) => {
+                {projects.map((pr) => {
                   const [x, y] = project(pr.lon, pr.lat);
                   return (
                     <g key={pr.id} transform={`translate(${x} ${y})`}>
