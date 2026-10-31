@@ -20,6 +20,7 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
   const { t } = useI18n();
   if (page === 'home') return null;
   const copy = pageCopy[page];
+  const localizedPage = { about: { title: `${t.company.h2a} ${t.company.h2b}`, description: t.company.lead }, projects: { title: `${t.projects.h2a} ${t.projects.h2b}`, description: t.projects.text }, minerals: { title: `${t.catalogue.h2a} ${t.catalogue.h2b}`, description: t.catalogue.text }, gallery: { title: `${t.gallery.h2a} ${t.gallery.h2b}`, description: t.gallery.text }, contact: { title: `${t.contact.h2a} ${t.contact.h2b}`, description: t.contact.text } }[page];
   const localizedEyebrow = { about: t.nav.company, projects: t.nav.projects, minerals: t.nav.portfolio, gallery: t.nav.gallery, contact: t.nav.contact }[page];
   return (
     <div className={`company-page company-page-${page}`}>
@@ -27,8 +28,8 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
         <div className="page-hero-image" />
         <div className="page-hero-content">
           <p className="eyebrow">{localizedEyebrow}</p>
-          <h1>{copy.title}</h1>
-          <p>{copy.description}</p>
+          <h1>{localizedPage.title}</h1>
+          <p>{localizedPage.description}</p>
           <a className="btn btn-gold" href="#/contact">{t.nav.cta} <ArrowUpRight size={16} /></a>
         </div>
       </section>
@@ -44,7 +45,7 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
         <p className="content-note">Project-specific geological evidence, sampling, testing, permits and technical reports should be assessed independently before investment decisions.</p>
       </div></section>}
       {page === 'gallery' && <section className="sec sec-dark"><div className="sec-container"><div className="page-section-heading"><p className="eyebrow">Company media</p><h2 className="display light">A closer look at our work</h2><p className="body-text">Browse sample imagery and authorized company uploads.</p></div></div><Gallery uploads={uploads}/></section>}
-      {page === 'contact' && <section className="sec sec-dark"><div className="sec-container page-contact-grid"><div><p className="eyebrow">Contact our team</p><h2 className="display light">Let's explore what's possible.</h2><p className="body-text">{copy.description}</p><div className="page-contact-detail"><Mail size={18}/><a href={`mailto:${SITE.email}`}>{SITE.email}</a></div><div className="page-contact-detail"><MapPin size={18}/><span>{t.contact.address}</span></div><p className="page-contact-note">Please include the subject of your enquiry and any relevant project context.</p></div><div className="page-contact-form"><ContactForm/></div></div></section>}
+      {page === 'contact' && <section className="sec sec-dark"><div className="sec-container page-contact-grid"><div><p className="eyebrow">Contact our team</p><h2 className="display light">Let's explore what's possible.</h2><p className="body-text">{localizedPage.description}</p><div className="page-contact-detail"><Mail size={18}/><a href={`mailto:${SITE.email}`}>{SITE.email}</a></div><div className="page-contact-detail"><MapPin size={18}/><span>{t.contact.address}</span></div><p className="page-contact-note">Please include the subject of your enquiry and any relevant project context.</p></div><div className="page-contact-form"><ContactForm/></div></div></section>}
       <section className="page-cta"><div><p className="eyebrow">Green Gemstone Mining Company</p><h2>Have a project or partnership in mind?</h2></div><a className="btn btn-gold" href="#/contact">{t.nav.contact} <ArrowUpRight size={16}/></a></section>
     </div>
   );
