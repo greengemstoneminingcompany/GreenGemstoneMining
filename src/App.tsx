@@ -32,7 +32,13 @@ export default function App() {
     const syncRoute = () => {
       setCurrentPage(readPage());
       setMenuOpen(false);
-      window.scrollTo({ top: 0, behavior: 'auto' });
+      // Wait until React renders the destination page before locating its section.
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+        const section = new URLSearchParams(window.location.hash.split('?')[1] || '').get('section');
+        const target = section ? document.getElementById(section) : null;
+        if (target) target.scrollIntoView({ behavior: 'auto', block: 'start' });
+        else window.scrollTo({ top: 0, behavior: 'auto' });
+      }));
     };
     window.addEventListener('hashchange', syncRoute);
     return () => window.removeEventListener('hashchange', syncRoute);
@@ -56,26 +62,26 @@ export default function App() {
           <div className="nav-menu-item">
             <a href="#/about" onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
             <details className="nav-dropdown"><summary aria-label="Open company submenu"><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
-              <a href="#/about" onClick={() => setMenuOpen(false)}>Company profile</a>
-              <a href="#/about" onClick={() => setMenuOpen(false)}>Vision &amp; mission</a>
-              <a href="#/about" onClick={() => setMenuOpen(false)}>Leadership</a>
-              <a href="#/about" onClick={() => setMenuOpen(false)}>Company history</a>
+              <a href="#/about?section=company-profile" onClick={() => setMenuOpen(false)}>Company profile</a>
+              <a href="#/about?section=vision-mission" onClick={() => setMenuOpen(false)}>Vision &amp; mission</a>
+              <a href="#/about?section=leadership" onClick={() => setMenuOpen(false)}>Leadership</a>
+              <a href="#/about?section=history-details" onClick={() => setMenuOpen(false)}>Company history</a>
             </div></details>
           </div>
           <div className="nav-menu-item">
             <a href="#/minerals" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
             <details className="nav-dropdown"><summary aria-label="Open portfolio submenu"><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
-              <a href="#/minerals" onClick={() => setMenuOpen(false)}>Gemstones</a>
-              <a href="#/minerals" onClick={() => setMenuOpen(false)}>Industrial &amp; precious metals</a>
-              <a href="#/about" onClick={() => setMenuOpen(false)}>Services</a>
+              <a href="#/about?section=gemstones" onClick={() => setMenuOpen(false)}>Gemstones</a>
+              <a href="#/about?section=industrial-metals" onClick={() => setMenuOpen(false)}>Industrial &amp; precious metals</a>
+              <a href="#/about?section=services" onClick={() => setMenuOpen(false)}>Services</a>
             </div></details>
           </div>
           <div className="nav-menu-item">
             <a href="#/projects" onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
             <details className="nav-dropdown"><summary aria-label="Open projects submenu"><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
-              <a href="#/projects" onClick={() => setMenuOpen(false)}>Mining development</a>
-              <a href="#/about" onClick={() => setMenuOpen(false)}>Rural development &amp; community support</a>
-              <a href="#/about" onClick={() => setMenuOpen(false)}>Operations &amp; equipment</a>
+              <a href="#/about?section=development-projects" onClick={() => setMenuOpen(false)}>Mining development</a>
+              <a href="#/about?section=rural-development" onClick={() => setMenuOpen(false)}>Rural development &amp; community support</a>
+              <a href="#/about?section=operations" onClick={() => setMenuOpen(false)}>Operations &amp; equipment</a>
             </div></details>
           </div>
           <a href="#/gallery" onClick={() => setMenuOpen(false)}>{t.nav.gallery}</a>
