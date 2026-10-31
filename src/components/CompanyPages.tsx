@@ -8,18 +8,9 @@ import { useI18n } from '@/i18n/core';
 
 export type CompanyPage = 'home' | 'about' | 'projects' | 'minerals' | 'gallery' | 'contact';
 
-const pageCopy: Record<Exclude<CompanyPage, 'home'>, { eyebrow: string; title: string; description: string }> = {
-  about: { eyebrow: 'Our company', title: 'Local knowledge. Global opportunity.', description: 'Learn about our company, our approach to responsible mining, and the communities and partners we work with.' },
-  projects: { eyebrow: 'Our projects', title: 'Mining development across Somaliland.', description: 'Explore the regions and opportunities identified in company materials. Project status and technical evidence should be reviewed individually.' },
-  minerals: { eyebrow: 'Mineral portfolio', title: 'A diverse portfolio of mineral interests.', description: 'Explore the gemstones, metals and industrial minerals identified in the company portfolio. Listings are interests, not reserve declarations.' },
-  gallery: { eyebrow: 'Visual stories', title: 'Field work, samples and company milestones.', description: 'Browse the company gallery and authorized media uploads.' },
-  contact: { eyebrow: 'Start a conversation', title: 'Build the next opportunity together.', description: 'Contact our team about investment, partnerships, mineral interests or general enquiries.' },
-};
-
 export default function CompanyPages({ page, uploads }: { page: CompanyPage; uploads: Parameters<typeof Gallery>[0]['uploads'] }) {
   const { t } = useI18n();
   if (page === 'home') return null;
-  const copy = pageCopy[page];
   const localizedPage = { about: { title: `${t.company.h2a} ${t.company.h2b}`, description: t.company.lead }, projects: { title: `${t.projects.h2a} ${t.projects.h2b}`, description: t.projects.text }, minerals: { title: `${t.catalogue.h2a} ${t.catalogue.h2b}`, description: t.catalogue.text }, gallery: { title: `${t.gallery.h2a} ${t.gallery.h2b}`, description: t.gallery.text }, contact: { title: `${t.contact.h2a} ${t.contact.h2b}`, description: t.contact.text } }[page];
   const localizedEyebrow = { about: t.nav.company, projects: t.nav.projects, minerals: t.nav.portfolio, gallery: t.nav.gallery, contact: t.nav.contact }[page];
   return (
