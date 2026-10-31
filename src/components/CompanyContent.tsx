@@ -45,7 +45,7 @@ export default function CompanyContent() {
       <section id="vision-mission" className="sec sec-dark">
         <div className="sec-container">
           <div className="content-intro reveal in">
-            <p className="eyebrow center">Vision &amp; mission</p>
+            <p className="eyebrow center">{t.mission.eyebrow}</p>
             <h2 className="display light">Build opportunity.<br /><em>Grow local value.</em></h2>
             <p className="body-text">The company aims to help establish Somaliland as a stronger participant in international gemstone and industrial-mineral markets while expanding local employment and processing capability.</p>
           </div>
@@ -83,7 +83,7 @@ export default function CompanyContent() {
       <section id="gemstones" className="sec sec-dark">
         <div className="sec-container">
           <div className="content-intro reveal in">
-            <p className="eyebrow center">Gemstones</p>
+            <p className="eyebrow center">{t.catalogue.cats.Gemstone}</p>
             <h2 className="display light">A broad gemstone<br /><em>portfolio.</em></h2>
             <p className="body-text">The company's gemstone interests include the following types.</p>
           </div>
@@ -96,7 +96,7 @@ export default function CompanyContent() {
       <section id="operations" className="sec">
         <div className="sec-container">
           <div className="content-intro reveal in">
-            <p className="eyebrow center">Operations &amp; equipment</p>
+            <p className="eyebrow center">{t.nav.projects}</p>
             <h2 className="display">Real assets.<br /><em>Clear constraints.</em></h2>
             <p className="body-text">The following operational details were supplied by the company and are presented as company-reported information.</p>
           </div>
@@ -187,7 +187,7 @@ export default function CompanyContent() {
             <Card label="Listed service" title="Mineral identification"><p>Mineral identification is listed among the company's service areas.</p></Card>
             <Card label="Listed service" title="Mineral processing"><p>Mineral processing is listed among the company's service areas.</p></Card>
             <Card label="Listed service" title="Agriculture"><p>Agriculture is one of the company's stated service and development interests.</p></Card>
-            <article className="content-card"><span className="content-label">Listed service</span><h3>Rural development</h3><p>Explore the company's rural-development and community-support work, including water access, rural roads, humanitarian assistance and mosque restoration.</p><a className="link-go" href="#rural-development">Rural development &amp; community support <ArrowRight size={15} /></a></article>
+            <article className="content-card"><span className="content-label">Listed service</span><h3>Rural development</h3><p>Explore the company's rural-development and community-support work, including water access, rural roads, humanitarian assistance and mosque restoration.</p><a className="link-go" href="#/about?section=rural-development">Rural development &amp; community support <ArrowRight size={15} /></a></article>
             <Card label="Listed service" title="Fishing"><p>Fishing is one of the company's stated service and development interests.</p></Card>
             <Card label="Research initiative" title="Seaweed information gathering"><p>The company has begun gathering information about seaweed and is exploring wild collection and ocean farming as future possibilities. These are research and planning activities, not represented here as established operations.</p></Card>
           </div>
@@ -215,7 +215,7 @@ export default function CompanyContent() {
       <section id="leadership" className="sec">
         <div className="sec-container">
           <div className="content-intro reveal in">
-            <p className="eyebrow center">Leadership</p>
+            <p className="eyebrow center">{t.nav.company}</p>
             <h2 className="display">Local leadership.<br /><em>Operational focus.</em></h2>
           </div>
           <div className="content-grid">
