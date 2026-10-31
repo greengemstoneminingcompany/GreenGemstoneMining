@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - preview/resource-navigation-gallery
+      - feature/advanced-design-creative-studio
   pull_request:
     branches:
       - main
