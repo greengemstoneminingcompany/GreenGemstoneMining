@@ -1,0 +1,32 @@
+name: ggm-ai
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: litellm
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Inject from Infisical}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litellm -d litellm"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  litellm:
+    image: ${LITELLM_IMAGE:?Select a tested LiteLLM image >=1.109.0 with ARM64 support}
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    ports:
+      - "127.0.0.1:4000:4000"
+    volumes:
+      - ./litellm.yaml:/app/config.yaml:ro
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Inject postgres connection URL from Infisical}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:?Inject from Infisical}
+      LITELLM_SALT_KEY: ${LITELLM_SALT_KEY:?Inject stable salt from Infisical}
+      STORE_MODEL_IN_DB: "True"
+    depends_on:
+      postgres:
+        condition: service_healthy
+volumes:
+  postgres_data:

@@ -15,3 +15,13 @@ coverage/
 # Supabase CLI generated local state
 /supabase/.temp/
 .vercel
+
+# Workspace-local tools and Infisical project selection
+.tools/
+.infisical.json
+.infisical.yaml
+__pycache__/
+*.pyc
+
+# Local n8n instance, databases, credentials, logs, workflows, and backups
+/n8n/

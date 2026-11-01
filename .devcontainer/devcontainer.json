@@ -3,16 +3,22 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
   "remoteUser": "pwuser",
   "forwardPorts": [
     5173,
-    4173
+    4173,
+    4000,
+    5678
   ],
   "postCreateCommand": "npm ci",
   "customizations": {
     "vscode": {
       "extensions": [
         "openai.chatgpt",
+        "anthropic.claude-code",
         "dbaeumer.vscode-eslint",
         "ms-playwright.playwright"
       ]
