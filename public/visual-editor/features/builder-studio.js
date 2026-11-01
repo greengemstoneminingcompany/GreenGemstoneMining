@@ -303,6 +303,14 @@ export function mountBuilderStudio(api) {
   guide.append(action('Edit selected section', () => { setMode?.('select'); say?.('Click any visible part of the website to open its inspector.'); }, true));
   layout.append(map, guide); host.append(bar, actions, layout);
   panel.insertBefore(host, panel.querySelector('.ve-topbar')?.nextSibling || null);
+  const inspectorDock = liveNode('section', { class: 've-live-inspector-dock', 'aria-label': 'Selected section inspector' });
+  const inspectorTitle = panel.querySelector('.ve-inspector-title');
+  const inspector = panel.querySelector('.ve-inspector');
+  const status = panel.querySelector('.ve-status');
+  if (inspectorTitle) inspectorDock.append(inspectorTitle);
+  if (inspector) inspectorDock.append(inspector);
+  if (status) inspectorDock.append(status);
+  host.append(inspectorDock);
   panel.classList.remove('ve-studio-wide'); panel.classList.add('ve-live-editor');
   const sync = () => { state.textContent = `Viewing ${liveRoute()}`; renderMap(); };
   window.addEventListener('hashchange', sync); renderMap();
