@@ -365,6 +365,12 @@ h2.display.light em, .display.light em { color: var(--emerald); }
   box-shadow: none !important;
   pointer-events: none;
 }
+#ggmc-visual-editor.ve-live-editor > *:not(.ve-topbar):not(.ve-live-studio):not(.ve-resize):not(.ve-resize-height):not(.ve-resize-corner) {
+  display: none !important;
+}
+#ggmc-visual-editor.ve-live-editor > .ve-resize,
+#ggmc-visual-editor.ve-live-editor > .ve-resize-height,
+#ggmc-visual-editor.ve-live-editor > .ve-resize-corner { display: none !important; }
 #ggmc-visual-editor.ve-live-editor > .ve-topbar {
   grid-column: 1 / -1;
   grid-row: 1;

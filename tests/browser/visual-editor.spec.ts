@@ -663,6 +663,9 @@ test('live Studio uses a three-panel workspace around the real site canvas', asy
  await expect(panel).toHaveCSS('display', 'grid');
  await expect.poll(async () => (await panel.boundingBox())?.width).toBe(1280);
  await expect(canvas).toBeVisible();
+ await expect(panel.locator('.ve-add-form')).toBeHidden();
+ await expect(panel.locator('.ve-live-actions')).toBeVisible();
+ await expect(panel.locator('.ve-live-inspector-dock')).toBeVisible();
  await expect(canvas.locator(':scope > #root')).toHaveCount(1);
  await expect(panel.getByRole('button', { name: 'Back to site', exact: true })).toBeVisible();
  const geometry = await page.evaluate(() => {
