@@ -12,6 +12,7 @@ test('actual preview employee dropdown opens sign-in while editor controls stay 
  const trigger = page.getByRole('button', { name: 'Open Preview Editor' });
  await expect(trigger).toHaveCount(0);
  expect(new URL(page.url()).searchParams.has('edit')).toBe(false);
+ await page.getByRole('button', { name: 'Open menu', exact: true }).click();
  await page.locator('.owner-menu summary').click();
  await page.getByRole('link', { name: 'Employee portal sign-in', exact: true }).click();
  await expect(page.locator('#ggmc-editor-auth-gate')).toBeVisible();
@@ -688,6 +689,15 @@ test('live Studio uses a three-panel workspace around the real site canvas', asy
  await expect(canvas.locator('.hdr-burger')).toBeVisible();
  await expect(canvas.locator('.hdr-nav')).toBeHidden();
  await expect(canvas.locator('.hdr-brand span')).toHaveCSS('white-space', 'nowrap');
+ await expect(canvas).toHaveAttribute('aria-label', 'Live website preview. Scroll here to view the full page.');
+ await panel.getByRole('button', { name: 'Hero', exact: true }).click();
+ const stickyHeader = await canvas.locator('.hdr').boundingBox();
+ const canvasBox = await canvas.boundingBox();
+ expect(stickyHeader?.y).toBe((canvasBox?.y ?? 0) + 18);
+ await canvas.evaluate(el => el.scrollTo({ top: el.scrollHeight, behavior: 'auto' }));
+ await expect.poll(() => canvas.evaluate(el => el.scrollTop + el.clientHeight >= el.scrollHeight - 1)).toBe(true);
+ await panel.getByRole('button', { name: 'Page top', exact: true }).click();
+ await expect.poll(() => canvas.evaluate(el => el.scrollTop)).toBe(0);
  const geometry = await page.evaluate(() => {
   const panelRect = document.querySelector('#ggmc-visual-editor')!.getBoundingClientRect();
   const canvasRect = document.querySelector('.ve-live-canvas')!.getBoundingClientRect();

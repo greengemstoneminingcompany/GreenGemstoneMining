@@ -252,7 +252,7 @@ export function mountBuilderStudio(api) {
 
   const rootParent = root.parentNode;
   const rootNextSibling = root.nextSibling;
-  const canvas = liveNode('div', { class: 've-live-canvas', 'aria-label': 'Live website preview' });
+  const canvas = liveNode('div', { class: 've-live-canvas', role: 'region', tabindex: '0', 'aria-label': 'Live website preview. Scroll here to view the full page.' });
   canvas.append(root);
   document.body.append(canvas);
 
@@ -335,6 +335,7 @@ export function mountBuilderStudio(api) {
     const route = liveRoute();
     map.replaceChildren();
     map.append(liveNode('strong', { class: 've-live-map-heading' }, 'Pages and sections'));
+    map.append(action('Page top', () => canvas.scrollTo({ top: 0, behavior: 'smooth' })));
     liveSiteMap.forEach(group => {
       const page = liveNode('section', { class: 've-live-page-group' });
       const pageButton = action(group.page, () => selectSection(group.route, group.sections[0][1]));

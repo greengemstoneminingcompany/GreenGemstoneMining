@@ -482,9 +482,16 @@ h2.display.light em, .display.light em { color: var(--emerald); }
   justify-content: flex-start;
   align-items: flex-start;
   overflow: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(228,200,124,.75) #18271f;
   padding: 18px;
   background: #101a15;
 }
+.ve-live-canvas::-webkit-scrollbar { width: 10px; height: 10px; }
+.ve-live-canvas::-webkit-scrollbar-track { background: #18271f; }
+.ve-live-canvas::-webkit-scrollbar-thumb { border: 2px solid #18271f; border-radius: 99px; background: rgba(228,200,124,.75); }
+.ve-live-canvas:focus-visible { outline: 2px solid #e4c87c; outline-offset: -3px; }
 .ve-live-canvas > #root {
   flex: 0 0 auto;
   width: 100% !important;
