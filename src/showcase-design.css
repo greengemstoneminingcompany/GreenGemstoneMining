@@ -375,6 +375,9 @@ h2.display.light em, .display.light em { color: var(--emerald); }
 #ggmc-visual-editor.ve-live-editor .ve-live-page-group > button { text-align: left; font-weight: 800; }
 #ggmc-visual-editor.ve-live-editor .ve-live-section-list { display: grid; gap: 3px; padding-left: 12px; }
 #ggmc-visual-editor.ve-live-editor .ve-live-section-list button { text-align: left; border-color: transparent; color: #b7d1c5; }
+#ggmc-visual-editor.ve-live-editor .ve-live-responsive { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+#ggmc-visual-editor.ve-live-editor .ve-live-responsive strong { margin-right: auto; color: #f0d887; font-size: 11px; }
+#ggmc-visual-editor.ve-live-editor .ve-live-responsive button[aria-pressed="true"] { outline: 2px solid #e4c87c; }
 #ggmc-visual-editor.ve-live-editor .ve-live-guide { padding: 10px; border: 1px solid rgba(241,217,135,.25); border-radius: 8px; background: #08261b; }
 #ggmc-visual-editor.ve-live-editor .ve-live-guide strong { color: #f0d887; }
 #ggmc-visual-editor.ve-live-editor .ve-live-guide p { margin: 6px 0 10px; color: #b7d1c5; font-size: 11px; }

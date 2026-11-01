@@ -246,7 +246,7 @@ const liveRoute = () => location.hash.replace(/^#\/?/, '').split(/[/?]/)[0] || '
 const afterWebsiteRender = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
 export function mountBuilderStudio(api) {
-  const { panel, root, say, undo, redo, selectElement, setMode } = api;
+  const { panel, root, say, undo, redo, selectElement, setMode, setResponsiveViewport } = api;
   if (!panel || !root) return () => {};
 
   const host = liveNode('section', { class: 've-live-studio', 'aria-label': 'Website editor' });
@@ -271,6 +271,22 @@ export function mountBuilderStudio(api) {
   const map = liveNode('nav', { class: 've-live-map', 'aria-label': 'Website pages' });
   const guide = liveNode('div', { class: 've-live-guide' });
   guide.append(liveNode('strong', {}, 'Edit the real website'), liveNode('p', {}, 'Choose a page and section. The live website remains visible beside this panel, where the selected section is outlined and ready to edit.'));
+  const responsive = liveNode('section', { class: 've-live-responsive', 'aria-label': 'Responsive preview' });
+  responsive.append(liveNode('strong', {}, 'Responsive preview'));
+  [['Desktop','Desktop'],['Tablet','Tablet'],['Mobile','Mobile']].forEach(([label, mode]) => {
+    const button = action(label, () => {
+      setResponsiveViewport?.(mode);
+      responsive.querySelectorAll('button').forEach(other => {
+        const selected = other === button;
+        other.classList.toggle('active', selected);
+        other.setAttribute('aria-pressed', String(selected));
+      });
+    });
+    const isDefault = mode === 'Desktop';
+    button.setAttribute('aria-pressed', String(isDefault));
+    button.classList.toggle('active', isDefault);
+    responsive.append(button);
+  });
 
   const selectSection = async (route, editorId) => {
     if (liveRoute() !== route) { location.hash = `#/${route}`; await afterWebsiteRender(); }
@@ -301,7 +317,7 @@ export function mountBuilderStudio(api) {
   };
 
   guide.append(action('Edit selected section', () => { setMode?.('select'); say?.('Click any visible part of the website to open its inspector.'); }, true));
-  layout.append(map, guide); host.append(bar, actions, layout);
+  layout.append(map, guide); host.append(bar, actions, responsive, layout);
   panel.insertBefore(host, panel.querySelector('.ve-topbar')?.nextSibling || null);
   const inspectorDock = liveNode('section', { class: 've-live-inspector-dock', 'aria-label': 'Selected section inspector' });
   const inspectorTitle = panel.querySelector('.ve-inspector-title');
