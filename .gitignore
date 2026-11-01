@@ -3,6 +3,8 @@ dist/
 .env
 .env.local
 .env.*.local
+.env.*
+!.env.example
 .DS_Store
 npm-debug.log*
 .vite/
@@ -22,6 +24,13 @@ coverage/
 .infisical.yaml
 __pycache__/
 *.pyc
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+credentials.json
+service-account.json
 
 # Local n8n instance, databases, credentials, logs, workflows, and backups
 /n8n/
