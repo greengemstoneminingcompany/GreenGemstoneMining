@@ -12,7 +12,9 @@ const siteFiles = (): Plugin => ({
     const withSiteUrl = html.replaceAll('%SITE_URL%', SITE_URL);
     // Expose the editor marker only in Vercel Preview builds or local development.
     // Never rely on a static index.html marker: it would leak the editor entry point into production.
-    const editorEnabled = process.env.VERCEL_ENV === 'preview' || process.env.NODE_ENV === 'development';
+    const isPreview = process.env.VERCEL_ENV === 'preview'
+      || (process.env.VERCEL === '1' && process.env.VERCEL_TARGET_ENV === 'preview' && process.env.VITE_VISUAL_EDITOR_ENABLED === 'true');
+    const editorEnabled = isPreview || process.env.NODE_ENV === 'development';
     return editorEnabled
       ? withSiteUrl.replace('</head>', '  <meta name="ggmc-preview-editor" content="enabled">\n</head>')
       : withSiteUrl;

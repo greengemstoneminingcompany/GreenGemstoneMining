@@ -556,7 +556,7 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
     const tools=document.createElement('div');tools.className='ve-row';
     const exp=document.createElement('button');exp.className='primary';exp.dataset.studioAction='export';exp.textContent='Export JSON';exp.addEventListener('click',exportDraft);
     const reset=document.createElement('button');reset.className='danger';reset.textContent='Reset draft';reset.addEventListener('click',resetDraft);
-    const close=document.createElement('button');close.textContent='Close';close.addEventListener('click',()=>{if(!confirm('Close the editor? Your local draft remains saved.'))return;teardown();});
+    const close=document.createElement('button');close.className='ve-editor-close';close.textContent='Close';close.addEventListener('click',()=>{if(!confirm('Close the editor? Your local draft remains saved.'))return;teardown();});
     tools.append(exp,reset,close);panel.append(tools);
     const label=document.createElement('div');label.className='ve-label ve-inspector-title';label.textContent='Inspector';panel.append(label);
     inspector=document.createElement('div');inspector.className='ve-inspector';panel.append(inspector);

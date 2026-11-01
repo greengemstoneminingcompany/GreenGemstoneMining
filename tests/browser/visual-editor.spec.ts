@@ -587,8 +587,8 @@ test('editor studio remains usable within a narrow mobile viewport', async ({ pa
  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
  expect(bounds!.width).toBeLessThan(390);
  expect(bounds!.height).toBeLessThan(844);
- await expect(panel.getByRole('button', { name: 'Select element', exact: true })).toBeVisible();
- await panel.getByRole('button', { name: 'Select element', exact: true }).click();
+ await expect(panel.getByRole('button', { name: 'Select mode', exact: true })).toBeVisible();
+ await panel.getByRole('button', { name: 'Select mode', exact: true }).click();
  await expect(page.locator('body')).toHaveClass(/ggmc-ve-select/);
 });
 
@@ -652,6 +652,31 @@ test('live Studio selects and edits a real website section in the local draft', 
  })).toBe(true);
  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2') || '{}'));
  expect(saved.pageBuilder).toBeUndefined();
+});
+
+test('live Studio uses a three-panel workspace around the real site canvas', async ({ page }) => {
+ await page.setViewportSize({ width: 1280, height: 900 });
+ await page.goto(fixture + '?edit=1');
+ await page.addStyleTag({ url: '/src/showcase-design.css' });
+ const panel = page.locator('#ggmc-visual-editor');
+ const canvas = page.locator('.ve-live-canvas');
+ await expect(panel).toHaveCSS('display', 'grid');
+ await expect.poll(async () => (await panel.boundingBox())?.width).toBe(1280);
+ await expect(canvas).toBeVisible();
+ await expect(canvas.locator(':scope > #root')).toHaveCount(1);
+ await expect(panel.getByRole('button', { name: 'Back to site', exact: true })).toBeVisible();
+ const geometry = await page.evaluate(() => {
+  const panelRect = document.querySelector('#ggmc-visual-editor')!.getBoundingClientRect();
+  const canvasRect = document.querySelector('.ve-live-canvas')!.getBoundingClientRect();
+  const inspectorRect = document.querySelector('.ve-live-inspector-dock')!.getBoundingClientRect();
+  return { panelWidth: panelRect.width, canvasLeft: canvasRect.left, inspectorLeft: inspectorRect.left, canvasRight: canvasRect.right };
+ });
+ expect(geometry.panelWidth).toBe(1280);
+ expect(geometry.canvasLeft).toBeGreaterThan(0);
+ expect(geometry.inspectorLeft).toBeGreaterThan(geometry.canvasLeft);
+ expect(geometry.canvasRight).toBeLessThanOrEqual(geometry.inspectorLeft);
+ await panel.locator('.ve-live-responsive').getByRole('button', { name: 'Mobile', exact: true }).click();
+ await expect(canvas.locator(':scope > #root')).toHaveCSS('width', '390px');
 });
 
 test('live Studio responsive preview switches canvas width without changing page content', async ({ page }) => {

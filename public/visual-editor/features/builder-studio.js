@@ -249,6 +249,12 @@ export function mountBuilderStudio(api) {
   const { panel, root, say, undo, redo, selectElement, setMode, setResponsiveViewport } = api;
   if (!panel || !root) return () => {};
 
+  const rootParent = root.parentNode;
+  const rootNextSibling = root.nextSibling;
+  const canvas = liveNode('div', { class: 've-live-canvas', 'aria-label': 'Live website preview' });
+  canvas.append(root);
+  document.body.append(canvas);
+
   const host = liveNode('section', { class: 've-live-studio', 'aria-label': 'Website editor' });
   const bar = liveNode('div', { class: 've-live-studio-bar' });
   const state = liveNode('span', { class: 've-live-draft-state', 'aria-live': 'polite' }, 'Draft changes save automatically');
@@ -259,13 +265,32 @@ export function mountBuilderStudio(api) {
     button.addEventListener('click', callback);
     return button;
   };
+  const exit = action('Back to site', () => panel.querySelector('.ve-editor-close')?.click(), true);
+  exit.classList.add('ve-live-exit');
+  panel.querySelector('.ve-topbar')?.append(exit);
   const runAction = key => {
     const target = panel.querySelector(`[data-studio-action="${key}"]`);
     if (!target) return say?.('That action is still loading. Try again in a moment.');
     target.click();
   };
   const actions = liveNode('div', { class: 've-live-actions', 'aria-label': 'Draft actions' });
-  actions.append(action('Undo', () => undo?.()), action('Redo', () => redo?.()), action('Save draft', () => runAction('save-draft'), true), action('Publish', () => runAction('publish'), true));
+  const setModeFromToolbar = (mode, button) => {
+    panel.querySelector(`[data-mode="${mode}"]`)?.click();
+    actions.querySelectorAll('[data-live-mode]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+  };
+  const textMode = action('Text mode', event => setModeFromToolbar('text', event.currentTarget));
+  textMode.dataset.liveMode = 'text';
+  const selectMode = action('Select mode', event => setModeFromToolbar('select', event.currentTarget));
+  selectMode.dataset.liveMode = 'select';
+  actions.append(
+    textMode,
+    selectMode,
+    action('Create block', () => runAction('add-content')),
+    action('Undo', () => undo?.()),
+    action('Redo', () => redo?.()),
+    action('Save draft', () => runAction('save-draft'), true),
+    action('Publish', () => runAction('publish'), true),
+  );
 
   const layout = liveNode('div', { class: 've-live-layout' });
   const map = liveNode('nav', { class: 've-live-map', 'aria-label': 'Website pages' });
@@ -302,6 +327,7 @@ export function mountBuilderStudio(api) {
   const renderMap = () => {
     const route = liveRoute();
     map.replaceChildren();
+    map.append(liveNode('strong', { class: 've-live-map-heading' }, 'Pages and sections'));
     liveSiteMap.forEach(group => {
       const page = liveNode('section', { class: 've-live-page-group' });
       const pageButton = action(group.page, () => selectSection(group.route, group.sections[0][1]));
@@ -330,5 +356,11 @@ export function mountBuilderStudio(api) {
   panel.classList.remove('ve-studio-wide'); panel.classList.add('ve-live-editor');
   const sync = () => { state.textContent = `Viewing ${liveRoute()}`; renderMap(); };
   window.addEventListener('hashchange', sync); renderMap();
-  return () => { window.removeEventListener('hashchange', sync); panel.classList.remove('ve-live-editor'); host.remove(); };
+  return () => {
+    window.removeEventListener('hashchange', sync);
+    panel.classList.remove('ve-live-editor');
+    host.remove();
+    if (rootParent?.isConnected) rootParent.insertBefore(root, rootNextSibling?.parentNode === rootParent ? rootNextSibling : null);
+    canvas.remove();
+  };
 }
