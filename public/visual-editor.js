@@ -46,7 +46,7 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
 
   const blank = () => ({ text: {}, styles: {}, hidden: {}, blocks: [], actions: {} });
   const copy = (v) => JSON.parse(JSON.stringify(v));
-  let draft = blank(), mode = 'text', selected = null, applying = false;
+  let draft = blank(), mode = 'text', selected = null, applying = false, mediaLibraryRequest = null;
   let panel, inspector, status, counter, layers, textStart = null, lastSelection = null, layerFilter = '', layerOffset = 0;
   const styleBaselines = new WeakMap(), imageSrcBaselines = new WeakMap(), imageAltBaselines = new WeakMap(); let lastAppliedStyles = [], lastAppliedImageSrc = [], lastAppliedImageAlt = [], lastHiddenElements = [];
   let observer = null, featureTeardown = null;
@@ -231,7 +231,7 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
       const nextAppliedStyles=[],nextAppliedImageSrc=[],nextAppliedImageAlt=[];
       const customCss={'--ve-background-image':'background-image','--ve-background-size':'background-size','--ve-background-position':'background-position','--ve-image-filter':'filter','--ve-object-fit':'object-fit','--ve-object-position':'object-position'};
       Object.entries(draft.styles).forEach(([selector,props])=>all(selector).forEach(el=>Object.entries(props).forEach(([prop,val])=>{
-        if(prop==='--ve-image-src'&&el instanceof HTMLImageElement&&safeImageSrc(val)){if(!imageSrcBaselines.has(el))imageSrcBaselines.set(el,el.getAttribute('src')||'');el.src=val;nextAppliedImageSrc.push(el);}
+        if((prop==='--ve-image-src'&&el instanceof HTMLImageElement&&safeImageSrc(val))||(prop==='--ve-video-src'&&el instanceof HTMLVideoElement&&safeImageSrc(val)&&!/^data:/i.test(val))){if(!imageSrcBaselines.has(el))imageSrcBaselines.set(el,el.getAttribute('src')||'');el.src=val;nextAppliedImageSrc.push(el);}
         else if(prop==='--ve-image-alt'&&el instanceof HTMLImageElement&&typeof val==='string'){if(!imageAltBaselines.has(el))imageAltBaselines.set(el,el.alt);el.alt=val;nextAppliedImageAlt.push(el);}
         else if(prop==='--ve-link-href'&&el instanceof HTMLAnchorElement&&typeof val==='string')el.setAttribute('href',safeUrl(val));
         else {const cssProp=customCss[prop]||(!prop.startsWith('--ve-')?prop:null);if(cssProp&&((prop==='--ve-background-image'&&safeImageSrc(val))||safeCssValue(cssProp,val))){rememberStyle(el,cssProp);const cssVal=prop==='--ve-background-image'&&safeImageSrc(val)?`url("${val}")`:val;el.style.setProperty(cssProp,cssVal);nextAppliedStyles.push({el,prop:cssProp});}}
@@ -261,11 +261,19 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
     if(!selected)return;
     const cssProp=({'--ve-background-image':'background-image','--ve-background-size':'background-size','--ve-background-position':'background-position','--ve-image-filter':'filter','--ve-object-fit':'object-fit','--ve-object-position':'object-position'})[prop]||prop;
     if(prop==='--ve-image-src'){if(!safeImageSrc(value))return say('Use a safe HTTPS or site-relative image URL.');}
+    else if(prop==='--ve-video-src'){if(!safeImageSrc(value)||/^data:/i.test(value))return say('Use a safe HTTPS or site-relative video URL.');}
     else if(prop==='--ve-image-alt'){if(typeof value!=='string'||value.length>500)return say('Image descriptions must be 500 characters or fewer.');}
     else if(prop==='--ve-background-image'){if(!safeImageSrc(value))return say('Use a safe HTTPS or site-relative image URL.');}
     else if(!safeCssValue(cssProp,value))return say('That CSS value is not allowed. URL-based CSS and unsupported values are blocked.');
     saveHistory();const key=path(selected);draft.styles[key]={...(draft.styles[key]||{}),[prop]:value};applyChange('Updated '+prop+'.');inspect(selected);
   }
+  function openMediaLibrary(mediaType){
+    if(!selected)return say('Select an image, video, or section first.');
+    const requestId='editor-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
+    mediaLibraryRequest={element:selected,mediaType,requestId};
+    window.dispatchEvent(new CustomEvent('ggmc-open-media',{detail:{requestId,mediaType}}));
+  }
+  window.addEventListener('ggmc-media-selected',event=>{const detail=event.detail;if(!mediaLibraryRequest||!detail||detail.requestId!==mediaLibraryRequest.requestId||detail.mediaType!==mediaLibraryRequest.mediaType||typeof detail.url!=='string')return;const target=mediaLibraryRequest.element;mediaLibraryRequest=null;if(!document.contains(target))return say('The selected section is no longer on this page.');selectElement(target);changeStyle(detail.mediaType==='video'?'--ve-video-src':target instanceof HTMLImageElement?'--ve-image-src':'--ve-background-image',detail.url);},{signal:lifetime.signal});
   function inspect(el){
     if(!inspector)return;inspector.replaceChildren();
     if(!el){inspector.textContent='Choose Select element, then click a page element to inspect it.';return;}
@@ -284,7 +292,8 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
       const bgPosition=input('text',props['--ve-background-position']||'center center','e.g. center 40%');bgPosition.setAttribute('aria-label','Background focus');bgPosition.addEventListener('change',()=>{if(!/^(left|center|right|\d{1,3}%)(\s+(top|center|bottom|\d{1,3}%))?$/.test(bgPosition.value.trim()))return say('Use a position such as center 40% or 60% 40%.');changeStyle('--ve-background-position',bgPosition.value.trim());});
       const choose=imageFileField('Choose background image from this device',data=>changeStyle('--ve-background-image',data));
       const clear=document.createElement('button');clear.textContent='Remove background image';clear.addEventListener('click',()=>{saveHistory();delete draft.styles[key]?.['--ve-background-image'];applyChange('Background image removed from this draft.');});
-      inspector.append(field('Background image URL',bgUrl),choose,field('Background fit',bgFit),field('Background focus',bgPosition),clear);
+      const library=document.createElement('button');library.type='button';library.textContent='Choose background from library';library.addEventListener('click',()=>openMediaLibrary('image'));
+      inspector.append(field('Background image URL',bgUrl),choose,library,field('Background fit',bgFit),field('Background focus',bgPosition),clear);
     }
     if(el instanceof HTMLImageElement){
       const imageUrl=input('url',el.getAttribute('src')||'','HTTPS or site-relative image URL');
@@ -295,7 +304,14 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
       const focus=input('text',props['--ve-object-position']||'50% 50%','e.g. 60% 40%');focus.setAttribute('aria-label','Image focus (horizontal, vertical)');focus.addEventListener('change',()=>{if(!/^\d{1,3}%\s+\d{1,3}%$/.test(focus.value.trim()))return say('Use two focus values such as 60% 40%.');changeStyle('--ve-object-position',focus.value.trim());});
       const filters=document.createElement('select');filters.setAttribute('aria-label','Image look');[['none','Original'],['brightness(1.08) saturate(1.15)','Brighter'],['saturate(1.35)','More colour'],['grayscale(1)','Black and white'],['sepia(.28) saturate(1.1)','Warm tone']].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;filters.append(o);});filters.value=props['--ve-image-filter']||'none';filters.addEventListener('change',()=>changeStyle('--ve-image-filter',filters.value));
       const choose=imageFileField('Replace image from this device',data=>changeStyle('--ve-image-src',data));
-      inspector.append(choose,field('Image URL',imageUrl),field('Image description',altText),field('Image fit',fit),field('Image focus (horizontal, vertical)',focus),field('Image look',filters));
+      const library=document.createElement('button');library.type='button';library.textContent='Choose image from library';library.addEventListener('click',()=>openMediaLibrary('image'));
+      inspector.append(choose,library,field('Image URL',imageUrl),field('Image description',altText),field('Image fit',fit),field('Image focus (horizontal, vertical)',focus),field('Image look',filters));
+    }
+    if(el instanceof HTMLVideoElement){
+      const videoUrl=input('url',el.getAttribute('src')||'','HTTPS video URL');
+      videoUrl.addEventListener('change',()=>{if(!safeImageSrc(videoUrl.value)||/^data:/i.test(videoUrl.value))return say('Use a safe HTTPS or site-relative video URL.');changeStyle('--ve-video-src',videoUrl.value);});
+      const library=document.createElement('button');library.type='button';library.textContent='Choose video from library';library.addEventListener('click',()=>openMediaLibrary('video'));
+      inspector.append(library,field('Video URL',videoUrl));
     }
     if(el instanceof HTMLAnchorElement){
       const href=input('url',el.getAttribute('href')||'','#section or HTTPS URL');

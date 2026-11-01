@@ -266,6 +266,7 @@ export function applyPublishedVisualEditorPayload(payload: Record<string, unknow
    if (key === '--ve-background-image' && safePublishedImageSrc(value)) (el as HTMLElement).style.backgroundImage = `url("${value}")`;
    else if (customCss[key] && safePublishedCssValue(customCss[key],value)) (el as HTMLElement).style.setProperty(customCss[key],value as string);
    else if (key === '--ve-image-src' && el instanceof HTMLImageElement && safePublishedImageSrc(value)) el.src = value;
+   else if (key === '--ve-video-src' && el instanceof HTMLVideoElement && safePublishedMediaSrc(value)) el.src = value;
    else if (key === '--ve-image-alt' && el instanceof HTMLImageElement && typeof value === 'string' && value.length < 500) el.alt = value;
    else if (key === '--ve-link-href' && el instanceof HTMLAnchorElement && typeof value === 'string') el.setAttribute('href', safePublishedHref(value));
    else if (/^(color|background-color|font-size|font-family|font-weight|font-style|line-height|letter-spacing|text-align|text-decoration|text-transform|padding|padding-top|padding-right|padding-bottom|padding-left|margin|margin-top|margin-right|margin-bottom|margin-left|border|border-color|border-width|border-style|border-radius|box-shadow|width|min-width|max-width|height|min-height|max-height|opacity|display|position|top|right|bottom|left|gap|column-gap|row-gap|object-fit|object-position)$/.test(key) && safePublishedCssValue(key,value)) (el as HTMLElement).style.setProperty(key,value);
