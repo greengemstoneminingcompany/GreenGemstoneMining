@@ -355,6 +355,11 @@ h2.display.light em, .display.light em { color: var(--emerald); }
   padding: 14px !important;
   border-radius: 12px !important;
 }
+#ggmc-visual-editor.ve-live-editor.ve-collapsed {
+  width: 52px !important;
+  min-width: 52px !important;
+  padding: 8px !important;
+}
 #ggmc-visual-editor.ve-live-editor .ve-live-studio { display: grid; gap: 12px; }
 #ggmc-visual-editor.ve-live-editor .ve-live-studio-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 #ggmc-visual-editor.ve-live-editor .ve-live-studio-bar strong { color: var(--gold-br); font-size: 16px; }
