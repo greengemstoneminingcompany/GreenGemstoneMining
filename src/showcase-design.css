@@ -289,9 +289,10 @@ h2.display.light em, .display.light em { color: var(--emerald); }
 /* Full editor studio: a structured page tree, real canvas, and property pane
    mirror the workspace shown in the approved studio reference. */
 #ggmc-visual-editor.ve-studio-wide {
-  top: 0 !important; right: 0 !important; bottom: 0 !important; left: 0 !important;
-  width: 100vw !important; height: 100vh !important; padding: 0 !important;
-  border: 0 !important; border-radius: 0 !important; background: #071c14 !important;
+  top: 16px !important; right: 16px !important; bottom: 16px !important; left: 16px !important;
+  width: auto !important; height: auto !important; min-width: 0 !important; max-width: none !important;
+  padding: 0 !important; border: 1px solid rgba(241,217,135,.54) !important;
+  border-radius: 8px !important; background: #071c14 !important;
 }
 #ggmc-visual-editor.ve-studio-wide .ve-topbar {
   position: sticky; top: 0; display: flex; min-height: 54px; align-items: center;
@@ -344,8 +345,16 @@ h2.display.light em, .display.light em { color: var(--emerald); }
 #ggmc-visual-editor.ve-studio-wide .ve-resize,
 #ggmc-visual-editor.ve-studio-wide .ve-resize-height,
 #ggmc-visual-editor.ve-studio-wide .ve-resize-corner { display: none; }
+#ggmc-visual-editor.ve-studio-wide > .ve-title,
+#ggmc-visual-editor.ve-studio-wide > .ve-note,
+#ggmc-visual-editor.ve-studio-wide > .ve-label,
+#ggmc-visual-editor.ve-studio-wide > .ve-status,
+#ggmc-visual-editor.ve-studio-wide > .ve-count,
+#ggmc-visual-editor.ve-studio-wide > .ve-row {
+  display: none;
+}
 @media (max-width: 900px) {
-  #ggmc-visual-editor.ve-studio-wide { inset: 0 !important; width: 100vw !important; height: 100vh !important; }
+  #ggmc-visual-editor.ve-studio-wide { top: 8px !important; right: 8px !important; bottom: 8px !important; left: 8px !important; }
   #ggmc-visual-editor.ve-studio-wide .ve-builder-workspace { grid-template-columns: 1fr; height: auto; }
   #ggmc-visual-editor.ve-studio-wide .ve-builder-pane, #ggmc-visual-editor.ve-studio-wide .ve-builder-canvas { min-height: 300px; max-height: none; }
   #ggmc-visual-editor.ve-studio-wide .ve-builder-tool-dock > span { width: 100%; }
