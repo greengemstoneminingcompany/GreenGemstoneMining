@@ -287,7 +287,7 @@ test('layer search finds elements beyond the initial layer list', async ({ page 
  await expect(result).toBeVisible();
  await expect(page.locator('#ggmc-visual-editor')).toContainText(/matches/);
  await result.click();
- await expect(page.locator('#ggmc-visual-editor')).toContainText('Selected:');
+ await expect(page.locator('#ggmc-visual-editor')).toContainText('Editing');
 });
 
 test('live Studio section inspector applies text styling to a real website section', async ({ page }) => {
@@ -312,14 +312,18 @@ test('selected element controls style, hide/show, move, duplicate, and remove', 
  await page.getByText('Style & layout', { exact: true }).click();
  await page.locator('#ggmc-visual-editor input[type="color"]').first().fill('#123456');
  await expect(contact).toHaveCSS('color', 'rgb(18, 52, 86)');
+ await page.getByText('More actions', { exact: true }).click();
  await page.getByRole('button', { name: 'Reset styles', exact: true }).click();
  await expect(contact).toHaveCSS('color', baseColor);
  await page.getByText('Style & layout', { exact: true }).click();
  await page.locator('#ggmc-visual-editor input[type="color"]').first().fill('#123456');
+ await page.getByText('More actions', { exact: true }).click();
  await page.getByRole('button', { name: 'Hide', exact: true }).click();
  await expect(contact).toHaveCSS('display', 'none');
+ await page.getByText('More actions', { exact: true }).click();
  await page.getByRole('button', { name: 'Show', exact: true }).click();
  await expect(contact).not.toHaveCSS('display', 'none');
+ await page.getByText('More actions', { exact: true }).click();
  const before = await contact.evaluate(el => [...el.parentElement!.children].indexOf(el));
  await page.getByRole('button', { name: 'Move up', exact: true }).click();
  const moved = await contact.evaluate(el => [...el.parentElement!.children].indexOf(el));
@@ -332,6 +336,7 @@ test('selected element controls style, hide/show, move, duplicate, and remove', 
  await expect(duplicate).toHaveCount(1);
  page.on('dialog', dialog => dialog.accept());
  await duplicate.click();
+ await page.getByText('More actions', { exact: true }).click();
  await page.getByRole('button', { name: 'Remove block', exact: true }).click();
  await expect(duplicate).toHaveCount(0);
 });
@@ -360,7 +365,7 @@ test('text conversion and existing-button dropdown actions work', async ({ page 
  await page.getByRole('button', { name: 'Add dropdown to selected button', exact: true }).click();
  await page.locator('#ggmc-visual-editor textarea[placeholder^="Optional dropdown items"]').fill('Contact | #contact');
  await page.getByRole('button', { name: 'Apply', exact: true }).click();
- await page.getByRole('button', { name: 'Edit text', exact: true }).click();
+ await page.locator('.ve-live-actions').getByRole('button', { name: 'Edit words', exact: true }).click();
  const nestedButton = page.locator('.nested button');
  await nestedButton.click();
  await expect(page.locator('.nested .ve-dropdown-menu')).toBeVisible();
@@ -595,8 +600,8 @@ test('editor studio remains usable within a narrow mobile viewport', async ({ pa
  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
  expect(bounds!.width).toBeLessThan(390);
  expect(bounds!.height).toBeLessThan(844);
- await expect(panel.getByRole('button', { name: 'Select mode', exact: true })).toBeVisible();
- await panel.getByRole('button', { name: 'Select mode', exact: true }).click();
+ await expect(panel.getByRole('button', { name: 'Select section', exact: true })).toBeVisible();
+ await panel.getByRole('button', { name: 'Select section', exact: true }).click();
  await expect(page.locator('body')).toHaveClass(/ggmc-ve-select/);
 });
 
@@ -649,7 +654,7 @@ test('live Studio selects and edits a real website section in the local draft', 
  await panel.getByRole('button', { name: 'Home', exact: true }).click();
  await panel.getByRole('button', { name: 'Hero', exact: true }).click();
  await expect(panel).toContainText('Editing home · hero');
- await expect(panel.getByLabel('Selected section inspector')).toContainText('Selected: section');
+ await expect(panel.getByLabel('Selected section inspector')).toContainText('Editing hero');
  await panel.locator('[data-mode="text"]').click();
  const headline = page.locator('#headline');
  await headline.fill('Edited preview headline');
@@ -668,7 +673,7 @@ test('live Studio exposes and selects the site header as a site-wide section', a
  await panel.getByRole('button', { name: 'Site-wide', exact: true }).click();
  await panel.getByRole('button', { name: 'Header', exact: true }).click();
  await expect(panel).toContainText('Editing site · header');
- await expect(panel.getByLabel('Selected section inspector')).toContainText('Selected: header');
+ await expect(panel.getByLabel('Selected section inspector')).toContainText('Editing header');
  await expect(page.locator('.ve-live-canvas #root > header')).toBeVisible();
 });
 

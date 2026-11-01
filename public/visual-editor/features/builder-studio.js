@@ -280,14 +280,14 @@ export function mountBuilderStudio(api) {
     panel.querySelector(`[data-mode="${mode}"]`)?.click();
     actions.querySelectorAll('[data-live-mode]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
   };
-  const textMode = action('Text mode', event => setModeFromToolbar('text', event.currentTarget));
+  const textMode = action('Edit words', event => setModeFromToolbar('text', event.currentTarget));
   textMode.dataset.liveMode = 'text';
-  const selectMode = action('Select mode', event => setModeFromToolbar('select', event.currentTarget));
+  const selectMode = action('Select section', event => setModeFromToolbar('select', event.currentTarget));
   selectMode.dataset.liveMode = 'select';
   actions.append(
     textMode,
     selectMode,
-    action('Create block', () => runAction('add-content')),
+    action('Add section', () => runAction('add-content')),
     action('Undo', () => undo?.()),
     action('Redo', () => redo?.()),
     action('Drafts & history', () => {
@@ -296,13 +296,13 @@ export function mountBuilderStudio(api) {
       if (serverDrafts.open) { serverDrafts.scrollIntoView({ block: 'nearest' }); serverDrafts.querySelector('button')?.click(); }
     }),
     action('Save draft', () => runAction('save-draft'), true),
-    action('Publish', () => runAction('publish'), true),
+    action('Publish website', () => runAction('publish'), true),
   );
 
   const layout = liveNode('div', { class: 've-live-layout' });
   const map = liveNode('nav', { class: 've-live-map', 'aria-label': 'Website pages' });
   const guide = liveNode('div', { class: 've-live-guide' });
-  guide.append(liveNode('strong', {}, 'Edit the real website'), liveNode('p', {}, 'Choose a page and section. The live website remains visible beside this panel, where the selected section is outlined and ready to edit.'));
+  guide.append(liveNode('strong', {}, 'Edit your website'), liveNode('p', {}, 'Choose a page, then choose a section to see it in the preview. Changes stay in your draft until you save.'));
   const responsive = liveNode('section', { class: 've-live-responsive', 'aria-label': 'Responsive preview' });
   responsive.append(liveNode('strong', {}, 'Responsive preview'));
   [['Desktop','Desktop'],['Tablet','Tablet'],['Mobile','Mobile']].forEach(([label, mode]) => {

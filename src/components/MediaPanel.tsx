@@ -344,7 +344,7 @@ function MediaManager({ open, onClose, onUploaded, admin, selectionType, onSelec
               Manage Media
             </h2>
             <p className="media-modal-sub">
-              Signed in as {admin.email}. Uploads appear in the public gallery under &quot;My uploads&quot;.
+              Owner session active. Uploads appear in the public gallery under &quot;My uploads&quot;.
             </p>
           </div>
           <button type="button" onClick={() => void admin.signOut().then(onClose)} className="media-close media-signout">Sign out</button>

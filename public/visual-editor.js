@@ -275,7 +275,9 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
   function inspect(el){
     if(!inspector)return;inspector.replaceChildren();
     if(!el){inspector.textContent='Choose Select element, then click a page element to inspect it.';return;}
-    const title=document.createElement('div');title.className='ve-label';title.textContent='Selected: '+el.tagName.toLowerCase()+(el.id?' #'+el.id:'');inspector.append(title);
+    const friendlyNames={HEADER:'Site header',FOOTER:'Site footer',MAIN:'Page content',SECTION:'Page section',ARTICLE:'Content section',H1:'Heading',H2:'Heading',H3:'Heading',P:'Text',IMG:'Image',VIDEO:'Video',A:'Link',BUTTON:'Button',NAV:'Navigation'};
+    const friendlyName=el.dataset.editorId?.split('.').pop()?.replace(/[-_]/g,' ')||friendlyNames[el.tagName]||'Content';
+    const title=document.createElement('div');title.className='ve-label';title.textContent='Editing '+friendlyName;inspector.append(title);
     const key=path(el),props=draft.styles[key]||{};
     const current=(p)=>props[p]||el.style.getPropertyValue(p)||getComputedStyle(el).getPropertyValue(p);
     if(el.childElementCount>0&&directTextNodes(el).some(n=>(n.textContent||'').trim())){
@@ -363,6 +365,8 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
     const extra=(label,prop,placeholder='')=>{const c=input('text',current(prop),placeholder||'CSS value');c.addEventListener('change',()=>changeStyle(prop,c.value));grid.append(field(label,c));};
     const fontFamily=document.createElement('select');[['Georgia, serif','Georgia / Serif'],['system-ui, sans-serif','System Sans'],['Arial, sans-serif','Arial'],['Inter, sans-serif','Inter'],['monospace','Monospace']].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;fontFamily.append(o);});fontFamily.value=current('font-family')||'Georgia, serif';fontFamily.addEventListener('change',()=>changeStyle('font-family',fontFamily.value));grid.append(field('Font family',fontFamily));
     extra('Font weight','font-weight','400 / 600 / 700');extra('Line height','line-height','1.5');extra('Letter spacing','letter-spacing','0.02em');extra('Width','width','100% / 320px');extra('Height','height','auto / 240px');extra('Border','border','1px solid #c4a252');extra('Shadow','box-shadow','0 4px 18px #0003');extra('Opacity','opacity','0.0–1.0');
+    const moreActions=document.createElement('details');moreActions.className='ve-more-actions';
+    const moreSummary=document.createElement('summary');moreSummary.textContent='More actions';moreActions.append(moreSummary);
     const actions=document.createElement('div');actions.className='ve-row';
     const hide=document.createElement('button');hide.textContent=draft.hidden[key]?'Show':'Hide';hide.addEventListener('click',()=>{saveHistory();draft.hidden[key]=!draft.hidden[key];applyChange('Visibility updated.');inspect(el);});
     const up=document.createElement('button');up.textContent='Move up';up.addEventListener('click',()=>move(el,-1));
@@ -370,7 +374,7 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
     const duplicate=document.createElement('button');duplicate.textContent='Duplicate';duplicate.addEventListener('click',()=>duplicateBlock(el));
     const reset=document.createElement('button');reset.textContent='Reset styles';reset.addEventListener('click',()=>{saveHistory();delete draft.styles[key];delete draft.hidden[key];applyChange('Styles reset.');inspect(el);});
     const remove=document.createElement('button');remove.className='danger';remove.textContent=el.dataset.veBlockId?'Remove block':'Hide element';remove.addEventListener('click',()=>{if(el.dataset.veBlockId){if(!confirm('Remove this added block from the draft?'))return;saveHistory();draft.blocks=draft.blocks.filter(b=>b.id!==el.dataset.veBlockId);selected=null;applyChange('Added block removed from the local draft.');inspect(null);}else{saveHistory();draft.hidden[key]=true;applyChange('Element hidden in the local draft.');inspect(el);}});
-    actions.append(hide,up,down,duplicate,reset,remove);visualControls.append(advanced);inspector.append(visualControls,actions);
+    actions.append(hide,up,down,duplicate,reset,remove);moreActions.append(actions);visualControls.append(advanced);inspector.append(visualControls,moreActions);
   }
   function move(el,direction){const sib=el.parentElement&&[...el.parentElement.children].filter(x=>x!==panel&&!x.dataset.veWrap);const i=sib?sib.indexOf(el):-1;const target=sib&&sib[i+direction];if(!target)return say('Cannot move further in that direction.');saveHistory();if(direction<0)el.parentElement.insertBefore(el,target);else el.parentElement.insertBefore(target,el);say('Moved in this preview. Ordering of existing website elements is preview-only; added-block order is saved in the draft.');}
   function duplicateBlock(el){
