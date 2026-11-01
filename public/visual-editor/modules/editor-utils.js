@@ -2,6 +2,7 @@ export function createElementPath(root) {
   return (el) => {
     if (!el) return '';
     if (el.dataset.veBlockId) return '[data-ve-block-id="'+el.dataset.veBlockId+'"]';
+    if (/^[a-z0-9.-]{1,120}$/i.test(el.dataset.editorId || '')) return '[data-editor-id="'+el.dataset.editorId+'"]';
     if (el.id) return '#'+el.id.replace(/([^\w-])/g,'\\$1');
     const parts = []; let node = el;
     while (node && node.nodeType === 1 && node !== root && node !== document.body) {

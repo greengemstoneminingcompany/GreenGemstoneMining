@@ -224,6 +224,9 @@ function renderPublishedPageBuilder(payload: Record<string, unknown>, root: HTML
  }
  main.replaceChildren(fragment); return true;
 }
+// Retained only to read old draft payloads during migration. The publishing
+// path below deliberately does not invoke it because it replaces the real site.
+void renderPublishedPageBuilder;
 function safePublishedSelector(selector: string): boolean {
  return typeof selector === 'string' && selector.length > 0 && selector.length <= 500 && !/^(?:html|body|#root|#ggmc-visual-editor)$/i.test(selector.trim());
 }
@@ -240,7 +243,9 @@ export function applyPublishedVisualEditorPayload(payload: Record<string, unknow
   window.__GGMC_COMPANY_RECORDS__ = payload.companyRecords;
   window.dispatchEvent(new CustomEvent('ggmc-company-records', { detail: payload.companyRecords }));
  }
- if (renderPublishedPageBuilder(payload, root)) { applyPublishedDesignTokens(payload, root); return; }
+ // Builder documents were disconnected from the React website and replaced the
+ // live page wholesale on publish. Published snapshots now apply only to the
+ // real, component-backed website sections below.
  const text = payload.text && typeof payload.text === 'object' ? payload.text as Record<string, {after?:unknown}> : {};
  for (const [selector, change] of Object.entries(text)) {
   if (!change || typeof change.after !== 'string' || change.after.length > 10000 || !safePublishedSelector(selector)) continue;

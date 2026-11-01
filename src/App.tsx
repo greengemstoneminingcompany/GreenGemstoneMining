@@ -122,7 +122,7 @@ export default function App() {
 
       <main id="main">
         {currentPage === 'home' ? (<>
-        <section id="top" className="hero">
+        <section id="top" className="hero" data-editor-id="home.hero">
           <img className="hero-bg" src={records.profile.heroImage} alt="" width={806} height={536} fetchPriority="high" />
           <div className="hero-overlay" />
           <Crystal3D />
@@ -146,17 +146,17 @@ export default function App() {
           <div className="hero-foot"><span>{t.hero.foot}</span></div>
         </section>
 
-        <section className="showcase-values" aria-label="Company principles">
+        <section className="showcase-values" aria-label="Company principles" data-editor-id="home.values">
           <div><ShieldCheck aria-hidden="true" /><strong>{t.mission.points[0].t}</strong><span>{t.mission.points[0].d}</span></div>
           <div><Handshake aria-hidden="true" /><strong>{t.mission.points[1].t}</strong><span>{t.mission.points[1].d}</span></div>
           <div><Sparkles aria-hidden="true" /><strong>{t.mission.points[2].t}</strong><span>{t.mission.points[2].d}</span></div>
         </section>
 
-        <section className="marquee">
+        <section className="marquee" data-editor-id="home.marquee">
           <div className="marquee-track">{[...t.marquee, ...t.marquee].map((word, i) => <span key={`${word}-${i}`}><Gem size={12} /> {word}</span>)}</div>
         </section>
 
-        <section id="company" className="sec">
+        <section id="company" className="sec" data-editor-id="home.company">
           <div className="sec-container company">
             <div className="company-visual reveal">
               <img src={records.profile.companyImage} alt={t.company.imgAlt} width={806} height={536} loading="lazy" />
@@ -173,7 +173,7 @@ export default function App() {
           </div>
         </section>
 
-        <section id="resources" className="sec sec-dark">
+        <section id="resources" className="sec sec-dark" data-editor-id="home.resources">
           <div className="sec-container">
             <div className="deposits-head reveal">
               <div>
@@ -201,7 +201,7 @@ export default function App() {
           </div>
         </section>
 
-        <section className="split">
+        <section className="split" data-editor-id="home.industrial">
           <div className="split-img split-panel"><ul aria-label={t.industrial.listLabel}>{metals.map((m) => <li key={m.name}>{t.catalogue.minerals[m.name] ?? m.name}</li>)}</ul></div>
           <div className="split-text">
             <div className="reveal">
@@ -216,7 +216,7 @@ export default function App() {
           </div>
         </section>
 
-        <section id="mission" className="sec">
+        <section id="mission" className="sec" data-editor-id="home.mission">
           <div className="sec-container">
             <div className="mission-head reveal">
               <p className="eyebrow">{t.mission.eyebrow}</p>
@@ -235,7 +235,7 @@ export default function App() {
           </div>
         </section>
 
-        <section id="projects" className="sec sec-dark">
+        <section id="projects" className="sec sec-dark" data-editor-id="home.projects">
           <div className="sec-container">
             <div className="reveal center-block">
               <p className="eyebrow center">{t.projects.eyebrow}</p>
@@ -246,7 +246,7 @@ export default function App() {
           </div>
         </section>
 
-        <section className="sec">
+        <section className="sec" data-editor-id="home.history">
           <div className="sec-container">
             <div className="reveal center-block">
               <p className="eyebrow center">{t.history.eyebrow}</p>
@@ -265,7 +265,7 @@ export default function App() {
           </div>
         </section>
 
-        <section id="gallery" className="sec sec-dark">
+        <section id="gallery" className="sec sec-dark" data-editor-id="home.gallery">
           <div className="sec-container">
             <div className="reveal center-block">
               <p className="eyebrow center">{t.gallery.eyebrow}</p>
@@ -276,7 +276,7 @@ export default function App() {
           <Gallery uploads={uploads} items={records.gallery} />
         </section>
 
-        <section className="sec">
+        <section className="sec" data-editor-id="home.minerals">
           <div className="sec-container">
             <div className="reveal center-block">
               <p className="eyebrow center">{t.catalogue.eyebrow}</p>
@@ -295,7 +295,7 @@ export default function App() {
           </div>
         </section>
 
-        <section id="contact" className="contact-sec">
+        <section id="contact" className="contact-sec" data-editor-id="home.contact">
           <div className="contact-visual">
             <div className="contact-stamp">{t.contact.stamp1}<strong>{t.contact.stamp2}</strong></div>
           </div>

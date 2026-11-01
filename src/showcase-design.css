@@ -345,6 +345,33 @@ h2.display.light em, .display.light em { color: var(--emerald); }
 #ggmc-visual-editor.ve-studio-wide .ve-resize,
 #ggmc-visual-editor.ve-studio-wide .ve-resize-height,
 #ggmc-visual-editor.ve-studio-wide .ve-resize-corner { display: none; }
+#ggmc-visual-editor.ve-live-editor {
+  left: auto !important;
+  right: 16px !important;
+  top: 16px !important;
+  bottom: 16px !important;
+  width: min(390px, calc(100vw - 32px)) !important;
+  min-width: 300px !important;
+  padding: 14px !important;
+  border-radius: 12px !important;
+}
+#ggmc-visual-editor.ve-live-editor .ve-live-studio { display: grid; gap: 12px; }
+#ggmc-visual-editor.ve-live-editor .ve-live-studio-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+#ggmc-visual-editor.ve-live-editor .ve-live-studio-bar strong { color: var(--gold-br); font-size: 16px; }
+#ggmc-visual-editor.ve-live-editor .ve-live-draft-state { color: #96e4bc; font-size: 10px; text-align: right; }
+#ggmc-visual-editor.ve-live-editor .ve-live-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+#ggmc-visual-editor.ve-live-editor .ve-live-layout { display: grid; gap: 12px; }
+#ggmc-visual-editor.ve-live-editor .ve-live-map { display: grid; gap: 5px; }
+#ggmc-visual-editor.ve-live-editor .ve-live-page-group { display: grid; gap: 5px; }
+#ggmc-visual-editor.ve-live-editor .ve-live-page-group > button { text-align: left; font-weight: 800; }
+#ggmc-visual-editor.ve-live-editor .ve-live-section-list { display: grid; gap: 3px; padding-left: 12px; }
+#ggmc-visual-editor.ve-live-editor .ve-live-section-list button { text-align: left; border-color: transparent; color: #b7d1c5; }
+#ggmc-visual-editor.ve-live-editor .ve-live-guide { padding: 10px; border: 1px solid rgba(241,217,135,.25); border-radius: 8px; background: #08261b; }
+#ggmc-visual-editor.ve-live-editor .ve-live-guide strong { color: #f0d887; }
+#ggmc-visual-editor.ve-live-editor .ve-live-guide p { margin: 6px 0 10px; color: #b7d1c5; font-size: 11px; }
+@media (max-width: 700px) {
+  #ggmc-visual-editor.ve-live-editor { top: auto !important; right: 8px !important; bottom: 8px !important; left: 8px !important; width: auto !important; min-width: 0 !important; max-height: 68vh; }
+}
 #ggmc-visual-editor.ve-studio-wide > .ve-title,
 #ggmc-visual-editor.ve-studio-wide > .ve-note,
 #ggmc-visual-editor.ve-studio-wide > .ve-label,

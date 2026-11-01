@@ -59,7 +59,7 @@ function drawCanvas(documentModel, canvas, selectedPageId, selectedComponentId, 
   const globals = documentModel.globals || {}; if (/^#[0-9a-f]{3,8}$/i.test(globals.background || '')) pageNode.style.setProperty('--builder-background', globals.background); if (/^#[0-9a-f]{3,8}$/i.test(globals.color || '')) pageNode.style.setProperty('--builder-color', globals.color); if (['system-ui','Georgia','Arial'].includes(globals.fontFamily)) pageNode.style.setProperty('--builder-font', globals.fontFamily); if (globals.headerText) pageNode.prepend(el('header', {}, globals.headerText)); if (Array.isArray(globals.navigation)) { const nav = el('nav', { 'aria-label': 'Site navigation preview' }); globals.navigation.forEach(entry => nav.append(el('span', {}, entry.split('|')[0] + ' '))); pageNode.prepend(nav); } if (globals.footerText) pageNode.append(el('footer', {}, globals.footerText)); canvas.append(title, pageNode);
 }
 
-export function mountBuilderStudio(api) {
+function mountDisconnectedBuilderStudio(api) {
   const { panel, getDraft, saveHistory, applyChange, say, undo, redo } = api;
   if (!panel || typeof getDraft !== 'function') return () => {};
   const host = el('section', { class: 've-builder-studio ve-studio-shell' });
@@ -218,3 +218,93 @@ export function mountBuilderStudio(api) {
 }
 
 function uniqueSlug(pages, wanted) { const base = slug(wanted); const used = new Set(pages.map(item => item.slug)); if (!used.has(base)) return base; for (let n = 2; n < 1000; n += 1) if (!used.has(`${base}-${n}`)) return `${base}-${n}`; return `${base}-${Date.now().toString(36)}`; }
+
+// The original builder above remains in the file temporarily for draft
+// compatibility. It is intentionally not mounted: its synthetic pages are not
+// the React website that visitors see.
+const liveSiteMap = [
+  { page: 'Home', route: 'home', sections: [['Hero', 'home.hero'], ['Company', 'home.company'], ['Resources', 'home.resources'], ['Mission', 'home.mission'], ['Projects', 'home.projects'], ['Gallery', 'home.gallery'], ['Contact', 'home.contact']] },
+  { page: 'About', route: 'about', sections: [['Page hero', 'about.hero'], ['Company content', 'about.content'], ['Call to action', 'about.cta']] },
+  { page: 'Projects', route: 'projects', sections: [['Page hero', 'projects.hero'], ['Project overview', 'projects.overview'], ['Field records', 'projects.directory'], ['Call to action', 'projects.cta']] },
+  { page: 'Minerals', route: 'minerals', sections: [['Page hero', 'minerals.hero'], ['Mineral directory', 'minerals.directory'], ['Call to action', 'minerals.cta']] },
+  { page: 'Gallery', route: 'gallery', sections: [['Page hero', 'gallery.hero'], ['Collection', 'gallery.collection'], ['Call to action', 'gallery.cta']] },
+  { page: 'Contact', route: 'contact', sections: [['Page hero', 'contact.hero'], ['Contact details', 'contact.details'], ['Call to action', 'contact.cta']] },
+];
+
+const liveNode = (tag, attrs = {}, text = '') => {
+  const node = document.createElement(tag);
+  Object.entries(attrs).forEach(([key, value]) => {
+    if (key === 'class') node.className = value;
+    else if (key === 'type') node.type = value;
+    else node.setAttribute(key, value);
+  });
+  if (text) node.textContent = text;
+  return node;
+};
+
+const liveRoute = () => location.hash.replace(/^#\/?/, '').split(/[/?]/)[0] || 'home';
+const afterWebsiteRender = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+export function mountBuilderStudio(api) {
+  const { panel, root, say, undo, redo, selectElement, setMode } = api;
+  if (!panel || !root) return () => {};
+
+  const host = liveNode('section', { class: 've-live-studio', 'aria-label': 'Website editor' });
+  const bar = liveNode('div', { class: 've-live-studio-bar' });
+  const state = liveNode('span', { class: 've-live-draft-state', 'aria-live': 'polite' }, 'Draft changes save automatically');
+  bar.append(liveNode('strong', {}, 'Website editor'), state);
+
+  const action = (label, callback, primary = false) => {
+    const button = liveNode('button', { type: 'button', class: primary ? 'primary' : '' }, label);
+    button.addEventListener('click', callback);
+    return button;
+  };
+  const runAction = key => {
+    const target = panel.querySelector(`[data-studio-action="${key}"]`);
+    if (!target) return say?.('That action is still loading. Try again in a moment.');
+    target.click();
+  };
+  const actions = liveNode('div', { class: 've-live-actions', 'aria-label': 'Draft actions' });
+  actions.append(action('Undo', () => undo?.()), action('Redo', () => redo?.()), action('Save draft', () => runAction('save-draft'), true), action('Publish', () => runAction('publish'), true));
+
+  const layout = liveNode('div', { class: 've-live-layout' });
+  const map = liveNode('nav', { class: 've-live-map', 'aria-label': 'Website pages' });
+  const guide = liveNode('div', { class: 've-live-guide' });
+  guide.append(liveNode('strong', {}, 'Edit the real website'), liveNode('p', {}, 'Choose a page and section. The live website remains visible beside this panel, where the selected section is outlined and ready to edit.'));
+
+  const selectSection = async (route, editorId) => {
+    if (liveRoute() !== route) { location.hash = `#/${route}`; await afterWebsiteRender(); }
+    const target = root.querySelector(`[data-editor-id="${editorId}"]`);
+    if (!target) return say?.('This section is still loading. Choose the page again and try once more.');
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setMode?.('select');
+    selectElement?.(target);
+    state.textContent = `Editing ${editorId.replace('.', ' · ')}`;
+    renderMap();
+  };
+
+  const renderMap = () => {
+    const route = liveRoute();
+    map.replaceChildren();
+    liveSiteMap.forEach(group => {
+      const page = liveNode('section', { class: 've-live-page-group' });
+      const pageButton = action(group.page, () => selectSection(group.route, group.sections[0][1]));
+      pageButton.classList.toggle('active', route === group.route);
+      page.append(pageButton);
+      if (route === group.route) {
+        const sections = liveNode('div', { class: 've-live-section-list' });
+        group.sections.forEach(([label, editorId]) => sections.append(action(label, () => selectSection(group.route, editorId))));
+        page.append(sections);
+      }
+      map.append(page);
+    });
+  };
+
+  guide.append(action('Edit selected section', () => { setMode?.('select'); say?.('Click any visible part of the website to open its inspector.'); }, true));
+  layout.append(map, guide); host.append(bar, actions, layout);
+  panel.insertBefore(host, panel.querySelector('.ve-topbar')?.nextSibling || null);
+  panel.classList.remove('ve-studio-wide'); panel.classList.add('ve-live-editor');
+  const sync = () => { state.textContent = `Viewing ${liveRoute()}`; renderMap(); };
+  window.addEventListener('hashchange', sync); renderMap();
+  return () => { window.removeEventListener('hashchange', sync); panel.classList.remove('ve-live-editor'); host.remove(); };
+}
