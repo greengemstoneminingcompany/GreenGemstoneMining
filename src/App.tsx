@@ -67,9 +67,9 @@ export default function App() {
       <a className="skip-link" href="#main">{t.ui.skip}</a>
       <ScrollProgress />
 
-      <header className={`hdr ${scrolled || menuOpen ? 'scrolled' : ''}`}>
-        <a className="hdr-brand" href="#/home"><Gem size={22} aria-hidden="true" /><span>{records.profile.legalName}</span></a>
-        <nav id="main-nav" className={`hdr-nav ${menuOpen ? 'open' : ''}`} aria-label={t.ui.mainNav}>
+      <header className={`hdr ${scrolled || menuOpen ? 'scrolled' : ''}`} data-editor-id="site.header">
+        <a className="hdr-brand" data-editor-id="site.brand" href="#/home"><Gem size={22} aria-hidden="true" /><span>{records.profile.legalName}</span></a>
+        <nav id="main-nav" data-editor-id="site.navigation" className={`hdr-nav ${menuOpen ? 'open' : ''}`} aria-label={t.ui.mainNav}>
           <a href="#/home" onClick={() => setMenuOpen(false)}>{t.nav.overview}</a>
           <div className="nav-menu-item">
             <a href="#/about" onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
@@ -104,7 +104,7 @@ export default function App() {
             </div></details>
           )}
           <LanguageSwitcher />
-          <a className="hdr-cta" href="#/contact" onClick={() => setMenuOpen(false)}>{t.nav.cta} <ArrowUpRight size={14} aria-hidden="true" /></a>
+          <a className="hdr-cta" data-editor-id="site.primary-cta" href="#/contact" onClick={() => setMenuOpen(false)}>{t.nav.cta} <ArrowUpRight size={14} aria-hidden="true" /></a>
         </nav>
         <button type="button" className="hdr-burger" aria-expanded={menuOpen} aria-controls="main-nav" onClick={() => setMenuOpen((v) => !v)} aria-label={menuOpen ? t.ui.menuClose : t.ui.menuOpen}>
           {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}

@@ -16,6 +16,7 @@ const copy = {
     "directory": "Company-stated interests, not independently verified resources, reserves, production or commercial viability.",
     "dueDiligence": "Independently review geological evidence, sampling, testing, permits and technical reports before investing.",
     "contactNote": "Please include your enquiry subject and relevant project context.",
+    "contactHeading": "Contact details",
     "cta": "Have a project or partnership in mind?"
   },
   "so": {
@@ -32,6 +33,7 @@ const copy = {
     "directory": "Kuwani waa danaha ay shirkaddu sheegtay; ma xaqiijinayaan kayd macdaneed, wax-soo-saar ama faa'iido ganacsi.",
     "dueDiligence": "Ka hor maalgelin, si madax-bannaan u hubi caddaynta joolajiyada, muunadaha, tijaabooyinka, ruqsadaha iyo warbixinnada farsamo.",
     "contactNote": "Fadlan sheeg mawduuca codsigaaga iyo xogta mashruuca ee khusaysa.",
+    "contactHeading": "Xogta xiriirka",
     "cta": "Ma haysaa mashruuc ama fikrad iskaashi?"
   },
   "ar": {
@@ -48,6 +50,7 @@ const copy = {
     "directory": "هذه اهتمامات أعلنتها الشركة، وليست موارد أو احتياطيات أو إنتاجًا أو جدوى تجارية مؤكدة.",
     "dueDiligence": "قبل الاستثمار، تحقق بصورة مستقلة من الأدلة الجيولوجية والعينات والاختبارات والتراخيص والتقارير الفنية.",
     "contactNote": "يرجى توضيح موضوع استفسارك ومعلومات المشروع ذات الصلة.",
+    "contactHeading": "تفاصيل التواصل",
     "cta": "هل لديك مشروع أو فكرة شراكة؟"
   },
   "zh": {
@@ -64,6 +67,7 @@ const copy = {
     "directory": "以下仅为公司声明的关注领域，不构成经独立核实的资源量、储量、产量或商业可行性。",
     "dueDiligence": "投资前应独立核查地质证据、取样、测试、许可及技术报告。",
     "contactNote": "请说明咨询主题及相关项目背景。",
+    "contactHeading": "联系方式",
     "cta": "有项目或合作构想吗？"
   }
 } as const;

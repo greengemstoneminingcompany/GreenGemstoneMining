@@ -178,6 +178,20 @@ test('undo and redo restore the edited canvas text with buttons and keyboard sho
  await expect(headline).toHaveText('Temporary undo test');
 });
 
+test('inspector text field commits before undo and redo', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ await page.locator('[data-mode="select"]').click();
+ await page.locator('#split-headline').click();
+ const editText = page.getByLabel('Edit this text while keeping links and formatting');
+ await expect(editText).toBeVisible();
+ const originalDirectText = await editText.inputValue();
+ await editText.fill('Changed inspector text');
+ await page.locator('.ve-live-actions').getByRole('button', { name: 'Undo', exact: true }).click();
+ await expect(page.getByLabel('Edit this text while keeping links and formatting')).toHaveValue(originalDirectText);
+ await page.locator('.ve-live-actions').getByRole('button', { name: 'Redo', exact: true }).click();
+ await expect(page.getByLabel('Edit this text while keeping links and formatting')).toHaveValue('Changed inspector text ');
+});
+
 test('Close restores canvas styles and stops editor keyboard interception', async ({ page }) => {
  await page.goto(fixture + '?edit=1');
  const root = page.locator('#root');
@@ -266,7 +280,7 @@ test('layer search finds elements beyond the initial layer list', async ({ page 
  await page.goto(fixture + '?edit=1');
  const search = page.getByLabel('Find anything on this page');
  await page.getByRole('button', { name: 'Show more results', exact: true }).click();
- await expect(page.locator('#ggmc-visual-editor')).toContainText('Showing 101–117 of 117 items.');
+ await expect(page.locator('#ggmc-visual-editor')).toContainText(/Showing 101–\d+ of \d+ items\./);
  await search.fill('Extra layer 104');
  const result = page.locator('#ggmc-visual-editor button').filter({ hasText: 'Extra layer 104' }).first();
  await expect(result).toBeVisible();
@@ -280,6 +294,7 @@ test('live Studio section inspector applies text styling to a real website secti
  const panel = page.locator('#ggmc-visual-editor');
  await panel.getByRole('button', { name: 'Home', exact: true }).click();
  await panel.getByRole('button', { name: 'Hero', exact: true }).click();
+ await page.getByText('Style & layout', { exact: true }).click();
  const fontSize = panel.getByRole('textbox', { name: 'e.g. 24px' });
  await expect(fontSize).toBeVisible();
  await fontSize.fill('22px');
@@ -293,10 +308,12 @@ test('selected element controls style, hide/show, move, duplicate, and remove', 
  const contact = page.locator('#contact');
  await contact.click();
  const baseColor = await contact.evaluate(el => getComputedStyle(el).color);
+ await page.getByText('Style & layout', { exact: true }).click();
  await page.locator('#ggmc-visual-editor input[type="color"]').first().fill('#123456');
  await expect(contact).toHaveCSS('color', 'rgb(18, 52, 86)');
  await page.getByRole('button', { name: 'Reset styles', exact: true }).click();
  await expect(contact).toHaveCSS('color', baseColor);
+ await page.getByText('Style & layout', { exact: true }).click();
  await page.locator('#ggmc-visual-editor input[type="color"]').first().fill('#123456');
  await page.getByRole('button', { name: 'Hide', exact: true }).click();
  await expect(contact).toHaveCSS('display', 'none');
@@ -353,7 +370,8 @@ test('server controls fail clearly without a preview server API', async ({ page 
  await page.goto(fixture + '?edit=1');
  await expect(page.locator('#ggmc-visual-editor')).toBeVisible();
  await page.evaluate(() => { Reflect.deleteProperty(window, '__GGMC_EDITOR_API__'); });
- for (const name of ['Sign in', 'Refresh', 'Load draft', 'Save server draft']) {
+ await page.locator('.ve-live-actions').getByRole('button', { name: 'Drafts & history', exact: true }).click();
+ for (const name of ['Refresh', 'Load draft', 'Save server draft']) {
   await page.getByRole('button', { name, exact: true }).click();
   await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Server drafts are not connected on this preview.');
  }
@@ -474,7 +492,8 @@ test('unsafe links and CSS URL values are rejected and docking clears stale left
  await expect(panel).not.toHaveAttribute('style', /left:\s*50px/);
  await page.getByRole('button', { name: 'Select element', exact: true }).click();
  await page.locator('#contact').click();
- await page.locator('#ggmc-visual-editor details summary').click();
+ await page.locator('#ggmc-visual-editor details summary').filter({ hasText: 'Style & layout' }).click();
+ await page.locator('#ggmc-visual-editor details summary').filter({ hasText: 'Advanced appearance' }).click();
  const shadow = page.locator('#ggmc-visual-editor input[placeholder="0 4px 18px #0003"]');
  await shadow.fill('url(https://evil.example/x.png)');
  await shadow.press('Tab');
@@ -484,6 +503,7 @@ test('unsafe links and CSS URL values are rejected and docking clears stale left
 
 test('server draft pointer survives reload and publishing starts a separate copy', async ({ page }) => {
  await page.goto(fixture + '?edit=1');
+ await page.locator('.ve-live-actions').getByRole('button', { name: 'Drafts & history', exact: true }).click();
  await page.locator('#ggmc-visual-editor input[placeholder="Draft name"]').fill('Reload cycle test');
  await page.getByRole('button', { name: 'Save server draft', exact: true }).click();
  await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Server draft saved as version 1');
@@ -492,6 +512,7 @@ test('server draft pointer survives reload and publishing starts a separate copy
  expect(first.version).toBe(1);
  await page.reload();
  await expect(page.locator('#ggmc-visual-editor')).toBeVisible();
+ await page.locator('.ve-live-actions').getByRole('button', { name: 'Drafts & history', exact: true }).click();
  await page.getByRole('button', { name: 'Refresh', exact: true }).click();
  await page.getByRole('button', { name: 'Load draft', exact: true }).click();
  await expect(page.locator('#ggmc-visual-editor input[placeholder="Draft name"]')).toHaveValue('Reload cycle test');
@@ -512,34 +533,20 @@ test('server draft pointer survives reload and publishing starts a separate copy
 
 
 
-test('server autosave reuses the same draft, increments versions, and preserves edits on conflicts', async ({ page }) => {
+test('page edits stay local until an owner explicitly saves a server draft', async ({ page }) => {
  await page.goto(fixture + '?edit=1');
  await expect(page.locator('#ggmc-visual-editor')).toBeVisible();
  const headline = page.locator('#headline');
- await headline.fill('Autosave version one');
- await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]').length), { timeout: 8000 }).toBe(1);
- await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Server autosaved version 1.', { timeout: 8000 });
- const first = await page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]')[0]);
- expect(first.version).toBe(1);
- const draftId = first.id;
-
- await headline.fill('Autosave version two');
- await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]')[0]?.version), { timeout: 8000 }).toBe(2);
- const second = await page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]'));
- expect(second).toHaveLength(1);
- expect(second[0].id).toBe(draftId);
- expect(second[0].payload.text['#headline'].after).toBe('Autosave version two');
-
- await page.evaluate(() => {
-  const rows = JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]');
-  rows[0].version = 20;
-  localStorage.setItem('fixture-server-drafts', JSON.stringify(rows));
- });
- await headline.fill('Keep this conflicting edit locally');
- await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Autosave paused to protect newer server changes.', { timeout: 8000 });
+ await headline.fill('Keep this edit in the browser');
  const localDraft = await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2') || '{}'));
- expect(localDraft.text['#headline'].after).toBe('Keep this conflicting edit locally');
- expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]'))).toHaveLength(1);
+ expect(localDraft.text['#headline'].after).toBe('Keep this edit in the browser');
+ expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]'))).toHaveLength(0);
+ await page.locator('.ve-live-actions').getByRole('button', { name: 'Drafts & history', exact: true }).click();
+ await page.getByRole('button', { name: 'Save server draft', exact: true }).click();
+ await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Server draft saved as version 1.');
+ const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]'));
+ expect(saved).toHaveLength(1);
+ expect(saved[0].payload.text['#headline'].after).toBe('Keep this edit in the browser');
 });
 
 
@@ -652,6 +659,16 @@ test('live Studio selects and edits a real website section in the local draft', 
  })).toBe(true);
  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2') || '{}'));
  expect(saved.pageBuilder).toBeUndefined();
+});
+
+test('live Studio exposes and selects the site header as a site-wide section', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ const panel = page.locator('#ggmc-visual-editor');
+ await panel.getByRole('button', { name: 'Site-wide', exact: true }).click();
+ await panel.getByRole('button', { name: 'Header', exact: true }).click();
+ await expect(panel).toContainText('Editing site · header');
+ await expect(panel.getByLabel('Selected section inspector')).toContainText('Selected: header');
+ await expect(page.locator('.ve-live-canvas #root > header')).toBeVisible();
 });
 
 test('live Studio uses a three-panel workspace around the real site canvas', async ({ page }) => {

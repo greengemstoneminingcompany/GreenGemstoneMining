@@ -115,7 +115,7 @@ function mountDisconnectedBuilderStudio(api) {
     button('Publish', () => runAction('publish'), true),
     button('Export', () => runAction('export')),
   );
-  const historyRow = el('div', { class: 've-row' }); historyRow.append(button('Builder undo', () => { undo?.(); render(); }, true), button('Builder redo', () => { redo?.(); render(); }), el('span', { class: 've-builder-save-state' }, 'Draft changes save locally and are included in server versions.'));
+  const historyRow = el('div', { class: 've-row' }); historyRow.append(button('Builder undo', () => { undo?.(); render(); }, true), button('Builder redo', () => { redo?.(); render(); }), el('span', { class: 've-builder-save-state' }, 'Changes stay in this browser until you choose Save draft.'));
   const layoutRow = el('div', { class: 've-row' });
   const studioLayout = button('Use compact layout', () => {
     const wide = panel.classList.toggle('ve-studio-wide');
@@ -223,7 +223,8 @@ function uniqueSlug(pages, wanted) { const base = slug(wanted); const used = new
 // compatibility. It is intentionally not mounted: its synthetic pages are not
 // the React website that visitors see.
 const liveSiteMap = [
-  { page: 'Home', route: 'home', sections: [['Hero', 'home.hero'], ['Company', 'home.company'], ['Resources', 'home.resources'], ['Mission', 'home.mission'], ['Projects', 'home.projects'], ['Gallery', 'home.gallery'], ['Contact', 'home.contact']] },
+  { page: 'Site-wide', route: '*', sections: [['Header', 'site.header'], ['Company name', 'site.brand'], ['Navigation', 'site.navigation'], ['Contact button', 'site.primary-cta']] },
+  { page: 'Home', route: 'home', sections: [['Hero', 'home.hero'], ['Company', 'home.company'], ['Resources', 'home.resources'], ['Values', 'home.values'], ['Marquee', 'home.marquee'], ['Industrial and precious metals', 'home.industrial'], ['Mission', 'home.mission'], ['Projects', 'home.projects'], ['Company history', 'home.history'], ['Gallery', 'home.gallery'], ['Minerals', 'home.minerals'], ['Contact', 'home.contact']] },
   { page: 'About', route: 'about', sections: [['Page hero', 'about.hero'], ['Company content', 'about.content'], ['Call to action', 'about.cta']] },
   { page: 'Projects', route: 'projects', sections: [['Page hero', 'projects.hero'], ['Project overview', 'projects.overview'], ['Field records', 'projects.directory'], ['Call to action', 'projects.cta']] },
   { page: 'Minerals', route: 'minerals', sections: [['Page hero', 'minerals.hero'], ['Mineral directory', 'minerals.directory'], ['Call to action', 'minerals.cta']] },
@@ -257,7 +258,7 @@ export function mountBuilderStudio(api) {
 
   const host = liveNode('section', { class: 've-live-studio', 'aria-label': 'Website editor' });
   const bar = liveNode('div', { class: 've-live-studio-bar' });
-  const state = liveNode('span', { class: 've-live-draft-state', 'aria-live': 'polite' }, 'Draft changes save automatically');
+  const state = liveNode('span', { class: 've-live-draft-state', 'aria-live': 'polite' }, 'Local draft · saved in this browser');
   bar.append(liveNode('strong', {}, 'Website editor'), state);
 
   const action = (label, callback, primary = false) => {
@@ -273,6 +274,7 @@ export function mountBuilderStudio(api) {
     if (!target) return say?.('That action is still loading. Try again in a moment.');
     target.click();
   };
+  const serverDrafts = panel.querySelector('.ve-server-drafts');
   const actions = liveNode('div', { class: 've-live-actions', 'aria-label': 'Draft actions' });
   const setModeFromToolbar = (mode, button) => {
     panel.querySelector(`[data-mode="${mode}"]`)?.click();
@@ -288,6 +290,11 @@ export function mountBuilderStudio(api) {
     action('Create block', () => runAction('add-content')),
     action('Undo', () => undo?.()),
     action('Redo', () => redo?.()),
+    action('Drafts & history', () => {
+      if (!serverDrafts) return say?.('Server drafts are unavailable in this editor session.');
+      serverDrafts.open = !serverDrafts.open;
+      if (serverDrafts.open) { serverDrafts.scrollIntoView({ block: 'nearest' }); serverDrafts.querySelector('button')?.click(); }
+    }),
     action('Save draft', () => runAction('save-draft'), true),
     action('Publish', () => runAction('publish'), true),
   );
@@ -314,7 +321,7 @@ export function mountBuilderStudio(api) {
   });
 
   const selectSection = async (route, editorId) => {
-    if (liveRoute() !== route) { location.hash = `#/${route}`; await afterWebsiteRender(); }
+    if (route !== '*' && liveRoute() !== route) { location.hash = `#/${route}`; await afterWebsiteRender(); }
     const target = root.querySelector(`[data-editor-id="${editorId}"]`);
     if (!target) return say?.('This section is still loading. Choose the page again and try once more.');
     target.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -331,9 +338,9 @@ export function mountBuilderStudio(api) {
     liveSiteMap.forEach(group => {
       const page = liveNode('section', { class: 've-live-page-group' });
       const pageButton = action(group.page, () => selectSection(group.route, group.sections[0][1]));
-      pageButton.classList.toggle('active', route === group.route);
+      pageButton.classList.toggle('active', route === group.route || group.route === '*');
       page.append(pageButton);
-      if (route === group.route) {
+      if (route === group.route || group.route === '*') {
         const sections = liveNode('div', { class: 've-live-section-list' });
         group.sections.forEach(([label, editorId]) => sections.append(action(label, () => selectSection(group.route, editorId))));
         page.append(sections);
@@ -346,6 +353,7 @@ export function mountBuilderStudio(api) {
   layout.append(map, guide); host.append(bar, actions, responsive, layout);
   panel.insertBefore(host, panel.querySelector('.ve-topbar')?.nextSibling || null);
   const inspectorDock = liveNode('section', { class: 've-live-inspector-dock', 'aria-label': 'Selected section inspector' });
+  if (serverDrafts) host.append(serverDrafts);
   const inspectorTitle = panel.querySelector('.ve-inspector-title');
   const inspector = panel.querySelector('.ve-inspector');
   const status = panel.querySelector('.ve-status');
