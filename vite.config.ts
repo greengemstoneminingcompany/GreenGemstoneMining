@@ -3,15 +3,17 @@ import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 
-const SITE_URL = (process.env.VITE_SITE_URL || 'https://green-gemstone-mining.vercel.app').replace(/\/+$/, '');
+const SITE_URL = (process.env.VITE_SITE_URL || 'https://green-gemstone-mining-nine.vercel.app').replace(/\/+$/, '');
 
 /** Fills %SITE_URL% in index.html and emits robots.txt + sitemap.xml for the configured domain. */
 const siteFiles = (): Plugin => ({
   name: 'site-files',
   transformIndexHtml: (html) => {
     const withSiteUrl = html.replaceAll('%SITE_URL%', SITE_URL);
-    // This entry point is emitted only in Vercel Preview deployments. Production stays unchanged.
-    return process.env.VERCEL_ENV === 'preview'
+    // Expose the editor marker only in Vercel Preview builds or local development.
+    // Never rely on a static index.html marker: it would leak the editor entry point into production.
+    const editorEnabled = process.env.VERCEL_ENV === 'preview' || process.env.NODE_ENV === 'development';
+    return editorEnabled
       ? withSiteUrl.replace('</head>', '  <meta name="ggmc-preview-editor" content="enabled">\n</head>')
       : withSiteUrl;
   },
