@@ -685,6 +685,9 @@ test('live Studio uses a three-panel workspace around the real site canvas', asy
  await expect(panel.locator('.ve-live-inspector-dock')).toBeVisible();
  await expect(canvas.locator(':scope > #root')).toHaveCount(1);
  await expect(panel.getByRole('button', { name: 'Back to site', exact: true })).toBeVisible();
+ await expect(canvas.locator('.hdr-burger')).toBeVisible();
+ await expect(canvas.locator('.hdr-nav')).toBeHidden();
+ await expect(canvas.locator('.hdr-brand span')).toHaveCSS('white-space', 'nowrap');
  const geometry = await page.evaluate(() => {
   const panelRect = document.querySelector('#ggmc-visual-editor')!.getBoundingClientRect();
   const canvasRect = document.querySelector('.ve-live-canvas')!.getBoundingClientRect();

@@ -611,7 +611,7 @@ h2.display.light em, .display.light em { color: var(--emerald); }
 }
 
 /* Keep the long company name and navigation from colliding on laptop widths. */
-@media (max-width: 1200px) {
+@media (max-width: 1320px) {
   .hdr-brand { max-width: none; white-space: nowrap; }
   .hdr-brand span { max-width: min(62vw, 520px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hdr-burger { display: grid; place-items: center; width: 42px; height: 42px; flex: none; }
