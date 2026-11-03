@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import en, { type Dict } from './en';
 import { I18nContext, LANGUAGES, loaders, langFromPath, matchBrowserLanguage, pathForLang, type Lang } from './core';
 
@@ -24,9 +24,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   // `shown` is the language of the dictionary actually on screen.
   const [state, setState] = useState<{ lang: Lang; t: Dict }>({ lang: 'en', t: en });
 
+  // A slower previous import must never overwrite a more recent language choice.
+  const loadVersion = useRef(0);
   const load = useCallback(async (lang: Lang) => {
-    const t = lang === 'en' ? en : (await loaders[lang]()).default;
-    setState({ lang, t });
+    const version = ++loadVersion.current;
+    try {
+      const t = lang === 'en' ? en : (await loaders[lang]()).default;
+      if (version === loadVersion.current) setState({ lang, t });
+    } catch (error) {
+      if (version === loadVersion.current) console.error('Failed to load language:', lang, error);
+    }
   }, []);
 
   useEffect(() => {

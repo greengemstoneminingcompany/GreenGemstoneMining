@@ -63,6 +63,22 @@ describe.each([['so', so], ['ar', ar], ['zh', zh]] as const)('%s dictionary', (_
   });
 });
 
+describe('dictionary structure', () => {
+  const shape = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(shape);
+    if (value !== null && typeof value === 'object') {
+      return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, shape(item)]));
+    }
+    return typeof value;
+  };
+  it.each([['Somali', so], ['Arabic', ar], ['Chinese', zh]] as const)(
+    '%s matches the full English dictionary structure',
+    (_language, dictionary) => {
+      expect(shape(dictionary)).toEqual(shape(en));
+    },
+  );
+});
+
 describe('LanguageProvider', () => {
   it('opens /so/ in Somali with the right document language', async () => {
     window.history.replaceState(null, '', '/so/');
