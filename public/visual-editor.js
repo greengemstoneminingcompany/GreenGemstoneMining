@@ -49,10 +49,11 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
   const normalizeDraft = (value) => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Draft payload must be an object.');
     const normalized = { ...blank(), ...copy(value) };
-    for (const key of Object.keys(normalized)) if (!['text', 'styles', 'hidden', 'blocks', 'actions', 'designTokens', 'pageBuilder'].includes(key)) throw new Error('Unexpected draft field: ' + key);
+    for (const key of Object.keys(normalized)) if (!['text', 'styles', 'hidden', 'blocks', 'actions', 'designTokens', 'pageBuilder', 'companyRecords'].includes(key)) throw new Error('Unexpected draft field: ' + key);
     for (const field of ['text', 'styles', 'hidden', 'actions', 'designTokens']) {
       if (!normalized[field] || typeof normalized[field] !== 'object' || Array.isArray(normalized[field])) throw new Error('Invalid draft field: ' + field);
     }
+    if (normalized.companyRecords !== undefined && (!normalized.companyRecords || typeof normalized.companyRecords !== 'object' || Array.isArray(normalized.companyRecords))) throw new Error('Invalid company records draft.');
     if (normalized.pageBuilder !== undefined && (!normalized.pageBuilder || typeof normalized.pageBuilder !== 'object' || Array.isArray(normalized.pageBuilder) || !Array.isArray(normalized.pageBuilder.pages))) throw new Error('Invalid page builder draft.');
     if (!Array.isArray(normalized.blocks)) throw new Error('Invalid draft blocks.');
     if (normalized.blocks.some(block => !block || typeof block !== 'object' || Array.isArray(block) || typeof block.id !== 'string' || !block.id)) throw new Error('Invalid draft block entry.');
