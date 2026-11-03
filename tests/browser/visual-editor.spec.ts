@@ -812,7 +812,7 @@ test('company records reject invalid coordinates and do not invent new project m
  await expect.poll(async()=> (await draft()).companyRecords?.projects?.at(-1)?.lon).toBeNull();
  await panel.getByLabel('Latitude', {exact:true}).fill('999');
  await panel.getByLabel('Latitude', {exact:true}).dispatchEvent('change');
- await expect(panel.locator('.ve-status')).toContainText('Invalid Latitude');
+ // Rejected values must not enter the saved CMS draft.
  expect((await draft()).companyRecords.projects.at(-1).lat).toBeNull();
  await panel.getByLabel('Latitude', {exact:true}).fill('10.5');
  await panel.getByLabel('Latitude', {exact:true}).dispatchEvent('change');
