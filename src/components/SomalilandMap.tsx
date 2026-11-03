@@ -252,8 +252,8 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
 
             {showProjects && (
               <g className="gm-projects">
-                {projects.map((pr) => {
-                  const [x, y] = project(pr.lon, pr.lat);
+                {projects.filter((pr) => pr.lon !== null && pr.lat !== null && Number.isFinite(pr.lon) && Number.isFinite(pr.lat)).map((pr) => {
+                  const [x, y] = project(pr.lon!, pr.lat!);
                   return (
                     <g key={pr.id} transform={`translate(${x} ${y})`}>
                       <path d="M0 -9L8 0L0 9L-8 0Z" className={`proj-mark ${pr.port ? 'is-port' : ''}`} />

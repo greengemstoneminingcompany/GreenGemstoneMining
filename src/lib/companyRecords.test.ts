@@ -15,7 +15,7 @@ describe('company records', () => {
 
   it('rejects invalid coordinates and unsupported finding evidence', () => {
     const records = parseCompanyRecords({ projects: [{ ...defaultCompanyRecords.projects[0], lon: 999, findings: [{ mineral: 'Gold', evidence: 'made-up' }] }] });
-    expect(records?.projects[0].lon).toBe(defaultCompanyRecords.projects[0].lon);
+    expect(records?.projects[0].lon).toBeNull();
     expect(records?.projects[0].findings).toEqual([]);
   });
 });
@@ -39,4 +39,17 @@ it('bounds detailed records and renders content as plain strings', () => {
   expect(records?.about.history).toEqual(defaultCompanyRecords.about.history);
   expect(records?.about.leadership.cards).toEqual([]);
   expect(defaultCompanyRecords.about.operations.title).toBe('Real assets.');
+});
+
+
+describe('unverified project locations', () => {
+  it('preserves unset coordinates without creating a zero-zero map location', () => {
+    const parsed = parseCompanyRecords({ projects: [{ id: 'new-project', name: 'Unlocated project', region: 'awdal', lon: null, lat: null, priority: null, findings: [] }] });
+    expect(parsed?.projects[0]).toMatchObject({ id: 'new-project', lon: null, lat: null });
+  });
+  it('rejects out-of-range coordinates rather than substituting another project location', () => {
+    const parsed = parseCompanyRecords({ projects: [{ ...defaultCompanyRecords.projects[0], lon: 200, lat: -95 }] });
+    expect(parsed?.projects[0].lon).toBeNull();
+    expect(parsed?.projects[0].lat).toBeNull();
+  });
 });
