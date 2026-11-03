@@ -59,3 +59,25 @@ test('shared About records update detailed sections and office details together'
   await page.getByRole('link', { name: 'Contact', exact: true }).first().click();
   await expect(page.locator('.page-contact-detail').last()).toContainText('Verified office acceptance');
 });
+
+
+test('Arabic project directory exposes translated filters and right-to-left direction', async ({ page }) => {
+  await page.goto('/ar/#/projects');
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
+  const group = page.getByRole('group', { name: 'تصفية سجلات المشاريع' });
+  await expect(group).toBeVisible();
+  await group.getByRole('button', { name: 'مواقع الموانئ' }).click();
+  await expect(page.locator('.project-card')).toHaveCount(1);
+  await expect(group.getByRole('button', { name: 'مواقع الموانئ' })).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('project directory remains operable at a narrow mobile viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto('/#/projects');
+  const group = page.getByRole('group', { name: 'Filter project records' });
+  await expect(group).toBeVisible();
+  await group.getByRole('button', { name: 'Priority areas' }).click();
+  await expect(group.getByRole('button', { name: 'Priority areas' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.project-card').first()).toBeVisible();
+});
