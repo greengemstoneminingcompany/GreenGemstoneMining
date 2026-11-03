@@ -252,7 +252,7 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
 
             {showProjects && (
               <g className="gm-projects">
-                {projects.filter((pr) => pr.lon !== null && pr.lat !== null && Number.isFinite(pr.lon) && Number.isFinite(pr.lat)).map((pr) => {
+                {projects.filter((pr) => typeof pr.lon === 'number' && typeof pr.lat === 'number' && Number.isFinite(pr.lon) && Number.isFinite(pr.lat)).map((pr) => {
                   const [x, y] = project(pr.lon!, pr.lat!);
                   return (
                     <g key={pr.id} transform={`translate(${x} ${y})`}>
