@@ -789,3 +789,13 @@ test('builder workspace metadata does not invalidate locally saved text or block
  await page.reload();
  await expect(page.locator('#headline')).toHaveText('Builder metadata preserves this headline');
 });
+
+
+test('invalid stored drafts are not silently overwritten during editor startup', async ({ page }) => {
+ await page.goto(fixture);
+ await page.evaluate(() => localStorage.setItem('ggmc-preview-editor-v2', JSON.stringify({text:{'#headline':{before:'original',after:'Recover me'}},blocks:'invalid'})));
+ await page.goto(fixture+'?edit=1');
+ await expect(page.getByRole('alert')).toContainText('Editing is disabled');
+ await expect(page.locator('#ggmc-visual-editor')).toHaveCount(0);
+ expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2')||'{}').text['#headline'].after)).toBe('Recover me');
+});

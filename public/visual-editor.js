@@ -76,7 +76,29 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
       const old = JSON.parse(localStorage.getItem('ggmc-preview-editor-v1') || '{}');
       Object.entries(old).forEach(([key, value]) => { if (value && typeof value.after === 'string') draft.text[key] = value; });
     }
-  } catch {}
+  } catch (error) {
+    // Never overwrite an unreadable saved draft with an empty editor state.
+    // The original localStorage value remains available for manual recovery.
+    const message = error instanceof Error ? error.message : 'Unknown draft error';
+    console.error('Visual editor could not restore the saved draft:', message);
+    const warning = document.createElement('section');
+    warning.id = 'ggmc-editor-recovery-warning';
+    warning.setAttribute('role', 'alert');
+    warning.style.cssText = 'position:fixed;z-index:2147483647;inset:auto 16px 16px auto;max-width:420px;padding:16px;background:#291d16;color:#fff;border:2px solid #d8a55e;border-radius:10px;font:14px/1.5 system-ui,sans-serif';
+    const description = document.createElement('p');
+    description.textContent = 'The saved website draft could not be restored (' + message + '). Editing is disabled to protect the existing saved data. Export or back up browser storage before attempting recovery.';
+    const exportButton = document.createElement('button');
+    exportButton.type = 'button'; exportButton.textContent = 'Download saved draft backup';
+    exportButton.addEventListener('click', () => {
+      const raw = localStorage.getItem(KEY);
+      if (raw === null) return;
+      const url = URL.createObjectURL(new Blob([raw], { type: 'application/json' }));
+      const a = document.createElement('a'); a.href = url; a.download = 'visual-editor-recovery.json'; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+    warning.append(description, exportButton); document.body.append(warning);
+    return;
+  }
 
   const style = document.createElement('style');
   style.textContent = [
