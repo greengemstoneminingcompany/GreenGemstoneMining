@@ -774,3 +774,18 @@ test('editor uses valid CSS selectors for ID-based text and styles', async ({ pa
  await expect(headline).toHaveText('Selector regression headline');
  await expect(headline).toHaveAttribute('data-ve-key','#headline');
 });
+
+
+test('builder workspace metadata does not invalidate locally saved text or blocks after reload', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ await expect(page.locator('#ggmc-visual-editor')).toBeVisible();
+ await page.locator('#headline').fill('Builder metadata preserves this headline');
+ await page.evaluate(() => {
+   const key='ggmc-preview-editor-v2';
+   const draft=JSON.parse(localStorage.getItem(key)||'{}');
+   draft.pageBuilder={version:1,pages:[],activePageId:'',updatedAt:new Date().toISOString()};
+   localStorage.setItem(key,JSON.stringify(draft));
+ });
+ await page.reload();
+ await expect(page.locator('#headline')).toHaveText('Builder metadata preserves this headline');
+});
