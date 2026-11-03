@@ -749,3 +749,14 @@ test('loading another server draft asks before replacing dirty local edits', asy
  await page.getByRole('button', { name: 'Load draft', exact: true }).click();
  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2') || '{}').text['#headline'].after)).toBe('Do not discard me');
 });
+
+test('design tokens and text edits survive reload together', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ const panel = page.locator('#ggmc-visual-editor');
+ await expect(panel.getByText('Global design tokens')).toBeVisible();
+ await panel.getByRole('button', { name: 'Apply design system', exact: true }).click();
+ await page.locator('#headline').fill('Persist alongside design tokens');
+ await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2') || '{}').designTokens !== undefined)).toBe(true);
+ await page.reload();
+ await expect(page.locator('#headline')).toHaveText('Persist alongside design tokens');
+});

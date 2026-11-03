@@ -44,13 +44,13 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
   const root = document.getElementById('root');
   if (!root) return;
 
-  const blank = () => ({ text: {}, styles: {}, hidden: {}, blocks: [], actions: {} });
+  const blank = () => ({ text: {}, styles: {}, hidden: {}, blocks: [], actions: {}, designTokens: {} });
   const copy = (v) => JSON.parse(JSON.stringify(v));
   const normalizeDraft = (value) => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Draft payload must be an object.');
     const normalized = { ...blank(), ...copy(value) };
-    for (const key of Object.keys(normalized)) if (!['text', 'styles', 'hidden', 'blocks', 'actions'].includes(key)) throw new Error('Unexpected draft field: ' + key);
-    for (const field of ['text', 'styles', 'hidden', 'actions']) {
+    for (const key of Object.keys(normalized)) if (!['text', 'styles', 'hidden', 'blocks', 'actions', 'designTokens'].includes(key)) throw new Error('Unexpected draft field: ' + key);
+    for (const field of ['text', 'styles', 'hidden', 'actions', 'designTokens']) {
       if (!normalized[field] || typeof normalized[field] !== 'object' || Array.isArray(normalized[field])) throw new Error('Invalid draft field: ' + field);
     }
     if (!Array.isArray(normalized.blocks)) throw new Error('Invalid draft blocks.');
