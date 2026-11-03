@@ -799,3 +799,22 @@ test('invalid stored drafts are not silently overwritten during editor startup',
  await expect(page.locator('#ggmc-visual-editor')).toHaveCount(0);
  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2')||'{}').text['#headline'].after)).toBe('Recover me');
 });
+
+
+test('company records reject invalid coordinates and do not invent new project map locations', async ({ page }) => {
+ await page.goto(fixture+'?edit=1');
+ const panel=page.locator('#ggmc-visual-editor');
+ await expect(panel.getByText('Company records', {exact:true})).toBeVisible();
+ await panel.getByRole('button',{name:'Projects & map'}).click();
+ await panel.getByRole('button',{name:'Add project',exact:true}).click();
+ const draft=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('ggmc-preview-editor-v2')||'{}'));
+ await expect.poll(async()=> (await draft()).companyRecords?.projects?.at(-1)?.lat).toBeNull();
+ await expect.poll(async()=> (await draft()).companyRecords?.projects?.at(-1)?.lon).toBeNull();
+ await panel.getByLabel('Latitude', {exact:true}).fill('999');
+ await panel.getByLabel('Latitude', {exact:true}).dispatchEvent('change');
+ await expect(panel.locator('.ve-status')).toContainText('Invalid Latitude');
+ expect((await draft()).companyRecords.projects.at(-1).lat).toBeNull();
+ await panel.getByLabel('Latitude', {exact:true}).fill('10.5');
+ await panel.getByLabel('Latitude', {exact:true}).dispatchEvent('change');
+ await expect.poll(async()=> (await draft()).companyRecords.projects.at(-1).lat).toBe(10.5);
+});
