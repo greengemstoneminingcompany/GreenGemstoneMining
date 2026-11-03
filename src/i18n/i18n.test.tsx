@@ -89,6 +89,10 @@ describe('LanguageProvider', () => {
   });
 
   it('switches to Arabic, flips to right-to-left, and remembers the choice', async () => {
+    const localeMeta = document.createElement('meta');
+    localeMeta.setAttribute('property', 'og:locale');
+    localeMeta.setAttribute('content', 'en_US');
+    document.head.appendChild(localeMeta);
     render(<LanguageProvider><App /></LanguageProvider>);
     fireEvent.click(await screen.findByRole('button', { name: 'العربية' }));
     await waitFor(() => expect(document.documentElement.dir).toBe('rtl'));
@@ -97,6 +101,7 @@ describe('LanguageProvider', () => {
     expect(window.localStorage.getItem('ggm-lang')).toBe('ar');
     expect(document.title).toBe(ar.meta.title);
     expect(document.querySelector('meta[property="og:locale"]')?.getAttribute('content')).toBe('ar_AR');
+    localeMeta.remove();
   });
 });
 
