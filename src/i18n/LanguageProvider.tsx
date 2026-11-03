@@ -47,7 +47,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
     const onPop = () => void load(langFromPath(window.location.pathname) ?? 'en');
     window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
+    return () => { ++loadVersion.current; window.removeEventListener('popstate', onPop); };
   }, [load]);
 
   useEffect(() => {
@@ -61,6 +61,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setMeta('meta[property="og:description"]', 'content', state.t.meta.description);
     setMeta('meta[name="twitter:title"]', 'content', state.t.meta.title);
     setMeta('meta[name="twitter:description"]', 'content', state.t.meta.description);
+    setMeta('meta[property="og:locale"]', 'content', ({ en: 'en_US', so: 'so_SO', ar: 'ar_AR', zh: 'zh_CN' } as const)[state.lang]);
     const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href');
     if (canonical) {
       const url = new URL(pathForLang(state.lang), canonical).toString();

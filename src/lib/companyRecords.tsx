@@ -43,7 +43,7 @@ export const defaultCompanyRecords: CompanyRecords = {
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const text = (value: unknown, fallback: string, max = 500) => typeof value === 'string' && value.trim() && value.length <= max ? value.trim() : fallback;
-const url = (value: unknown, fallback: string) => typeof value === 'string' && (/^\//.test(value) || /^https:\/\//.test(value)) && value.length <= 2000 ? value : fallback;
+const url = (value: unknown, fallback: string) => typeof value === 'string' && value.length <= 2000 && (/^\/(?![\\/])[^\\]*$/.test(value) || /^https:\/\/[^\s\\/]+(?:\/[^\\]*)?$/.test(value)) ? value : fallback;
 
 /** Bounded, typed record validation for published editor snapshots. */
 export function parseCompanyRecords(value: unknown): CompanyRecords | null {

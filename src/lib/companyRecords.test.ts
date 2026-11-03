@@ -53,3 +53,15 @@ describe('unverified project locations', () => {
     expect(parsed?.projects[0].lat).toBeNull();
   });
 });
+
+
+describe('published media URL safety', () => {
+  it.each(['//untrusted.example/image.jpg', '/\\\\untrusted.example/image.jpg', 'javascript:alert(1)', 'http://untrusted.example/image.jpg'])('rejects unsafe image URL %s', (src) => {
+    const parsed = parseCompanyRecords({ profile: { heroImage: src }, gallery: [{ ...defaultCompanyRecords.gallery[0], src }] });
+    expect(parsed?.profile.heroImage).toBe(defaultCompanyRecords.profile.heroImage);
+    expect(parsed?.gallery[0].src).toBe(defaultCompanyRecords.gallery[0].src);
+  });
+  it('accepts safe local media paths', () => {
+    expect(parseCompanyRecords({ profile: { heroImage: '/assets/images/company.jpg' } })?.profile.heroImage).toBe('/assets/images/company.jpg');
+  });
+});

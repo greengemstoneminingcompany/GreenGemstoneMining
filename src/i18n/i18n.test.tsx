@@ -96,6 +96,7 @@ describe('LanguageProvider', () => {
     expect(window.location.pathname).toBe('/ar/');
     expect(window.localStorage.getItem('ggm-lang')).toBe('ar');
     expect(document.title).toBe(ar.meta.title);
+    expect(document.querySelector('meta[property="og:locale"]')?.getAttribute('content')).toBe('ar_AR');
   });
 });
 
