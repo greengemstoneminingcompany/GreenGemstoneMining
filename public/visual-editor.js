@@ -49,10 +49,12 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
   const normalizeDraft = (value) => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Draft payload must be an object.');
     const normalized = { ...blank(), ...copy(value) };
+    for (const key of Object.keys(normalized)) if (!['text', 'styles', 'hidden', 'blocks', 'actions'].includes(key)) throw new Error('Unexpected draft field: ' + key);
     for (const field of ['text', 'styles', 'hidden', 'actions']) {
       if (!normalized[field] || typeof normalized[field] !== 'object' || Array.isArray(normalized[field])) throw new Error('Invalid draft field: ' + field);
     }
     if (!Array.isArray(normalized.blocks)) throw new Error('Invalid draft blocks.');
+    if (normalized.blocks.some(block => !block || typeof block !== 'object' || Array.isArray(block) || typeof block.id !== 'string' || !block.id)) throw new Error('Invalid draft block entry.');
     return normalized;
   };
   let draft = blank(), mode = 'text', selected = null, applying = false, mediaLibraryRequest = null;
@@ -103,7 +105,7 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
     updateCount();
   };
   const say = (text) => { if (status) status.textContent = text; };
-  const editorHistory = createEditorHistory({copy,getDraft:()=>draft,setDraft:value=>{draft=value;},setDirty:value=>{serverAutosaveDirty=value;},persist,refresh,renderLayers,inspect,getSelected:()=>selected,flushActiveText,say});
+  const editorHistory = createEditorHistory({copy,getDraft:()=>draft,setDraft:value=>{draft=value;},setDirty:value=>{serverAutosaveDirty=value;if(value)serverAutosaveController?.schedule();},persist,refresh,renderLayers,inspect,getSelected:()=>selected,flushActiveText,say});
   const saveHistory=editorHistory.saveHistory;
   const doUndo=editorHistory.undo;
   const doRedo=editorHistory.redo;
@@ -386,7 +388,7 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
     const remove=document.createElement('button');remove.className='danger';remove.textContent=el.dataset.veBlockId?'Remove block':'Hide element';remove.addEventListener('click',()=>{if(el.dataset.veBlockId){if(!confirm('Remove this added block from the draft?'))return;saveHistory();draft.blocks=draft.blocks.filter(b=>b.id!==el.dataset.veBlockId);selected=null;applyChange('Added block removed from the local draft.');inspect(null);}else{saveHistory();draft.hidden[key]=true;applyChange('Element hidden in the local draft.');inspect(el);}});
     actions.append(hide,up,down,duplicate,reset,remove);moreActions.append(actions);visualControls.append(advanced);inspector.append(visualControls,moreActions);
   }
-  function move(el,direction){const sib=el.parentElement&&[...el.parentElement.children].filter(x=>x!==panel&&!x.dataset.veWrap);const i=sib?sib.indexOf(el):-1;const target=sib&&sib[i+direction];if(!target)return say('Cannot move further in that direction.');saveHistory();if(direction<0)el.parentElement.insertBefore(el,target);else el.parentElement.insertBefore(target,el);say('Moved in this preview. Ordering of existing website elements is preview-only; added-block order is saved in the draft.');}
+  function move(el,direction){const sib=el.parentElement&&[...el.parentElement.children].filter(x=>x!==panel&&!x.dataset.veWrap);const i=sib?sib.indexOf(el):-1;const target=sib&&sib[i+direction];if(!target)return say('Cannot move further in that direction.');const blockId=el.dataset.veBlockId;const targetId=target.dataset.veBlockId;saveHistory();if(direction<0)el.parentElement.insertBefore(el,target);else el.parentElement.insertBefore(target,el);if(blockId&&targetId){const from=draft.blocks.findIndex(b=>b.id===blockId),to=draft.blocks.findIndex(b=>b.id===targetId);if(from>=0&&to>=0){const [item]=draft.blocks.splice(from,1);draft.blocks.splice(to,0,item);applyChange('Added-block order saved to the draft.');return;}}say('Moved in this preview only. Existing website element order is not persisted.');}
   function duplicateBlock(el){
     if(!el||!el.parentElement)return;
     const title=(el.textContent||'').trim().slice(0,90)||'Duplicated block';
@@ -485,7 +487,7 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
         if(from<0||to<0||from===to)return;
         saveHistory();const [item]=draft.blocks.splice(from,1);draft.blocks.splice(to,0,item);
         const ordered=draft.blocks.map(b=>root.querySelector('[data-ve-block-id="'+b.id+'"]')).filter(Boolean);
-        ordered.forEach(n=>n.parentElement?.append(n));persist();refresh();renderLayers();say('Block order saved in this browser draft.');
+        ordered.forEach(n=>n.parentElement?.append(n));applyChange('Block order saved in the browser and queued for server autosave.');
       });
       list.append(row);
     });
@@ -527,7 +529,7 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
     const authState=document.createElement('p');authState.className='ve-note';authState.setAttribute('role','status');authState.textContent='Checking owner access…';serverSection.append(authState);
     const refreshAuthState=async()=>{try{const session=await window.__GGMC_EDITOR_API__?.getSession?.();authState.textContent=session?.isAdmin===true?'Owner access active':'Owner sign-in required';}catch{authState.textContent='Owner sign-in required';}};
     void refreshAuthState();
-    const serverName=input('text',serverAutosaveDraftName,'Draft name');serverName.addEventListener('input',()=>{serverAutosaveDraftName=serverName.value.trim();if(serverAutosaveDraftName.length>=1&&serverAutosaveDraftName.length<=120)persistServerState();});serverSection.append(field('Draft name',serverName));
+    const serverName=input('text',serverAutosaveDraftName,'Draft name');serverName.addEventListener('input',()=>{const previous=serverAutosaveDraftName;serverAutosaveDraftName=serverName.value.trim();if(serverAutosaveDraftName.length>=1&&serverAutosaveDraftName.length<=120){persistServerState();if(previous!==serverAutosaveDraftName&&serverDraftId)markDraftDirty();}});serverSection.append(field('Draft name',serverName));
     const serverSelect=document.createElement('select');serverSelect.setAttribute('aria-label','Saved server drafts');serverSelect.style.width='100%';serverSection.append(serverSelect);
     const versionSelect=document.createElement('select');versionSelect.setAttribute('aria-label','Saved versions');versionSelect.style.width='100%';serverSection.append(field('Version history',versionSelect));
     const serverRow=document.createElement('div');serverRow.className='ve-row';
@@ -559,6 +561,7 @@ import { createEditorHistory } from './visual-editor/modules/editor-history.js';
         serverAutosaveConflict=false;
         if(!nameChangedDuringSave){serverAutosaveDraftName=nameSnapshot;serverName.value=nameSnapshot;}
         serverAutosaveDirty=contentChangedDuringSave||nameChangedDuringSave;
+        if(serverAutosaveDirty)serverAutosaveController?.schedule();
         persistServerState();
         await loadServerDrafts();
         say(serverAutosaveDirty?'Server draft saved; newer edits are waiting to save…':'Server draft saved as version '+result.version+'.');

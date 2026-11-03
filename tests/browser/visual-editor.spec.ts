@@ -737,3 +737,15 @@ test('live Studio responsive preview switches canvas width without changing page
  await expect(page.locator('#root')).toHaveCSS('max-width', '900px');
  await expect(page.locator('#headline')).toHaveText(originalText || '');
 });
+
+
+test('loading another server draft asks before replacing dirty local edits', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ await page.locator('.ve-live-actions').getByRole('button', { name: 'Drafts & history', exact: true }).click();
+ await page.getByRole('button', { name: 'Save server draft', exact: true }).click();
+ await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Server draft saved as version 1');
+ await page.locator('#headline').fill('Do not discard me');
+ page.on('dialog', dialog => dialog.dismiss());
+ await page.getByRole('button', { name: 'Load draft', exact: true }).click();
+ expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2') || '{}').text['#headline'].after)).toBe('Do not discard me');
+});
