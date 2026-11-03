@@ -13,7 +13,7 @@ export function mountCompanyRecords(api) {
   host.append(node('p', { class: 've-note' }, 'These are shared CMS records. Publishing updates every connected React view: identity, contact details, project cards and map markers, statistics, catalogue, gallery and timeline. This does not create text-selector overrides.'));
   const tabs = node('div', { class: 've-row' }); const body = node('div'); let active = 'profile'; let projectIndex = 0; let itemIndex = 0;
   const change = message => { applyChange(message); render(); };
-  const mutate = (message, fn) => { const data = records(getDraft()); const before = JSON.stringify(data); const result = fn(data); if (result === false || JSON.stringify(data) === before) return; saveHistory(); change(message); };
+  const mutate = (message, fn) => { saveHistory(); const result = fn(records(getDraft())); if (result === false) return; change(message); };
   const tab = (key, label) => { const button = node('button', { type: 'button', 'aria-pressed': key === active ? 'true' : 'false' }, label); button.addEventListener('click', () => { active = key; render(); }); tabs.append(button); return button; };
   const buttons = { profile: tab('profile', 'Profile & contact'), metrics: tab('metrics', 'Statistics'), projects: tab('projects', 'Projects & map'), catalogue: tab('catalogue', 'Catalogue'), media: tab('media', 'Gallery & timeline'), about: tab('about', 'Detailed About') };
   host.append(tabs, body); panel.append(host);
