@@ -45,16 +45,16 @@ export default function CompanyContent() {
           <div className="content-two-col">
             <Card label={cp.visionLabel} title={cp.visionTitle}>
               <ul>
-                <li>Evaluate responsible local processing and export opportunities for mineral products, subject to technical, legal and commercial review.</li>
-                <li>Create local employment by working with miners and deposit holders, buying suitable mineral output, and developing processing capability.</li>
-                <li>Grow the workforce over time; company materials set an ambition of 1,000 employees within five years, subject to growth and financing.</li>
+                <li>{cp.visionPoint1}</li>
+                <li>{cp.visionPoint2}</li>
+                <li>{cp.visionPoint3}</li>
               </ul>
             </Card>
             <Card label={cp.missionLabel} title={cp.missionTitle}>
               <ul>
-                <li>Expand the team across Somaliland and build relationships with miners and holders of relevant mineral deposits.</li>
-                <li>Assess responsible gemstone, metal and industrial-mineral opportunities as project evidence develops.</li>
-                <li>Explore ways to increase local participation in regional and international mineral markets.</li>
+                <li>{cp.missionPoint1}</li>
+                <li>{cp.missionPoint2}</li>
+                <li>{cp.missionPoint3}</li>
               </ul>
             </Card>
           </div>

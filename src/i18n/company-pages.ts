@@ -3,6 +3,12 @@ import type { Lang } from './core';
 
 const copy = {
   "en": {
+    "visionPoint1": "Evaluate responsible local processing and export opportunities for mineral products, subject to technical, legal and commercial review.",
+    "visionPoint2": "Create local employment by working with miners and deposit holders, buying suitable mineral output, and developing processing capability.",
+    "visionPoint3": "Grow the workforce over time; company materials set an ambition of 1,000 employees within five years, subject to growth and financing.",
+    "missionPoint1": "Expand the team across Somaliland and build relationships with miners and holders of relevant mineral deposits.",
+    "missionPoint2": "Assess responsible gemstone, metal and industrial-mineral opportunities as project evidence develops.",
+    "missionPoint3": "Explore ways to increase local participation in regional and international mineral markets.",
     "visionHeading": "Build opportunity.",
     "visionEmphasis": "Grow local value.",
     "visionIntro": "The company aims to help establish Somaliland as a stronger participant in international gemstone and industrial-mineral markets while expanding local employment and processing capability.",
@@ -57,6 +63,12 @@ const copy = {
     "cta": "Have a project or partnership in mind?"
   },
   "so": {
+    "visionPoint1": "Qiimee fursadaha farsamaynta iyo dhoofinta macdanta ee gudaha si mas'uuliyad leh, iyadoo la raacayo dib-u-eegis farsamo, sharci iyo ganacsi.",
+    "visionPoint2": "Abuur shaqooyin maxalli ah adigoo la shaqaynaya macdan-qodayaasha iyo dadka haysta dhulalka macdanta, iibsanaya macdan ku habboon, isla markaana horumarinaya awoodda farsamaynta.",
+    "visionPoint3": "Si tartiib ah u kordhi shaqaalaha; qoraallada shirkaddu waxay xusayaan himilo ah 1,000 shaqaale shan sano gudahood, taas oo ku xiran koboc iyo maalgelin.",
+    "missionPoint1": "Ballaarinta kooxda guud ahaan Somaliland iyo dhisidda xiriir lala yeesho macdan-qodayaasha iyo dadka haysta kaydadka macdanta.",
+    "missionPoint2": "Qiimee fursadaha dhagaxyada qaaliga ah, biraha iyo macdanaha warshadaha si mas'uuliyad leh marka caddaynta mashaariicdu sii kobocdo.",
+    "missionPoint3": "Raadi habab lagu kordhinayo ka-qaybgalka maxalliga ah ee suuqyada macdanta ee gobolka iyo caalamka.",
     "visionHeading": "Dhis fursado.",
     "visionEmphasis": "Kordhi qiimaha maxalliga ah.",
     "visionIntro": "Shirkaddu waxay hiigsanaysaa in Somaliland ay kaalin xooggan ka qaadato suuqyada caalamiga ah ee dhagaxyada qaaliga ah iyo macdanaha warshadaha, iyadoo ballaarinaysa shaqo-abuurka iyo awoodda farsamaynta gudaha.",
@@ -111,6 +123,12 @@ const copy = {
     "cta": "Ma haysaa mashruuc ama fikrad iskaashi?"
   },
   "ar": {
+    "visionPoint1": "تقييم فرص المعالجة المحلية والتصدير المسؤول للمنتجات المعدنية، رهناً بالمراجعة الفنية والقانونية والتجارية.",
+    "visionPoint2": "توفير فرص عمل محلية بالتعاون مع عمال المناجم وأصحاب الرواسب، وشراء الإنتاج المعدني المناسب وتطوير قدرات المعالجة.",
+    "visionPoint3": "توسيع القوى العاملة تدريجياً؛ وتشير مواد الشركة إلى طموح لتوظيف 1,000 شخص خلال خمس سنوات، رهناً بالنمو والتمويل.",
+    "missionPoint1": "توسيع الفريق في أنحاء صوماليلاند وبناء علاقات مع عمال المناجم وأصحاب الرواسب المعدنية ذات الصلة.",
+    "missionPoint2": "تقييم فرص الأحجار الكريمة والمعادن والمواد المعدنية الصناعية بمسؤولية مع تطور الأدلة الخاصة بالمشاريع.",
+    "missionPoint3": "استكشاف سبل تعزيز المشاركة المحلية في أسواق المعادن الإقليمية والدولية.",
     "visionHeading": "بناء الفرص.",
     "visionEmphasis": "تنمية القيمة المحلية.",
     "visionIntro": "تهدف الشركة إلى تعزيز مشاركة صوماليلاند في الأسواق الدولية للأحجار الكريمة والمعادن الصناعية، مع توسيع فرص العمل وقدرات المعالجة المحلية.",
@@ -165,6 +183,12 @@ const copy = {
     "cta": "هل لديك مشروع أو فكرة شراكة؟"
   },
   "zh": {
+    "visionPoint1": "在技术、法律和商业审查的前提下，评估负责任的本地矿产品加工与出口机会。",
+    "visionPoint2": "通过与矿工和矿床持有人合作、采购适合的矿产品并发展加工能力，创造本地就业机会。",
+    "visionPoint3": "逐步扩大员工队伍；公司资料提出五年内达到1,000名员工的目标，但须以业务增长和融资为前提。",
+    "missionPoint1": "在索马里兰各地扩大团队，并与矿工及相关矿床持有人建立联系。",
+    "missionPoint2": "随着项目证据逐步积累，负责任地评估宝石、金属和工业矿物机会。",
+    "missionPoint3": "探索提高本地参与区域及国际矿产品市场的途径。",
     "visionHeading": "创造机遇。",
     "visionEmphasis": "提升本地价值。",
     "visionIntro": "公司旨在促进索马里兰参与国际宝石和工业矿物市场，同时扩大本地就业与加工能力。",
