@@ -760,3 +760,17 @@ test('design tokens and text edits survive reload together', async ({ page }) =>
  await page.reload();
  await expect(page.locator('#headline')).toHaveText('Persist alongside design tokens');
 });
+
+
+test('editor uses valid CSS selectors for ID-based text and styles', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
+ const headline=page.locator('#headline');
+ await headline.fill('Selector regression headline');
+ await expect.poll(() => page.evaluate(() => {
+   const saved=JSON.parse(localStorage.getItem('ggmc-preview-editor-v2')||'{}');
+   return saved.text?.['#headline']?.after;
+ })).toBe('Selector regression headline');
+ await page.reload();
+ await expect(headline).toHaveText('Selector regression headline');
+ await expect(headline).toHaveAttribute('data-ve-key','#headline');
+});

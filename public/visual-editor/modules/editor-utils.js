@@ -3,7 +3,7 @@ export function createElementPath(root) {
     if (!el) return '';
     if (el.dataset.veBlockId) return '[data-ve-block-id="'+el.dataset.veBlockId+'"]';
     if (/^[a-z0-9.-]{1,120}$/i.test(el.dataset.editorId || '')) return '[data-editor-id="'+el.dataset.editorId+'"]';
-    if (el.id) return '#'+el.id.replace(/([^\\w-])/g,'\\\\$1');
+    if (el.id) return '#'+CSS.escape(el.id);
     // Prefer stable semantic selectors when they uniquely identify the element.
     for (const attr of ['data-testid','data-section','aria-label']) {
       const value=el.getAttribute(attr);
@@ -21,7 +21,7 @@ export function createElementPath(root) {
     while (node && node.nodeType === 1 && node !== root && node !== document.body) {
       let n=1, sib=node; while ((sib=sib.previousElementSibling)) if (sib.tagName===node.tagName) n++;
       parts.unshift(node.tagName.toLowerCase()+':nth-of-type('+n+')'); node=node.parentElement;
-      if (node && node.id) { parts.unshift('#'+node.id.replace(/([^\w-])/g,'\\$1')); break; }
+      if (node && node.id) { parts.unshift('#'+CSS.escape(node.id)); break; }
     }
     return parts.join(' > ');
   };
