@@ -113,3 +113,14 @@ test.describe('localized company content', () => {
     expect(overflow).toBeLessThanOrEqual(1);
   });
 });
+
+
+test('site exposes canonical, four-language alternates and social metadata', async ({ page }) => {
+  await page.goto('/#/about');
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\\/$/);
+  for (const [lang, path] of [['en', '/'], ['so', '/so/'], ['ar', '/ar/'], ['zh-Hans', '/zh/']]) {
+    await expect(page.locator(`link[rel="alternate"][hreflang="${lang}"]`)).toHaveAttribute('href', new RegExp(`${path.replaceAll('/', '\\\\/')}$`));
+  }
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /.+/);
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /.+/);
+});
