@@ -833,3 +833,20 @@ test('company records section buttons expose their active state to assistive tec
  await profile.click();
  await expect(profile).toHaveAttribute('aria-pressed','true');
 });
+
+
+test('company records reject duplicate or blank project identifiers without modifying saved records', async ({ page }) => {
+ await page.goto(fixture+'?edit=1');
+ const panel=page.locator('#ggmc-visual-editor');
+ await panel.getByRole('button',{name:'Projects & map'}).click();
+ const read=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('ggmc-preview-editor-v2')||'{}').companyRecords?.projects);
+ await panel.getByRole('button',{name:'Add project',exact:true}).click();
+ const original=(await read()).at(-1).id;
+ const id=panel.getByLabel('ID',{exact:true});
+ await id.fill(''); await id.dispatchEvent('change');
+ expect((await read()).at(-1).id).toBe(original);
+ await id.fill('invalid ID with spaces'); await id.dispatchEvent('change');
+ expect((await read()).at(-1).id).toBe(original);
+ await id.fill('verified-project-id'); await id.dispatchEvent('change');
+ await expect.poll(async()=> (await read()).at(-1).id).toBe('verified-project-id');
+});
