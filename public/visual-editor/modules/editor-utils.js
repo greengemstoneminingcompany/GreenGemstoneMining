@@ -3,7 +3,20 @@ export function createElementPath(root) {
     if (!el) return '';
     if (el.dataset.veBlockId) return '[data-ve-block-id="'+el.dataset.veBlockId+'"]';
     if (/^[a-z0-9.-]{1,120}$/i.test(el.dataset.editorId || '')) return '[data-editor-id="'+el.dataset.editorId+'"]';
-    if (el.id) return '#'+el.id.replace(/([^\w-])/g,'\\$1');
+    if (el.id) return '#'+el.id.replace(/([^\\w-])/g,'\\\\$1');
+    // Prefer stable semantic selectors when they uniquely identify the element.
+    for (const attr of ['data-testid','data-section','aria-label']) {
+      const value=el.getAttribute(attr);
+      if(value && value.length<=120 && /^[a-z0-9 _.-]+$/i.test(value)) {
+        const selector=el.tagName.toLowerCase()+'['+attr+'="'+value+'"]';
+        try { if(root.querySelectorAll(selector).length===1) return selector; } catch {}
+      }
+    }
+    const classes=[...el.classList].filter(name=>/^[a-z][a-z0-9_-]{1,60}$/i.test(name)&&!/^ve-|^reveal$|^in$/.test(name));
+    for(const name of classes.slice(0,3)) {
+      const selector=el.tagName.toLowerCase()+'.'+name;
+      try { if(root.querySelectorAll(selector).length===1) return selector; } catch {}
+    }
     const parts = []; let node = el;
     while (node && node.nodeType === 1 && node !== root && node !== document.body) {
       let n=1, sib=node; while ((sib=sib.previousElementSibling)) if (sib.tagName===node.tagName) n++;

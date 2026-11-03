@@ -70,3 +70,13 @@ describe('visual editor server bridge',()=>{
  });
 
 });
+
+
+describe('server draft payload size guard',()=>{
+ it('rejects oversized inline images before contacting the server',async()=>{
+  installVisualEditorBridge();
+  const payload={blocks:[{id:'large',kind:'image',src:'data:image/png;base64,'+'a'.repeat(950_000)}]};
+  await expect(window.__GGMC_EDITOR_API__!.saveDraft({id:null,expectedVersion:0,name:'Large draft',payload})).rejects.toThrow('900 KB safe upload limit');
+  expect(mocks.rpc).not.toHaveBeenCalled();
+ });
+});
