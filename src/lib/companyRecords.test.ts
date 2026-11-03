@@ -65,3 +65,13 @@ describe('published media URL safety', () => {
     expect(parseCompanyRecords({ profile: { heroImage: '/assets/images/company.jpg' } })?.profile.heroImage).toBe('/assets/images/company.jpg');
   });
 });
+
+
+describe('project record identity', () => {
+  it('does not publish duplicate project IDs', () => {
+    const first = defaultCompanyRecords.projects[0];
+    const parsed = parseCompanyRecords({ projects: [first, { ...first, name: 'Duplicated project' }] });
+    expect(parsed?.projects).toHaveLength(1);
+    expect(parsed?.projects[0].name).toBe(first.name);
+  });
+});

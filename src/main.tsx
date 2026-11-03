@@ -41,7 +41,7 @@ class PreviewRenderErrorBoundary extends Component<
         >
           <h1 style={{ color: '#e4c87c', marginBottom: '16px' }}>The preview could not render</h1>
           <p style={{ maxWidth: '720px', lineHeight: 1.6 }}>
-            The page encountered a rendering error. This diagnostic is only on the preview branch; the production site has not been changed.
+            The page encountered a rendering error. Please reload the page or try again later.
           </p>
           <pre
             style={{
@@ -56,7 +56,7 @@ class PreviewRenderErrorBoundary extends Component<
               color: '#f2eee4',
             }}
           >
-            {this.state.error.message}
+            {import.meta.env.DEV ? this.state.error.message : 'An unexpected rendering error occurred.'}
           </pre>
           <button
             type="button"
