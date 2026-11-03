@@ -44,7 +44,7 @@ export const defaultCompanyRecords: CompanyRecords = {
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const text = (value: unknown, fallback: string, max = 500) => typeof value === 'string' && value.trim() && value.length <= max ? value.trim() : fallback;
 const url = (value: unknown, fallback: string) => {
-  if (typeof value !== 'string' || value.length === 0 || value.length > 2000 || /[\\\u0000-\u001f\u007f]/.test(value)) return fallback;
+  if (typeof value !== 'string' || value.length === 0 || value.length > 2000 || value.split('').some(char => char === '\\' || char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)) return fallback;
   if (/^\/(?!\/)/.test(value)) return value;
   try {
     const parsed = new URL(value);
