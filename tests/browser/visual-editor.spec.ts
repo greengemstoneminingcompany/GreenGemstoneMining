@@ -881,7 +881,7 @@ test('company records disable adding projects when capacity is reached', async (
  await page.goto(fixture+'?edit=1');
  const panel=page.locator('#ggmc-visual-editor');
  await panel.getByRole('button',{name:'Projects & map'}).click();
- await page.evaluate(()=>{const key='ggmc-preview-editor-v2';const draft=JSON.parse(localStorage.getItem(key)||'{}');const sample=draft.companyRecords.projects[0]||{name:'Project',region:'awdal',lat:null,lon:null,findings:[]};draft.companyRecords.projects=Array.from({length:100},(_,i)=>({...sample,id:'capacity-project-'+i}));localStorage.setItem(key,JSON.stringify(draft));});
+ await page.evaluate(()=>{const key='ggmc-preview-editor-v2';const draft=JSON.parse(localStorage.getItem(key)||'{}');draft.companyRecords ||= {};const sample=draft.companyRecords.projects?.[0]||{name:'Project',region:'awdal',lat:null,lon:null,priority:null,findings:[]};draft.companyRecords.projects=Array.from({length:100},(_,i)=>({...sample,id:'capacity-project-'+i}));localStorage.setItem(key,JSON.stringify(draft));});
  await page.reload();
  await panel.getByRole('button',{name:'Projects & map'}).click();
  await expect(panel.getByRole('button',{name:'Add project',exact:true})).toBeDisabled();
