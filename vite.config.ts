@@ -4,23 +4,23 @@ import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 
 const SITE_URL = (process.env.VITE_SITE_URL || 'https://green-gemstone-mining-nine.vercel.app').replace(/\/+$/, '');
+const IS_PREVIEW = process.env.VERCEL_ENV === 'preview' || (process.env.VERCEL === '1' && process.env.VERCEL_TARGET_ENV === 'preview');
 
 /** Fills %SITE_URL% in index.html and emits robots.txt + sitemap.xml for the configured domain. */
 const siteFiles = (): Plugin => ({
   name: 'site-files',
   transformIndexHtml: (html) => {
-    const withSiteUrl = html.replaceAll('%SITE_URL%', SITE_URL);
+    const withSiteUrl = html.replaceAll('%SITE_URL%', SITE_URL).replace('<meta name="robots" content="index, follow" />', IS_PREVIEW ? '<meta name="robots" content="noindex, nofollow, noarchive" />' : '<meta name="robots" content="index, follow" />');
     // Expose the editor marker only in Vercel Preview builds or local development.
     // Never rely on a static index.html marker: it would leak the editor entry point into production.
-    const isPreview = process.env.VERCEL_ENV === 'preview'
-      || (process.env.VERCEL === '1' && process.env.VERCEL_TARGET_ENV === 'preview' && process.env.VITE_VISUAL_EDITOR_ENABLED === 'true');
+    const isPreview = IS_PREVIEW;
     const editorEnabled = isPreview || process.env.NODE_ENV === 'development';
     return editorEnabled
       ? withSiteUrl.replace('</head>', '  <meta name="ggmc-preview-editor" content="enabled">\n</head>')
       : withSiteUrl;
   },
   generateBundle() {
-    this.emitFile({ type: 'asset', fileName: 'robots.txt', source: `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n` });
+    this.emitFile({ type: 'asset', fileName: 'robots.txt', source: IS_PREVIEW ? `User-agent: *\nDisallow: /\n` : `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n` });
     this.emitFile({
       type: 'asset',
       fileName: 'sitemap.xml',
