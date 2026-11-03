@@ -126,3 +126,44 @@ test('site exposes canonical, four-language alternates and social metadata', asy
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /.+/);
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /.+/);
 });
+
+test.describe('localized detailed About content', () => {
+  for (const [lang, title, road] of [
+    ['so', 'Hanti dhab ah.', '2 km'],
+    ['ar', 'أصول فعلية.', 'كيلومترين'],
+    ['zh', '实际资产。', '2公里'],
+  ] as const) {
+    test(`${lang} renders localized operational and community records`, async ({ page }) => {
+      await page.goto(`/${lang}/#/about?section=operations`);
+      await expect(page.locator('#operations')).toContainText(title);
+      await expect(page.locator('#rural-development')).toContainText(road);
+      await expect(page.locator('#operations .content-card')).toHaveCount(5);
+      await expect(page.locator('#services .content-card')).toHaveCount(6);
+    });
+  }
+  test('Somali retains CMS-authored edits without reverting other translations', async ({ page }) => {
+    await page.goto('/so/#/about?section=operations');
+    await page.evaluate(() => {
+      const records = structuredClone(window.__GGMC_COMPANY_DEFAULT_RECORDS__!);
+      records.about.operations.cards[0].title = 'Edited mineral title';
+      records.about.community.cards[0].items[0] = 'Edited road detail';
+      window.dispatchEvent(new CustomEvent('ggmc-company-records', { detail: records }));
+    });
+    await expect(page.locator('#operations')).toContainText('Edited mineral title');
+    await expect(page.locator('#operations')).toContainText('Hanti dhab ah.');
+    await expect(page.locator('#rural-development')).toContainText('Edited road detail');
+  });
+});
+test('Arabic detailed About content is keyboard navigable at mobile width', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto('/ar/#/about?section=services');
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  const link = page.locator('#services a.link-go');
+  await expect(link).toHaveCount(1);
+  await link.focus();
+  await expect(link).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/section=rural-development/);
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+});
