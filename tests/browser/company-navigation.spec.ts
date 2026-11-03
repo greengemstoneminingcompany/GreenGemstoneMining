@@ -117,9 +117,11 @@ test.describe('localized company content', () => {
 
 test('site exposes canonical, four-language alternates and social metadata', async ({ page }) => {
   await page.goto('/#/about');
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\\/$/);
+  const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
+  expect(canonical?.endsWith('/')).toBe(true);
   for (const [lang, path] of [['en', '/'], ['so', '/so/'], ['ar', '/ar/'], ['zh-Hans', '/zh/']]) {
-    await expect(page.locator(`link[rel="alternate"][hreflang="${lang}"]`)).toHaveAttribute('href', new RegExp(`${path.replaceAll('/', '\\\\/')}$`));
+    const alternate = await page.locator(`link[rel="alternate"][hreflang="${lang}"]`).getAttribute('href');
+    expect(alternate?.endsWith(path)).toBe(true);
   }
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /.+/);
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /.+/);
