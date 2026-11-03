@@ -94,7 +94,7 @@ test.describe('localized company content', () => {
     test(`${locale} renders translated company sections and correct document direction`, async ({ page }) => {
       const prefix = locale === 'en' ? '/' : `/${locale}/`;
       await page.goto(`${prefix}#/about?section=vision-mission`);
-      await expect(page.locator('html')).toHaveAttribute('lang', locale);
+      await expect(page.locator('html')).toHaveAttribute('lang', locale === 'zh' ? 'zh-Hans' : locale);
       await expect(page.locator('html')).toHaveAttribute('dir', dir);
       await expect(page.locator('#vision-mission')).toContainText(vision);
       await expect(page.locator('#vision-mission')).toContainText(mission);
