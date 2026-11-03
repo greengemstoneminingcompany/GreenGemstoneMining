@@ -3,6 +3,15 @@ import type { Lang } from './core';
 
 const copy = {
   "en": {
+    "fieldRecords": "Field records",
+    "projectAreas": "Project areas and",
+    "evidenceHeading": "evidence.",
+    "recordsDisclaimer": "These cards summarize company field records. They are not licences, resource estimates, or proof of commercial viability.",
+    "filterProjects": "Filter project records",
+    "filterAll": "All records",
+    "filterPriority": "Priority areas",
+    "filterOther": "Other areas",
+    "filterPort": "Port sites",
     "map": "The map is regional context, not evidence that each location is licensed or operating.",
     "development": "Development",
     "opportunities": "Mining opportunities",
@@ -20,6 +29,15 @@ const copy = {
     "cta": "Have a project or partnership in mind?"
   },
   "so": {
+    "fieldRecords": "Diiwaannada goobaha",
+    "projectAreas": "Goobaha mashaariicda iyo",
+    "evidenceHeading": "caddaynta.",
+    "recordsDisclaimer": "Kaararkani waxay soo koobayaan diiwaannada goobaha ee shirkadda. Ma aha ruqsado, qiyaaso kayd macdaneed ama caddayn muujinaysa suurtagalnimada ganacsi.",
+    "filterProjects": "Shaandhee diiwaannada mashaariicda",
+    "filterAll": "Dhammaan diiwaannada",
+    "filterPriority": "Goobaha mudnaanta leh",
+    "filterOther": "Goobaha kale",
+    "filterPort": "Goobaha dekedaha",
     "map": "Khariidaddu waa guudmar goboleed, mana caddaynayso in goob kastaa ruqsad leedahay ama shaqaynayso.",
     "development": "Horumarin",
     "opportunities": "Fursadaha macdanta",
@@ -37,6 +55,15 @@ const copy = {
     "cta": "Ma haysaa mashruuc ama fikrad iskaashi?"
   },
   "ar": {
+    "fieldRecords": "سجلات المواقع",
+    "projectAreas": "مناطق المشاريع و",
+    "evidenceHeading": "الأدلة.",
+    "recordsDisclaimer": "تلخص هذه البطاقات سجلات الشركة الميدانية، ولا تمثل تراخيص أو تقديرات للموارد المعدنية أو إثباتًا للجدوى التجارية.",
+    "filterProjects": "تصفية سجلات المشاريع",
+    "filterAll": "جميع السجلات",
+    "filterPriority": "المناطق ذات الأولوية",
+    "filterOther": "مناطق أخرى",
+    "filterPort": "مواقع الموانئ",
     "map": "الخريطة توضح السياق الإقليمي ولا تثبت أن كل موقع مرخص أو قيد التشغيل.",
     "development": "التطوير",
     "opportunities": "فرص التعدين",
@@ -54,6 +81,15 @@ const copy = {
     "cta": "هل لديك مشروع أو فكرة شراكة؟"
   },
   "zh": {
+    "fieldRecords": "现场记录",
+    "projectAreas": "项目区域与",
+    "evidenceHeading": "证据。",
+    "recordsDisclaimer": "这些卡片汇总公司现场记录，不代表采矿许可证、资源量估算或商业可行性证明。",
+    "filterProjects": "筛选项目记录",
+    "filterAll": "全部记录",
+    "filterPriority": "重点区域",
+    "filterOther": "其他区域",
+    "filterPort": "港口地点",
     "map": "地图仅提供区域背景，不证明各地点均有采矿许可或正在运营。",
     "development": "开发",
     "opportunities": "矿业机会",

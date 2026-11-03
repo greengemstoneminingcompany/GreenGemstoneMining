@@ -5,6 +5,7 @@ import App from '@/App';
 import { LanguageProvider } from '@/i18n/LanguageProvider';
 import { langFromPath, matchBrowserLanguage, pathForLang } from '@/i18n/core';
 import en from '@/i18n/en';
+import { companyPageCopy } from '@/i18n/company-pages';
 import so from '@/i18n/so';
 import ar from '@/i18n/ar';
 import zh from '@/i18n/zh';
@@ -95,5 +96,15 @@ describe('LanguageProvider', () => {
     expect(window.location.pathname).toBe('/ar/');
     expect(window.localStorage.getItem('ggm-lang')).toBe('ar');
     expect(document.title).toBe(ar.meta.title);
+  });
+});
+
+
+describe('company subpage translation coverage', () => {
+  it.each(['en', 'so', 'ar', 'zh'] as const)('%s provides complete project directory labels', (lang) => {
+    const copy = companyPageCopy(lang);
+    for (const key of ['fieldRecords', 'projectAreas', 'evidenceHeading', 'recordsDisclaimer', 'filterProjects', 'filterAll', 'filterPriority', 'filterOther', 'filterPort'] as const) {
+      expect(copy[key].trim().length).toBeGreaterThan(0);
+    }
   });
 });
