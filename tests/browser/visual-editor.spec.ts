@@ -818,3 +818,18 @@ test('company records reject invalid coordinates and do not invent new project m
  await panel.getByLabel('Latitude', {exact:true}).dispatchEvent('change');
  await expect.poll(async()=> (await draft()).companyRecords.projects.at(-1).lat).toBe(10.5);
 });
+
+
+test('company records section buttons expose their active state to assistive technology', async ({ page }) => {
+ await page.goto(fixture+'?edit=1');
+ const panel=page.locator('#ggmc-visual-editor');
+ const profile=panel.getByRole('button',{name:'Profile & contact',exact:true});
+ const projects=panel.getByRole('button',{name:'Projects & map',exact:true});
+ await expect(profile).toHaveAttribute('aria-pressed','true');
+ await expect(projects).toHaveAttribute('aria-pressed','false');
+ await projects.click();
+ await expect(profile).toHaveAttribute('aria-pressed','false');
+ await expect(projects).toHaveAttribute('aria-pressed','true');
+ await profile.click();
+ await expect(profile).toHaveAttribute('aria-pressed','true');
+});

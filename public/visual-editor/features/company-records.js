@@ -14,12 +14,12 @@ export function mountCompanyRecords(api) {
   const tabs = node('div', { class: 've-row' }); const body = node('div'); let active = 'profile'; let projectIndex = 0; let itemIndex = 0;
   const change = message => { applyChange(message); render(); };
   const mutate = (message, fn) => { saveHistory(); fn(records(getDraft())); change(message); };
-  const tab = (key, label) => { const button = node('button', { type: 'button' }, label); button.addEventListener('click', () => { active = key; render(); }); tabs.append(button); return button; };
+  const tab = (key, label) => { const button = node('button', { type: 'button', 'aria-pressed': key === active ? 'true' : 'false' }, label); button.addEventListener('click', () => { active = key; render(); }); tabs.append(button); return button; };
   const buttons = { profile: tab('profile', 'Profile & contact'), metrics: tab('metrics', 'Statistics'), projects: tab('projects', 'Projects & map'), catalogue: tab('catalogue', 'Catalogue'), media: tab('media', 'Gallery & timeline'), about: tab('about', 'Detailed About') };
   host.append(tabs, body); panel.append(host);
   const listInput = (title, key, hint) => { body.append(node('p', { class: 've-note' }, hint)); const area = node('textarea', { 'aria-label': title }); area.value = records(getDraft())[key].join('\n'); area.addEventListener('change', () => mutate(`Updated ${title.toLowerCase()}.`, data => { data[key] = area.value.split('\n').map(value => value.trim()).filter(Boolean).slice(0, 80); })); body.append(area); };
   const render = () => {
-    Object.entries(buttons).forEach(([key, button]) => button.classList.toggle('active', key === active)); body.replaceChildren(); const data = records(getDraft());
+    Object.entries(buttons).forEach(([key, button]) => { button.classList.toggle('active', key === active); button.setAttribute('aria-pressed', key === active ? 'true' : 'false'); }); body.replaceChildren(); const data = records(getDraft());
     if (active === 'profile') {
       body.append(node('p', { class: 've-note' }, 'Company identity and office values are rendered in the header, footer, contact page and company profile. Use verified public details only.'));
       [['Legal name','legalName'],['Email','email'],['LinkedIn URL','linkedin'],['Office address','officeAddress'],['Public location','publicLocation'],['Hero image URL','heroImage'],['Company image URL','companyImage']].forEach(([label, key]) => body.append(field(label, data.profile[key], value => mutate(`Updated ${label.toLowerCase()}.`, current => { current.profile[key] = value.slice(0, 2000); }))));
