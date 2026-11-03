@@ -124,3 +124,11 @@ describe('company profile localization', () => {
     }
   });
 });
+
+
+describe('vision and catalogue translation coverage', () => {
+  it.each(['en', 'so', 'ar', 'zh'] as const)('%s includes company vision and mineral catalogue labels', (lang) => {
+    const copy = companyPageCopy(lang);
+    for (const key of ["visionHeading","visionEmphasis","visionIntro","visionLabel","visionTitle","missionLabel","missionTitle","metalsHeading","metalsEmphasis","metalsIntro","metalsNote","gemsHeading","gemsEmphasis","gemsIntro","gemLabel","gemNote","headOffice"] as (keyof typeof copy)[]) expect(copy[key].trim().length).toBeGreaterThan(0);
+  });
+});

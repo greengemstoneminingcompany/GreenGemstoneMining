@@ -39,18 +39,18 @@ export default function CompanyContent() {
         <div className="sec-container">
           <div className="content-intro reveal in">
             <p className="eyebrow center">{t.mission.eyebrow}</p>
-            <h2 className="display light">Build opportunity.<br /><em>Grow local value.</em></h2>
-            <p className="body-text">The company aims to help establish Somaliland as a stronger participant in international gemstone and industrial-mineral markets while expanding local employment and processing capability.</p>
+            <h2 className="display light">{cp.visionHeading}<br /><em>{cp.visionEmphasis}</em></h2>
+            <p className="body-text">{cp.visionIntro}</p>
           </div>
           <div className="content-two-col">
-            <Card label="Vision" title="Processing and export">
+            <Card label={cp.visionLabel} title={cp.visionTitle}>
               <ul>
                 <li>Evaluate responsible local processing and export opportunities for mineral products, subject to technical, legal and commercial review.</li>
                 <li>Create local employment by working with miners and deposit holders, buying suitable mineral output, and developing processing capability.</li>
                 <li>Grow the workforce over time; company materials set an ambition of 1,000 employees within five years, subject to growth and financing.</li>
               </ul>
             </Card>
-            <Card label="Mission" title="From local connections to global markets">
+            <Card label={cp.missionLabel} title={cp.missionTitle}>
               <ul>
                 <li>Expand the team across Somaliland and build relationships with miners and holders of relevant mineral deposits.</li>
                 <li>Assess responsible gemstone, metal and industrial-mineral opportunities as project evidence develops.</li>
@@ -65,11 +65,11 @@ export default function CompanyContent() {
         <div className="sec-container">
           <div className="content-intro reveal in">
             <p className="eyebrow center">{t.nav.portfolio}</p>
-            <h2 className="display">Metals and mineral<br /><em>interests.</em></h2>
-            <p className="body-text">These are mineral interests identified as areas of company interest. The list reflects company-stated interests. It does not represent independently verified reserves or confirm that every material is currently being mined.</p>
+            <h2 className="display">{cp.metalsHeading}<br /><em>{cp.metalsEmphasis}</em></h2>
+            <p className="body-text">{cp.metalsIntro}</p>
           </div>
           <div className="content-pill-list">{mineralInterests.map((name) => <span className="content-pill" key={name}>{name}</span>)}</div>
-          <div className="content-note">Resource descriptions and geological occurrences should be assessed against project-specific technical information. The presence of a mineral in this catalogue is not a reserve estimate or a guarantee of commercial viability.</div>
+          <div className="content-note">{cp.metalsNote}</div>
         </div>
       </section>
 
@@ -77,11 +77,11 @@ export default function CompanyContent() {
         <div className="sec-container">
           <div className="content-intro reveal in">
             <p className="eyebrow center">{t.catalogue.cats.Gemstone}</p>
-            <h2 className="display light">A broad gemstone<br /><em>portfolio.</em></h2>
-            <p className="body-text">The company's gemstone interests include the following types.</p>
+            <h2 className="display light">{cp.gemsHeading}<br /><em>{cp.gemsEmphasis}</em></h2>
+            <p className="body-text">{cp.gemsIntro}</p>
           </div>
           <div className="content-grid">
-            {gemstoneInterests.map((name, i) => <article className="content-card gemstone-card" key={name}><span className="content-label">Gemstone {String(i + 1).padStart(2, '0')}</span><h3>{name}</h3><p>Listed in the company's source material as a gemstone of interest.</p></article>)}
+            {gemstoneInterests.map((name, i) => <article className="content-card gemstone-card" key={name}><span className="content-label">{cp.gemLabel} {String(i + 1).padStart(2, '0')}</span><h3>{name}</h3><p>{cp.gemNote}</p></article>)}
           </div>
         </div>
       </section>
@@ -94,7 +94,8 @@ export default function CompanyContent() {
 const sectionIds: Record<AboutSectionKey, string> = { operations: 'operations', development: 'development-projects', community: 'rural-development', services: 'services', history: 'history-details', leadership: 'leadership' };
 function AboutSection({ sectionKey }: { sectionKey: AboutSectionKey }) {
   const { about, profile } = useCompanyRecords();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const cp = companyPageCopy(lang);
   const section = about[sectionKey];
   const dark = sectionKey === 'development' || sectionKey === 'history';
   return <section id={sectionIds[sectionKey]} className={`sec${dark ? ' sec-dark' : ''}`}>
@@ -108,7 +109,7 @@ function AboutSection({ sectionKey }: { sectionKey: AboutSectionKey }) {
         {card.paragraphs.map((paragraph, i) => <p key={i}>{paragraph}</p>)}
         {card.items.length > 0 && <ul>{card.items.map((item, i) => <li key={i}>{item}</li>)}</ul>}
         {card.link && <a className="link-go" href={`#/about?section=${sectionIds[card.link.target]}`}>{card.link.label} <ArrowRight size={15} /></a>}
-      </Card>)}{sectionKey === 'leadership' && <Card label="Head office" title={profile.publicLocation}><p>{profile.officeAddress}</p></Card>}</div>
+      </Card>)}{sectionKey === 'leadership' && <Card label={cp.headOffice} title={profile.publicLocation}><p>{profile.officeAddress}</p></Card>}</div>
       {section.note && <div className="content-note">{section.note}</div>}
     </div>
   </section>;
