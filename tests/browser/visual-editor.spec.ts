@@ -539,20 +539,25 @@ test('server draft pointer survives reload and publishing starts a separate copy
 
 
 
-test('page edits stay local until an owner explicitly saves a server draft', async ({ page }) => {
+test('page edits persist locally and autosave to an authorized server draft', async ({ page }) => {
  await page.goto(fixture + '?edit=1');
  await expect(page.locator('#ggmc-visual-editor')).toBeVisible();
- const headline = page.locator('#headline');
- await headline.fill('Keep this edit in the browser');
+ await page.locator('#headline').fill('Autosave this edit');
  const localDraft = await page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-v2') || '{}'));
- expect(localDraft.text['#headline'].after).toBe('Keep this edit in the browser');
- expect(await page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]'))).toHaveLength(0);
+ expect(localDraft.text['#headline'].after).toBe('Autosave this edit');
+ await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]').length), { timeout: 10000 }).toBe(1);
+ const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]'));
+ expect(saved[0].payload.text['#headline'].after).toBe('Autosave this edit');
+});
+
+test('reset clears the local draft and stale server pointer', async ({ page }) => {
+ await page.goto(fixture + '?edit=1');
  await page.locator('.ve-live-actions').getByRole('button', { name: 'Drafts & history', exact: true }).click();
  await page.getByRole('button', { name: 'Save server draft', exact: true }).click();
- await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Server draft saved as version 1.');
- const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('fixture-server-drafts') || '[]'));
- expect(saved).toHaveLength(1);
- expect(saved[0].payload.text['#headline'].after).toBe('Keep this edit in the browser');
+ await expect(page.locator('#ggmc-visual-editor .ve-status')).toContainText('Server draft saved as version 1');
+ page.on('dialog', dialog => dialog.accept());
+ await page.getByRole('button', { name: 'Reset draft', exact: true }).click();
+ await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('ggmc-preview-editor-server-draft-v1') || '{}').id)).toBe(null);
 });
 
 
