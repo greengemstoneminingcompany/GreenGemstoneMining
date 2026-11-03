@@ -81,3 +81,35 @@ test('project directory remains operable at a narrow mobile viewport', async ({ 
   await expect(group.getByRole('button', { name: 'Priority areas' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.project-card').first()).toBeVisible();
 });
+
+test.describe('localized company content', () => {
+  const cases = [
+    { locale: 'en', dir: 'ltr', vision: 'Build opportunity.', mission: 'From local connections to global markets', gem: 'A broad gemstone' },
+    { locale: 'so', dir: 'ltr', vision: 'Dhis fursado.', mission: 'Xiriirrada maxalliga ah ilaa suuqyada caalamiga ah', gem: 'Dhagaxyo qaali ah oo' },
+    { locale: 'ar', dir: 'rtl', vision: 'بناء الفرص.', mission: 'من العلاقات المحلية إلى الأسواق العالمية', gem: 'مجموعة متنوعة من' },
+    { locale: 'zh', dir: 'ltr', vision: '创造机遇。', mission: '从本地联系走向全球市场', gem: '丰富的宝石' },
+  ] as const;
+
+  for (const { locale, dir, vision, mission, gem } of cases) {
+    test(`${locale} renders translated company sections and correct document direction`, async ({ page }) => {
+      const prefix = locale === 'en' ? '/' : `/${locale}/`;
+      await page.goto(`${prefix}#/about?section=vision-mission`);
+      await expect(page.locator('html')).toHaveAttribute('lang', locale);
+      await expect(page.locator('html')).toHaveAttribute('dir', dir);
+      await expect(page.locator('#vision-mission')).toContainText(vision);
+      await expect(page.locator('#vision-mission')).toContainText(mission);
+      await expect(page.locator('#vision-mission li')).toHaveCount(6);
+      await expect(page.locator('#gemstones')).toContainText(gem);
+      await expect(page.locator('#gemstones .gemstone-card')).toHaveCount(11);
+    });
+  }
+
+  test('Arabic company content fits a narrow mobile viewport without horizontal overflow', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto('/ar/#/about?section=vision-mission');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(page.locator('#vision-mission')).toBeVisible();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
+  });
+});
