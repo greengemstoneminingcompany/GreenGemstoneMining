@@ -61,6 +61,13 @@ describe('published media URL safety', () => {
     expect(parsed?.profile.heroImage).toBe(defaultCompanyRecords.profile.heroImage);
     expect(parsed?.gallery[0].src).toBe(defaultCompanyRecords.gallery[0].src);
   });
+  it.each(['https://user:password@example.com/photo.jpg', 'https://user@example.com/photo.jpg', '/\\\\example.com/photo.jpg', '/path\\\\image.jpg', 'https://example.com/\\\\other.example/photo.jpg'])('rejects ambiguous or credential-bearing URL %s', (src) => {
+    const parsed = parseCompanyRecords({ profile: { heroImage: src } });
+    expect(parsed?.profile.heroImage).toBe(defaultCompanyRecords.profile.heroImage);
+  });
+  it('accepts HTTPS media without embedded credentials', () => {
+    expect(parseCompanyRecords({ profile: { heroImage: 'https://example.com/media/photo.jpg' } })?.profile.heroImage).toBe('https://example.com/media/photo.jpg');
+  });
   it('accepts safe local media paths', () => {
     expect(parseCompanyRecords({ profile: { heroImage: '/assets/images/company.jpg' } })?.profile.heroImage).toBe('/assets/images/company.jpg');
   });
