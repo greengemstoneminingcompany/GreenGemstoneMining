@@ -82,3 +82,13 @@ describe('project record identity', () => {
     expect(parsed?.projects[0].name).toBe(first.name);
   });
 });
+
+
+describe('case-insensitive published project identities', () => {
+  it('keeps the first project when IDs differ only by letter case', () => {
+    const first = defaultCompanyRecords.projects[0];
+    const parsed = parseCompanyRecords({ projects: [first, { ...first, id: first.id.toUpperCase(), name: 'Duplicate with different case' }] });
+    expect(parsed?.projects).toHaveLength(1);
+    expect(parsed?.projects[0].name).toBe(first.name);
+  });
+});
