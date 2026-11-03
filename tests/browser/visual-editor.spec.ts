@@ -850,3 +850,39 @@ test('company records reject duplicate or blank project identifiers without modi
  await id.fill('verified-project-id'); await id.dispatchEvent('change');
  await expect.poll(async()=> (await read()).at(-1).id).toBe('verified-project-id');
 });
+
+
+test('company records can clear previously verified project coordinates', async ({ page }) => {
+ await page.goto(fixture+'?edit=1');
+ const panel=page.locator('#ggmc-visual-editor');
+ await panel.getByRole('button',{name:'Projects & map'}).click();
+ await panel.getByRole('button',{name:'Add project',exact:true}).click();
+ const lat=panel.getByLabel('Latitude',{exact:true});
+ await lat.fill('10.5'); await lat.dispatchEvent('change');
+ await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('ggmc-preview-editor-v2')||'{}').companyRecords.projects.at(-1).lat)).toBe(10.5);
+ await lat.fill(''); await lat.dispatchEvent('change');
+ await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('ggmc-preview-editor-v2')||'{}').companyRecords.projects.at(-1).lat)).toBeNull();
+});
+
+test('company records reject case-insensitive duplicate project IDs', async ({ page }) => {
+ await page.goto(fixture+'?edit=1');
+ const panel=page.locator('#ggmc-visual-editor');
+ await panel.getByRole('button',{name:'Projects & map'}).click();
+ await panel.getByRole('button',{name:'Add project',exact:true}).click();
+ const id=panel.getByLabel('ID',{exact:true});
+ await id.fill('Unique-Test-Project'); await id.dispatchEvent('change');
+ await panel.getByRole('button',{name:'Add project',exact:true}).click();
+ const second=await page.evaluate(()=>JSON.parse(localStorage.getItem('ggmc-preview-editor-v2')||'{}').companyRecords.projects.at(-1).id);
+ await id.fill('unique-test-project'); await id.dispatchEvent('change');
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('ggmc-preview-editor-v2')||'{}').companyRecords.projects.at(-1).id)).toBe(second);
+});
+
+test('company records disable adding projects when capacity is reached', async ({ page }) => {
+ await page.goto(fixture+'?edit=1');
+ const panel=page.locator('#ggmc-visual-editor');
+ await panel.getByRole('button',{name:'Projects & map'}).click();
+ await page.evaluate(()=>{const key='ggmc-preview-editor-v2';const draft=JSON.parse(localStorage.getItem(key)||'{}');const sample=draft.companyRecords.projects[0]||{name:'Project',region:'awdal',lat:null,lon:null,findings:[]};draft.companyRecords.projects=Array.from({length:100},(_,i)=>({...sample,id:'capacity-project-'+i}));localStorage.setItem(key,JSON.stringify(draft));});
+ await page.reload();
+ await panel.getByRole('button',{name:'Projects & map'}).click();
+ await expect(panel.getByRole('button',{name:'Add project',exact:true})).toBeDisabled();
+});
