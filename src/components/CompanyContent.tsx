@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useI18n } from '@/i18n/core';
+import { companyPageCopy } from '@/i18n/company-pages';
 import { ABOUT_SECTION_KEYS, useCompanyRecords, type AboutSectionKey } from '@/lib/companyRecords';
 
 function Card({ label, title, children }: { label: string; title: string; children: ReactNode }) {
@@ -8,7 +9,8 @@ function Card({ label, title, children }: { label: string; title: string; childr
 }
 
 export default function CompanyContent() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const cp = companyPageCopy(lang);
   const { mineralInterests, gemstoneInterests, profile } = useCompanyRecords();
   return (
     <div className="company-content">
@@ -17,17 +19,17 @@ export default function CompanyContent() {
           <div className="content-intro reveal in">
             <p className="eyebrow center">{t.company.eyebrow}</p>
             <h2 className="display">{t.company.h2a}<br /><em>{t.company.h2b}</em></h2>
-            <p className="body-text">{profile.legalName} is a local mining and development company based in {profile.publicLocation}. Its stated interests span gemstones, metals and industrial minerals. Mineral evidence and project stages vary, and no resource or reserve estimates are presented in this profile.</p>
+            <p className="body-text">{profile.legalName} {cp.profileIntro} {profile.publicLocation}. {cp.profileEnd}</p>
           </div>
           <div className="content-grid">
-            <Card label="Our approach" title="A diversified strategy">
-              <p>The company strategy spans precious and non-precious metals, precious and non-precious gemstones, and mineral concentrates, with development opportunities across Somaliland.</p>
+            <Card label={cp.approach} title={cp.approachTitle}>
+              <p>{cp.approachText}</p>
             </Card>
-            <Card label="Our people" title="Rooted in Somaliland">
-              <p>Company materials describe a diverse local workforce drawn from regions across Somaliland, with a commitment to safe and sustainable practices that create value for employees, customers, shareholders and local communities.</p>
+            <Card label={cp.people} title={cp.peopleTitle}>
+              <p>{cp.peopleText}</p>
             </Card>
-            <Card label="Our responsibility" title="Safety comes first">
-              <p>The company states that social and environmental responsibility, industry best practice, and the safety and well-being of its people are central to its operations.</p>
+            <Card label={cp.responsibility} title={cp.responsibilityTitle}>
+              <p>{cp.responsibilityText}</p>
             </Card>
           </div>
         </div>

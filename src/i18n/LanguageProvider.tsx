@@ -45,9 +45,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     if (langFromPath(window.location.pathname) !== (initial === 'en' ? null : initial)) {
       window.history.replaceState(null, '', pathForLang(initial) + window.location.hash);
     }
+    const versionRef = loadVersion;
     const onPop = () => void load(langFromPath(window.location.pathname) ?? 'en');
     window.addEventListener('popstate', onPop);
-    return () => { ++loadVersion.current; window.removeEventListener('popstate', onPop); };
+    return () => { ++versionRef.current; window.removeEventListener('popstate', onPop); };
   }, [load]);
 
   useEffect(() => {

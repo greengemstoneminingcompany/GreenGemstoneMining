@@ -114,3 +114,13 @@ describe('company subpage translation coverage', () => {
     }
   });
 });
+
+
+describe('company profile localization', () => {
+  it.each(['en', 'so', 'ar', 'zh'] as const)('%s includes the full introductory company profile', (lang) => {
+    const copy = companyPageCopy(lang);
+    for (const key of ['profileIntro', 'profileEnd', 'approach', 'approachTitle', 'approachText', 'people', 'peopleTitle', 'peopleText', 'responsibility', 'responsibilityTitle', 'responsibilityText'] as const) {
+      expect(copy[key].trim()).not.toBe('');
+    }
+  });
+});
