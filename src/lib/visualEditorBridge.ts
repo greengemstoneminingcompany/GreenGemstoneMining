@@ -99,7 +99,7 @@ function hasControlOrBackslash(value: string, rejectSpaces = false): boolean {
 }
 function safePublishedImageSrc(value: unknown): value is string {
  if(typeof value!=='string'||hasControlOrBackslash(value,true))return false;
- if(/^data:image\/(?:png|jpeg|webp);base64,[a-z0-9+/]+=*$/i.test(value))return true;
+ if(value.length<=350000 && /^data:image\/(?:png|jpeg|webp);base64,[a-z0-9+/]+=*$/i.test(value))return true;
  if(/["'();{}]/.test(value))return false;
  if(value.startsWith('/')&&!value.startsWith('//'))return true;
  try{const url=new URL(value,location.origin);return url.protocol==='https:'&&!url.username&&!url.password&&/^https:\/\//i.test(value);}catch{return false;}
@@ -231,7 +231,7 @@ function safePublishedSelector(selector: string): boolean {
  return typeof selector === 'string' && selector.length > 0 && selector.length <= 500 && !/^(?:html|body|#root|#ggmc-visual-editor)$/i.test(selector.trim());
 }
 function safePublishedCssValue(prop: string, value: unknown): value is string {
- const allowed = new Set(['color','background-color','font-size','font-family','font-weight','font-style','line-height','letter-spacing','text-align','text-decoration','text-transform','padding','padding-top','padding-right','padding-bottom','padding-left','margin','margin-top','margin-right','margin-bottom','margin-left','border','border-color','border-width','border-style','border-radius','box-shadow','background-size','background-position','filter','width','min-width','max-width','height','min-height','max-height','opacity','display','position','top','right','bottom','left','gap','column-gap','row-gap','object-fit','object-position']);
+ const allowed = new Set(['color','background-color','font-size','font-family','font-weight','font-style','line-height','letter-spacing','text-align','text-decoration','text-decoration-line','text-transform','rotate','padding','padding-top','padding-right','padding-bottom','padding-left','margin','margin-top','margin-right','margin-bottom','margin-left','border','border-color','border-width','border-style','border-radius','box-shadow','background-size','background-position','filter','width','min-width','max-width','height','min-height','max-height','opacity','display','position','top','right','bottom','left','gap','column-gap','row-gap','object-fit','object-position']);
  if(typeof value!=='string'||value.length>=100||!allowed.has(prop)||Array.from(value).some(char=>{const code=char.charCodeAt(0);return ['<','>','\\',';','{','}'].includes(char)||code<=31||code===127;})||/(?:url\s*\(|expression\s*\(|javascript\s*:|vbscript\s*:|@import|!important)/i.test(value))return false;
  try{return typeof CSS!=='undefined'&&CSS.supports(prop,value.trim());}catch{return false;}
 }
@@ -246,90 +246,10 @@ export function applyPublishedVisualEditorPayload(payload: Record<string, unknow
  // Builder documents were disconnected from the React website and replaced the
  // live page wholesale on publish. Published snapshots now apply only to the
  // real, component-backed website sections below.
- const text = payload.text && typeof payload.text === 'object' ? payload.text as Record<string, {after?:unknown}> : {};
- for (const [selector, change] of Object.entries(text)) {
-  if (!change || typeof change.after !== 'string' || change.after.length > 10000 || !safePublishedSelector(selector)) continue;
-  try {
-   root.querySelectorAll(selector).forEach((el) => {
-    if (el === root || el.closest('#ggmc-visual-editor')) return;
-    if (el.childElementCount === 0) { el.textContent = change.after as string; return; }
-    const directText = Array.from(el.childNodes).find((node) => node.nodeType === Node.TEXT_NODE && (node.textContent || '').trim());
-    if (directText) directText.textContent = change.after as string;
-   });
-  } catch { /* malformed or stale selector */ }
- }
- const styles = payload.styles && typeof payload.styles === 'object' ? payload.styles as Record<string, Record<string, unknown>> : {};
- for (const [selector, props] of Object.entries(styles)) {
-  if (!safePublishedSelector(selector)) continue;
-  const customCss: Record<string,string> = {'--ve-background-size':'background-size','--ve-background-position':'background-position','--ve-image-filter':'filter','--ve-object-fit':'object-fit','--ve-object-position':'object-position'};
-  try { root.querySelectorAll(selector).forEach((el) => Object.entries(props || {}).forEach(([key,value]) => {
-   if (key === '--ve-background-image' && safePublishedImageSrc(value)) (el as HTMLElement).style.backgroundImage = `url("${value}")`;
-   else if (customCss[key] && safePublishedCssValue(customCss[key],value)) (el as HTMLElement).style.setProperty(customCss[key],value as string);
-   else if (key === '--ve-image-src' && el instanceof HTMLImageElement && safePublishedImageSrc(value)) el.src = value;
-   else if (key === '--ve-video-src' && el instanceof HTMLVideoElement && safePublishedMediaSrc(value)) el.src = value;
-   else if (key === '--ve-image-alt' && el instanceof HTMLImageElement && typeof value === 'string' && value.length < 500) el.alt = value;
-   else if (key === '--ve-link-href' && el instanceof HTMLAnchorElement && typeof value === 'string') el.setAttribute('href', safePublishedHref(value));
-   else if (/^(color|background-color|font-size|font-family|font-weight|font-style|line-height|letter-spacing|text-align|text-decoration|text-transform|padding|padding-top|padding-right|padding-bottom|padding-left|margin|margin-top|margin-right|margin-bottom|margin-left|border|border-color|border-width|border-style|border-radius|box-shadow|width|min-width|max-width|height|min-height|max-height|opacity|display|position|top|right|bottom|left|gap|column-gap|row-gap|object-fit|object-position)$/.test(key) && safePublishedCssValue(key,value)) (el as HTMLElement).style.setProperty(key,value);
-  })); } catch { /* stale selector */ }
- }
- const hidden = payload.hidden && typeof payload.hidden === 'object' ? payload.hidden as Record<string,unknown> : {};
- for (const [selector, hide] of Object.entries(hidden)) {
-  if (!safePublishedSelector(selector)) continue;
-  try { root.querySelectorAll(selector).forEach((el) => { if (hide === true) (el as HTMLElement).style.display='none'; }); } catch { /* stale selector */ }
- }
- 
-  const actions = payload.actions && typeof payload.actions === 'object' ? payload.actions as Record<string, Record<string, unknown>> : {};
-  const safeHref = safePublishedHref;
-  const makeMenu = (items: unknown) => {
-   const menu = document.createElement('div');
-   menu.style.cssText = 'display:none;gap:5px;padding:8px;margin:6px 0;border:1px solid #8d7747;border-radius:8px;background:#101a15';
-   menu.setAttribute('data-ve-published-menu','true');
-   (Array.isArray(items) ? items : []).forEach((entry) => {
-    if (!entry || typeof entry !== 'object') return;
-    const item = entry as Record<string, unknown>;
-    if (typeof item.label !== 'string' || !item.label.trim()) return;
-    const a = document.createElement('a'); a.textContent = item.label.slice(0,100); a.href = safeHref(item.href);
-    a.style.cssText = 'display:block;color:#f2eee4;padding:7px;text-decoration:none;border-radius:5px';
-    menu.append(a);
-   });
-   return menu;
-  };
-  for (const [selector, action] of Object.entries(actions)) {
-   if (!action || typeof action !== 'object') continue;
-   if (!safePublishedSelector(selector)) continue;
-   let el: Element|null; try { el=root.querySelector(selector); } catch { continue; }
-   if (!el || el.closest('#ggmc-visual-editor')) continue;
-   const items = Array.isArray(action.items) ? action.items : [];
-   if (action.mode === 'text' && typeof action.text === 'string' && action.text) {
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let node: Node|null;
-    while ((node=walker.nextNode())) {
-     const content=node.textContent||''; const at=content.indexOf(action.text); if(at<0) continue;
-     const range=document.createRange(); range.setStart(node,at); range.setEnd(node,at+action.text.length);
-     const control=document.createElement(action.type==='link'?'a':'button');
-     control.textContent=action.text; control.style.cssText='display:inline-block;padding:8px 14px;border:0;border-radius:24px;background:#c4a252;color:#07100b;text-decoration:none;font:600 13px system-ui,sans-serif;cursor:pointer';
-     if(action.type==='link') (control as HTMLAnchorElement).href=safeHref(action.href);
-     else (control as HTMLButtonElement).type='button';
-     try { range.surroundContents(control); } catch { continue; }
-     if(action.type==='button' && items.length) {
-      const menu=makeMenu(items); menu.style.display='none'; control.setAttribute('aria-haspopup','true'); control.setAttribute('aria-expanded','false');
-      control.insertAdjacentElement('afterend',menu);
-      control.addEventListener('click',()=>{ const opening=menu.style.display==='none'; menu.style.display=opening?'grid':'none'; control.setAttribute('aria-expanded',String(opening)); });
-     }
-     break;
-    }
-   } else if (action.mode === 'element' && action.type === 'dropdown' && (el instanceof HTMLButtonElement || el instanceof HTMLAnchorElement)) {
-    const control=el as HTMLButtonElement|HTMLAnchorElement; if(control.dataset.vePublishedDropdown==='true') continue;
-    control.dataset.vePublishedDropdown='true'; control.setAttribute('aria-haspopup','true'); control.setAttribute('aria-expanded','false');
-    const menu=makeMenu(items); control.insertAdjacentElement('afterend',menu);
-    control.addEventListener('click',(event)=>{ if(control instanceof HTMLAnchorElement) event.preventDefault(); const opening=menu.style.display==='none'; menu.style.display=opening?'grid':'none'; control.setAttribute('aria-expanded',String(opening)); });
-   }
-  }
-
-  applyPublishedDesignTokens(payload, root);
-
   const blocks = Array.isArray(payload.blocks) ? payload.blocks as Array<Record<string,unknown>> : [];
   const main = root.querySelector('main') || root;
   const allowedKinds = new Set(['section','text','card','grid','image','video','link','html','divider','spacer']);
+  const lastByAnchor = new Map<string, Element>();
   for (const block of blocks) {
     const id = typeof block.id === 'string' ? block.id.slice(0,120) : '';
     if (!id || [...root.querySelectorAll('[data-ve-block-id]')].some(el => (el as HTMLElement).dataset.veBlockId === id)) continue;
@@ -387,6 +307,93 @@ export function applyPublishedVisualEditorPayload(payload: Record<string, unknow
 
     const after = typeof block.after === 'string' && safePublishedSelector(block.after) ? block.after : '';
     let target: Element|null=null; try { target=after?root.querySelector(after):null; } catch { /* stale selector */ }
-    if (target?.parentElement) target.insertAdjacentElement('afterend',el); else main.append(el);
+    if (target?.parentElement) {
+      const anchor = lastByAnchor.get(after);
+      const insertionPoint = anchor?.parentElement === target.parentElement ? anchor : target;
+      insertionPoint.insertAdjacentElement('afterend',el);
+      lastByAnchor.set(after,el);
+    } else main.append(el);
   }
+ const text = payload.text && typeof payload.text === 'object' ? payload.text as Record<string, {after?:unknown}> : {};
+ for (const [selector, change] of Object.entries(text)) {
+  if (!change || typeof change.after !== 'string' || change.after.length > 10000 || !safePublishedSelector(selector)) continue;
+  try {
+   root.querySelectorAll(selector).forEach((el) => {
+    if (el === root || el.closest('#ggmc-visual-editor')) return;
+    if (el.childElementCount === 0) { el.textContent = change.after as string; return; }
+    const directText = Array.from(el.childNodes).find((node) => node.nodeType === Node.TEXT_NODE && (node.textContent || '').trim());
+    if (directText) directText.textContent = change.after as string;
+   });
+  } catch { /* malformed or stale selector */ }
+ }
+ const styles = payload.styles && typeof payload.styles === 'object' ? payload.styles as Record<string, Record<string, unknown>> : {};
+ for (const [selector, props] of Object.entries(styles)) {
+  if (!safePublishedSelector(selector)) continue;
+  const customCss: Record<string,string> = {'--ve-background-size':'background-size','--ve-background-position':'background-position','--ve-image-filter':'filter','--ve-object-fit':'object-fit','--ve-object-position':'object-position'};
+  try { root.querySelectorAll(selector).forEach((el) => Object.entries(props || {}).forEach(([key,value]) => {
+   if (key === '--ve-background-image' && safePublishedImageSrc(value)) (el as HTMLElement).style.backgroundImage = `url("${value}")`;
+   else if (customCss[key] && safePublishedCssValue(customCss[key],value)) (el as HTMLElement).style.setProperty(customCss[key],value as string);
+   else if (key === '--ve-image-src' && el instanceof HTMLImageElement && safePublishedImageSrc(value)) el.src = value;
+   else if (key === '--ve-video-src' && el instanceof HTMLVideoElement && safePublishedMediaSrc(value)) el.src = value;
+   else if (key === '--ve-image-alt' && el instanceof HTMLImageElement && typeof value === 'string' && value.length < 500) el.alt = value;
+   else if (key === '--ve-link-href' && el instanceof HTMLAnchorElement && typeof value === 'string') el.setAttribute('href', safePublishedHref(value));
+   else if (/^(color|background-color|font-size|font-family|font-weight|font-style|line-height|letter-spacing|text-align|text-decoration|text-decoration-line|text-transform|rotate|padding|padding-top|padding-right|padding-bottom|padding-left|margin|margin-top|margin-right|margin-bottom|margin-left|border|border-color|border-width|border-style|border-radius|box-shadow|width|min-width|max-width|height|min-height|max-height|opacity|display|position|top|right|bottom|left|gap|column-gap|row-gap|object-fit|object-position)$/.test(key) && safePublishedCssValue(key,value)) (el as HTMLElement).style.setProperty(key,value);
+  })); } catch { /* stale selector */ }
+ }
+ const hidden = payload.hidden && typeof payload.hidden === 'object' ? payload.hidden as Record<string,unknown> : {};
+ for (const [selector, hide] of Object.entries(hidden)) {
+  if (!safePublishedSelector(selector)) continue;
+  try { root.querySelectorAll(selector).forEach((el) => { if (hide === true) (el as HTMLElement).style.display='none'; }); } catch { /* stale selector */ }
+ }
+ 
+  const actions = payload.actions && typeof payload.actions === 'object' ? payload.actions as Record<string, Record<string, unknown>> : {};
+  const safeHref = safePublishedHref;
+  const makeMenu = (items: unknown) => {
+   const menu = document.createElement('div');
+   menu.style.cssText = 'display:none;gap:5px;padding:8px;margin:6px 0;border:1px solid #8d7747;border-radius:8px;background:#101a15';
+   menu.setAttribute('data-ve-published-menu','true');
+   (Array.isArray(items) ? items : []).forEach((entry) => {
+    if (!entry || typeof entry !== 'object') return;
+    const item = entry as Record<string, unknown>;
+    if (typeof item.label !== 'string' || !item.label.trim()) return;
+    const a = document.createElement('a'); a.textContent = item.label.slice(0,100); a.href = safeHref(item.href);
+    a.style.cssText = 'display:block;color:#f2eee4;padding:7px;text-decoration:none;border-radius:5px';
+    menu.append(a);
+   });
+   return menu;
+  };
+  for (const [selector, action] of Object.entries(actions)) {
+   if (!action || typeof action !== 'object') continue;
+   if (!safePublishedSelector(selector)) continue;
+   let el: Element|null; try { el=root.querySelector(selector); } catch { continue; }
+   if (!el || el.closest('#ggmc-visual-editor')) continue;
+   const items = Array.isArray(action.items) ? action.items : [];
+   if (action.mode === 'text' && typeof action.text === 'string' && action.text) {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let node: Node|null;
+    while ((node=walker.nextNode())) {
+     const content=node.textContent||''; const at=content.indexOf(action.text); if(at<0) continue;
+     const range=document.createRange(); range.setStart(node,at); range.setEnd(node,at+action.text.length);
+     const control=document.createElement(action.type==='link'?'a':'button');
+     control.textContent=action.text; control.style.cssText='display:inline-block;padding:8px 14px;border:0;border-radius:24px;background:#c4a252;color:#07100b;text-decoration:none;font:600 13px system-ui,sans-serif;cursor:pointer';
+     if(action.type==='link') (control as HTMLAnchorElement).href=safeHref(action.href);
+     else (control as HTMLButtonElement).type='button';
+     try { range.surroundContents(control); } catch { continue; }
+     if(action.type==='button' && items.length) {
+      const menu=makeMenu(items); menu.style.display='none'; control.setAttribute('aria-haspopup','true'); control.setAttribute('aria-expanded','false');
+      control.insertAdjacentElement('afterend',menu);
+      control.addEventListener('click',()=>{ const opening=menu.style.display==='none'; menu.style.display=opening?'grid':'none'; control.setAttribute('aria-expanded',String(opening)); });
+     }
+     break;
+    }
+   } else if (action.mode === 'element' && action.type === 'dropdown' && (el instanceof HTMLButtonElement || el instanceof HTMLAnchorElement)) {
+    const control=el as HTMLButtonElement|HTMLAnchorElement; if(control.dataset.vePublishedDropdown==='true') continue;
+    control.dataset.vePublishedDropdown='true'; control.setAttribute('aria-haspopup','true'); control.setAttribute('aria-expanded','false');
+    const menu=makeMenu(items); control.insertAdjacentElement('afterend',menu);
+    control.addEventListener('click',(event)=>{ if(control instanceof HTMLAnchorElement) event.preventDefault(); const opening=menu.style.display==='none'; menu.style.display=opening?'grid':'none'; control.setAttribute('aria-expanded',String(opening)); });
+   }
+  }
+
+  applyPublishedDesignTokens(payload, root);
+
+
 }

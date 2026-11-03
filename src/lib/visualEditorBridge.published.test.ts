@@ -97,3 +97,22 @@ it('preserves real site chrome when a disconnected Builder payload is present', 
  expect(document.querySelector('.lang-switch')?.textContent).toBe('EN');
  document.body.innerHTML = '';
 });
+
+
+describe('published added-block ordering and styling', () => {
+ afterEach(() => { document.body.innerHTML = ''; });
+ it('applies styles and visibility to blocks created in the same snapshot', () => {
+  document.body.innerHTML = '<div id="root"><main><div id="anchor">Anchor</div></main></div>';
+  applyPublishedVisualEditorPayload({blocks:[{id:'added-one',kind:'card',after:'#anchor',title:'Added'}],styles:{'[data-ve-block-id="added-one"]':{color:'red','text-decoration-line':'underline',rotate:'10deg'}},hidden:{'[data-ve-block-id="added-one"]':true}},document.getElementById('root')!);
+  const added=document.querySelector('[data-ve-block-id="added-one"]') as HTMLElement;
+  expect(added.style.color).toBe('red');
+  expect(added.style.display).toBe('none');
+  expect(added.style.textDecorationLine).toBe('underline');
+  expect(added.style.rotate).toBe('10deg');
+ });
+ it('keeps multiple blocks attached to one anchor in draft order', () => {
+  document.body.innerHTML = '<div id="root"><main><div id="anchor">Anchor</div></main></div>';
+  applyPublishedVisualEditorPayload({blocks:[{id:'one',kind:'card',after:'#anchor',title:'One'},{id:'two',kind:'card',after:'#anchor',title:'Two'},{id:'three',kind:'card',after:'#anchor',title:'Three'}]},document.getElementById('root')!);
+  expect(Array.from(document.querySelectorAll('main > [data-ve-block-id]')).map(el=>(el as HTMLElement).dataset.veBlockId)).toEqual(['one','two','three']);
+ });
+});
