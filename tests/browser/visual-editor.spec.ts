@@ -764,7 +764,9 @@ test('design tokens and text edits survive reload together', async ({ page }) =>
 
 test('editor uses valid CSS selectors for ID-based text and styles', async ({ page }) => {
  await page.goto(fixture + '?edit=1');
+ await expect(page.locator('#ggmc-visual-editor')).toBeVisible();
  const headline=page.locator('#headline');
+ await expect(headline).toHaveAttribute('contenteditable', 'true');
  await headline.fill('Selector regression headline');
  await expect.poll(() => page.evaluate(() => {
    const saved=JSON.parse(localStorage.getItem('ggmc-preview-editor-v2')||'{}');
