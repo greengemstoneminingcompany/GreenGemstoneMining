@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useI18n } from '@/i18n/core';
 import { companyPageCopy } from '@/i18n/company-pages';
+import { localizeAbout } from '@/i18n/about';
 import { ABOUT_SECTION_KEYS, useCompanyRecords, type AboutSectionKey } from '@/lib/companyRecords';
 
 function Card({ label, title, children }: { label: string; title: string; children: ReactNode }) {
@@ -96,7 +97,7 @@ function AboutSection({ sectionKey }: { sectionKey: AboutSectionKey }) {
   const { about, profile } = useCompanyRecords();
   const { t, lang } = useI18n();
   const cp = companyPageCopy(lang);
-  const section = about[sectionKey];
+  const section = localizeAbout(about, lang)[sectionKey];
   const dark = sectionKey === 'development' || sectionKey === 'history';
   return <section id={sectionIds[sectionKey]} className={`sec${dark ? ' sec-dark' : ''}`}>
     <div className="sec-container">
