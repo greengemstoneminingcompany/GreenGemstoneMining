@@ -29,6 +29,7 @@ const MediaPanel = lazy(() => import('@/components/MediaPanel'));
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [lowBandwidth, setLowBandwidth] = useState(false);
   const [currentPage, setCurrentPage] = useState<CompanyPage>(readPage);
   useEffect(() => {
     const syncRoute = () => {
@@ -57,7 +58,7 @@ export default function App() {
     window.addEventListener('ggmc-open-media', openMedia);
     return () => window.removeEventListener('ggmc-open-media', openMedia);
   }, []);
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const records = useCompanyRecords();
   const metals = records.minerals.filter((m) => m.cat === 'Metal' || m.cat === 'Precious');
   const scrolled = useScrollHeader();
@@ -66,7 +67,7 @@ export default function App() {
   useReveals();
 
   return (
-    <div className="app">
+    <div className={`app ${lowBandwidth ? 'low-bandwidth' : ''}`}>
       <SiteAnalytics route={currentPage} />
       <a className="skip-link" href="#main">{t.ui.skip}</a>
       <ScrollProgress />
@@ -107,6 +108,7 @@ export default function App() {
               <a href="?edit=1" onClick={(event) => { event.preventDefault(); setMenuOpen(false); event.currentTarget.closest('details')?.removeAttribute('open'); window.dispatchEvent(new Event('ggmc-open-editor')); }}>Employee portal sign-in</a>
             </div></details>
           )}
+          <button type="button" className="atlas-bandwidth-toggle" aria-pressed={lowBandwidth} onClick={() => setLowBandwidth((value) => !value)}>{({ en: 'Low bandwidth', zh: '低流量模式', so: 'Xog yar', ar: 'بيانات أقل' } as const)[lang]}</button>
           <LanguageSwitcher />
           <a className="hdr-cta" data-editor-id="site.primary-cta" href="#/contact" onClick={() => setMenuOpen(false)}>{t.nav.cta} <ArrowUpRight size={14} aria-hidden="true" /></a>
         </nav>
