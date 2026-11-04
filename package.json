@@ -5,7 +5,7 @@
   "description": "Marketing and investor site for Green Gemstone Mining Company, Hargeisa, Somaliland.",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.22.2"
   },
   "scripts": {
     "dev": "vite",
