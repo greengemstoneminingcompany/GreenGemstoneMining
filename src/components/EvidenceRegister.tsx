@@ -37,8 +37,10 @@ export default function EvidenceRegister({ projects }: { projects: readonly Proj
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
+    const priorOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     document.addEventListener('keydown', handleEscape);
-    return () => { document.removeEventListener('keydown', handleEscape); previous?.focus(); };
+    return () => { document.removeEventListener('keydown', handleEscape); document.body.style.overflow = priorOverflow; previous?.focus(); };
   }, [selected]);
   const visible = useMemo(() => projects.filter((p) => filter === 'all' || p.findings.some((f) => f.evidence === filter)), [projects, filter]);
   return <section className="sec atlas-evidence" data-editor-id="home.evidence">
