@@ -18,7 +18,11 @@ Deno.serve(async (request) => {
   if (request.method !== 'POST') return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers });
   if (Number(request.headers.get('content-length') || '0') > 1024) return new Response(JSON.stringify({ error: 'Too large' }), { status: 413, headers });
   let data: unknown;
-  try { data = await request.json(); } catch { return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400, headers }); }
+  try {
+    const raw = await request.text();
+    if (new TextEncoder().encode(raw).byteLength > 1024) return new Response(JSON.stringify({ error: 'Too large' }), { status: 413, headers });
+    data = JSON.parse(raw);
+  } catch { return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400, headers }); }
   if (!data || typeof data !== 'object') return new Response(JSON.stringify({ error: 'Invalid payload' }), { status: 400, headers });
   const { route, language } = data as Record<string, unknown>;
   if (typeof route !== 'string' || !allowedRoutes.has(route) || typeof language !== 'string' || !allowedLanguages.has(language))
