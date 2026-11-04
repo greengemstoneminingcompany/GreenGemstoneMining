@@ -7,7 +7,7 @@ const IMG = (() => {
   if (!configuredMediaBase) return '/assets/images';
   try {
     const url = new URL(configuredMediaBase);
-    if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) return '/assets/images';
+    if (url.protocol !== 'https:' || !url.hostname.endsWith('.supabase.co') || url.username || url.password || url.search || url.hash) return '/assets/images';
     return url.href.replace(/[/]$/, '');
   } catch { return '/assets/images'; }
 })();
