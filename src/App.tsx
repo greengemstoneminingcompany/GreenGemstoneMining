@@ -79,33 +79,33 @@ export default function App() {
           <div className="nav-menu-item">
             <a href="#/about" onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
             <details className="nav-dropdown"><summary aria-label={`${t.nav.company} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
-              <a href="#/about?section=company-profile" onClick={() => setMenuOpen(false)}>Company profile</a>
-              <a href="#/about?section=vision-mission" onClick={() => setMenuOpen(false)}>Vision &amp; mission</a>
-              <a href="#/about?section=leadership" onClick={() => setMenuOpen(false)}>Leadership</a>
-              <a href="#/about?section=history-details" onClick={() => setMenuOpen(false)}>Company history</a>
+              <a href="#/about?section=company-profile" onClick={() => setMenuOpen(false)}>{({ en: 'Company profile', zh: '公司简介', so: 'Xogta shirkadda', ar: 'الملف التعريفي للشركة' } as const)[lang]}</a>
+              <a href="#/about?section=vision-mission" onClick={() => setMenuOpen(false)}>{({ en: 'Vision & mission', zh: '愿景与使命', so: 'Aragtida iyo himilada', ar: 'الرؤية والرسالة' } as const)[lang]}</a>
+              <a href="#/about?section=leadership" onClick={() => setMenuOpen(false)}>{({ en: 'Leadership', zh: '管理团队', so: 'Hoggaanka', ar: 'القيادة' } as const)[lang]}</a>
+              <a href="#/about?section=history-details" onClick={() => setMenuOpen(false)}>{({ en: 'Company history', zh: '公司历史', so: 'Taariikhda shirkadda', ar: 'تاريخ الشركة' } as const)[lang]}</a>
             </div></details>
           </div>
           <div className="nav-menu-item">
             <a href="#/minerals" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
             <details className="nav-dropdown"><summary aria-label={`${t.nav.portfolio} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
-              <a href="#/about?section=gemstones" onClick={() => setMenuOpen(false)}>Gemstones</a>
-              <a href="#/about?section=industrial-metals" onClick={() => setMenuOpen(false)}>Industrial &amp; precious metals</a>
-              <a href="#/about?section=services" onClick={() => setMenuOpen(false)}>Services</a>
+              <a href="#/about?section=gemstones" onClick={() => setMenuOpen(false)}>{({ en: 'Gemstones', zh: '宝石', so: 'Dhagaxyada qaaliga ah', ar: 'الأحجار الكريمة' } as const)[lang]}</a>
+              <a href="#/about?section=industrial-metals" onClick={() => setMenuOpen(false)}>{({ en: 'Industrial & precious metals', zh: '工业与贵金属', so: 'Biraha warshadaha iyo kuwa qaaliga ah', ar: 'المعادن الصناعية والثمينة' } as const)[lang]}</a>
+              <a href="#/about?section=services" onClick={() => setMenuOpen(false)}>{({ en: 'Services', zh: '服务', so: 'Adeegyada', ar: 'الخدمات' } as const)[lang]}</a>
             </div></details>
           </div>
           <div className="nav-menu-item">
             <a href="#/projects" onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
             <details className="nav-dropdown"><summary aria-label={`${t.nav.projects} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
-              <a href="#/about?section=development-projects" onClick={() => setMenuOpen(false)}>Mining development</a>
-              <a href="#/about?section=rural-development" onClick={() => setMenuOpen(false)}>Rural development &amp; community support</a>
-              <a href="#/about?section=operations" onClick={() => setMenuOpen(false)}>Operations &amp; equipment</a>
+              <a href="#/about?section=development-projects" onClick={() => setMenuOpen(false)}>{({ en: 'Mining development', zh: '矿业开发', so: 'Horumarinta macdanta', ar: 'تطوير التعدين' } as const)[lang]}</a>
+              <a href="#/about?section=rural-development" onClick={() => setMenuOpen(false)}>{({ en: 'Rural development & community support', zh: '乡村发展与社区支持', so: 'Horumarinta miyiga iyo taageerada bulshada', ar: 'التنمية الريفية ودعم المجتمع' } as const)[lang]}</a>
+              <a href="#/about?section=operations" onClick={() => setMenuOpen(false)}>{({ en: 'Operations & equipment', zh: '运营与设备', so: 'Hawlaha iyo qalabka', ar: 'العمليات والمعدات' } as const)[lang]}</a>
             </div></details>
           </div>
           <a href="#/gallery" onClick={() => setMenuOpen(false)}>{t.nav.gallery}</a>
           <a href="#/contact" onClick={() => setMenuOpen(false)}>{t.nav.contact}</a>
           {document.querySelector('meta[name="ggmc-preview-editor"]')?.getAttribute('content') === 'enabled' && (
-            <details className="nav-dropdown owner-menu"><summary>Employee portal</summary><div className="nav-dropdown-panel">
-              <a href="?edit=1" onClick={(event) => { event.preventDefault(); setMenuOpen(false); event.currentTarget.closest('details')?.removeAttribute('open'); window.dispatchEvent(new Event('ggmc-open-editor')); }}>Employee portal sign-in</a>
+            <details className="nav-dropdown owner-menu"><summary>{({ en: 'Employee portal', zh: '员工门户', so: 'Bogga shaqaalaha', ar: 'بوابة الموظفين' } as const)[lang]}</summary><div className="nav-dropdown-panel">
+              <a href="?edit=1" onClick={(event) => { event.preventDefault(); setMenuOpen(false); event.currentTarget.closest('details')?.removeAttribute('open'); window.dispatchEvent(new Event('ggmc-open-editor')); }}>{({ en: 'Employee portal sign-in', zh: '员工登录', so: 'Galitaanka shaqaalaha', ar: 'تسجيل دخول الموظفين' } as const)[lang]}</a>
             </div></details>
           )}
           <button type="button" className="atlas-bandwidth-toggle" aria-pressed={lowBandwidth} onClick={() => setLowBandwidth((value) => !value)}>{({ en: 'Low bandwidth', zh: '低流量模式', so: 'Xog yar', ar: 'بيانات أقل' } as const)[lang]}</button>
