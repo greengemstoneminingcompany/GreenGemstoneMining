@@ -4,7 +4,6 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import App from '@/App';
 import ContactForm from '@/components/ContactForm';
 import Gallery from '@/components/Gallery';
-import { GALLERY } from '@/data/site';
 
 afterEach(cleanup);
 
@@ -42,15 +41,15 @@ describe('ContactForm', () => {
 });
 
 describe('Gallery', () => {
-  it('shows every built-in item by default and filters by group', () => {
+  it('shows a loading status while gallery folders are being fetched', () => {
     render(<Gallery uploads={[]} />);
-    expect(screen.getByText(`${GALLERY.length} items`)).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Gemstones' }));
-    expect(screen.getByText('3 items')).toBeTruthy();
+    expect(screen.getByRole('status').textContent).toContain('Loading folders');
+    expect(screen.getByRole('navigation', { name: 'Gallery breadcrumb' })).toBeTruthy();
   });
 
-  it('only offers the uploads filter when uploads exist', () => {
+  it('does not show obsolete built-in media or uploads filters', () => {
     render(<Gallery uploads={[]} />);
+    expect(screen.queryByText('13 items')).toBeNull();
     expect(screen.queryByRole('button', { name: 'My uploads' })).toBeNull();
   });
 });
