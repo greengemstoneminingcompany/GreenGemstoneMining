@@ -88,3 +88,17 @@ html[dir="rtl"] .app .hdr-nav { text-align: start; }
   animation-duration: .01ms !important; transition-duration: .01ms !important;
 }
 @media (max-width: 1000px) { .atlas-bandwidth-toggle { font-size: 11px; } }
+
+/* Atlas Heritage partner entry paths, linked to the real contact page. */
+.atlas-paths { background: #e9e5d9; color: #172820; }
+.atlas-paths .display, .atlas-paths .eyebrow { color: #172820; }
+.atlas-paths .body-text { color: #46574e; }
+.atlas-path-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); margin-top: 36px; border-top: 1px solid rgba(23,40,32,.25); border-inline-start: 1px solid rgba(23,40,32,.25); }
+.atlas-path { display: flex; flex-direction: column; gap: 14px; padding: clamp(20px,2.5vw,36px); border-inline-end: 1px solid rgba(23,40,32,.25); border-bottom: 1px solid rgba(23,40,32,.25); text-decoration: none; color: inherit; min-height: 255px; transition: background .2s; }
+.atlas-path:hover, .atlas-path:focus-visible { background: #ddd5c2; }
+.atlas-path > span:first-child { font-family: var(--mono); color: #7b6a4d; font-size: .75rem; }
+.atlas-path h3 { font-family: var(--display); font-size: clamp(1.3rem,2vw,1.9rem); line-height: 1.15; }
+.atlas-path p { line-height: 1.6; color: #46574e; font-size: .9rem; }
+.atlas-path-link { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; font-size: .8rem; color: #344d3e; }
+@media (max-width: 900px) { .atlas-path-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 540px) { .atlas-path-grid { grid-template-columns: 1fr; } .atlas-path { min-height: 0; } }
