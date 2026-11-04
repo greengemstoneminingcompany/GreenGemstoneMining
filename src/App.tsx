@@ -79,7 +79,7 @@ export default function App() {
           <a href="#/home" onClick={() => setMenuOpen(false)}>{t.nav.overview}</a>
           <div className="nav-menu-item">
             <a href="#/about" onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
-            <details className="nav-dropdown"><summary aria-label={`${t.nav.company} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
+            <details className="nav-dropdown"><summary aria-label={`${t.nav.company} ${({ en: 'submenu', zh: '子菜单', so: 'liiska hoose', ar: 'قائمة فرعية' } as const)[lang]}`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#/about?section=company-profile" onClick={() => setMenuOpen(false)}>{({ en: 'Company profile', zh: '公司简介', so: 'Xogta shirkadda', ar: 'الملف التعريفي للشركة' } as const)[lang]}</a>
               <a href="#/about?section=vision-mission" onClick={() => setMenuOpen(false)}>{({ en: 'Vision & mission', zh: '愿景与使命', so: 'Aragtida iyo himilada', ar: 'الرؤية والرسالة' } as const)[lang]}</a>
               <a href="#/about?section=leadership" onClick={() => setMenuOpen(false)}>{({ en: 'Leadership', zh: '管理团队', so: 'Hoggaanka', ar: 'القيادة' } as const)[lang]}</a>
@@ -88,7 +88,7 @@ export default function App() {
           </div>
           <div className="nav-menu-item">
             <a href="#/minerals" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
-            <details className="nav-dropdown"><summary aria-label={`${t.nav.portfolio} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
+            <details className="nav-dropdown"><summary aria-label={`${t.nav.portfolio} ${({ en: 'submenu', zh: '子菜单', so: 'liiska hoose', ar: 'قائمة فرعية' } as const)[lang]}`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#/about?section=gemstones" onClick={() => setMenuOpen(false)}>{({ en: 'Gemstones', zh: '宝石', so: 'Dhagaxyada qaaliga ah', ar: 'الأحجار الكريمة' } as const)[lang]}</a>
               <a href="#/about?section=industrial-metals" onClick={() => setMenuOpen(false)}>{({ en: 'Industrial & precious metals', zh: '工业与贵金属', so: 'Biraha warshadaha iyo kuwa qaaliga ah', ar: 'المعادن الصناعية والثمينة' } as const)[lang]}</a>
               <a href="#/about?section=services" onClick={() => setMenuOpen(false)}>{({ en: 'Services', zh: '服务', so: 'Adeegyada', ar: 'الخدمات' } as const)[lang]}</a>
@@ -96,7 +96,7 @@ export default function App() {
           </div>
           <div className="nav-menu-item">
             <a href="#/projects" onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
-            <details className="nav-dropdown"><summary aria-label={`${t.nav.projects} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
+            <details className="nav-dropdown"><summary aria-label={`${t.nav.projects} ${({ en: 'submenu', zh: '子菜单', so: 'liiska hoose', ar: 'قائمة فرعية' } as const)[lang]}`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#/about?section=development-projects" onClick={() => setMenuOpen(false)}>{({ en: 'Mining development', zh: '矿业开发', so: 'Horumarinta macdanta', ar: 'تطوير التعدين' } as const)[lang]}</a>
               <a href="#/about?section=rural-development" onClick={() => setMenuOpen(false)}>{({ en: 'Rural development & community support', zh: '乡村发展与社区支持', so: 'Horumarinta miyiga iyo taageerada bulshada', ar: 'التنمية الريفية ودعم المجتمع' } as const)[lang]}</a>
               <a href="#/about?section=operations" onClick={() => setMenuOpen(false)}>{({ en: 'Operations & equipment', zh: '运营与设备', so: 'Hawlaha iyo qalabka', ar: 'العمليات والمعدات' } as const)[lang]}</a>
@@ -155,7 +155,7 @@ export default function App() {
 
         <PartnershipPaths />
 
-        <section className="showcase-values" aria-label="Company principles" data-editor-id="home.values">
+        <section className="showcase-values" aria-label={({ en: "Company principles", zh: "公司原则", so: "Mabaadi’da shirkadda", ar: "مبادئ الشركة" } as const)[lang]} data-editor-id="home.values">
           <div><ShieldCheck aria-hidden="true" /><strong>{t.mission.points[0].t}</strong><span>{t.mission.points[0].d}</span></div>
           <div><Handshake aria-hidden="true" /><strong>{t.mission.points[1].t}</strong><span>{t.mission.points[1].d}</span></div>
           <div><Sparkles aria-hidden="true" /><strong>{t.mission.points[2].t}</strong><span>{t.mission.points[2].d}</span></div>
