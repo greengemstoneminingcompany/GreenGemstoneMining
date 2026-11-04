@@ -8,7 +8,7 @@ const IMG = (() => {
   try {
     const url = new URL(configuredMediaBase);
     if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) return '/assets/images';
-    return url.href.replace(/\\/$/, '');
+    return url.href.replace(/[/]$/, '');
   } catch { return '/assets/images'; }
 })();
 
