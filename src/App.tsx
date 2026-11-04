@@ -129,7 +129,7 @@ export default function App() {
       <main id="main">
         {currentPage === 'home' ? (<>
         <section id="top" className="hero" data-editor-id="home.hero">
-          <img className="hero-bg" src={records.profile.heroImage} alt="" width={806} height={536} fetchPriority="high" />
+          {!lowBandwidth && <img className="hero-bg" src={records.profile.heroImage} alt="" width={806} height={536} fetchPriority="high" />}
           <div className="hero-overlay" />
           <Crystal3D />
           <div className="hero-inner">
@@ -165,7 +165,7 @@ export default function App() {
         <section id="company" className="sec" data-editor-id="home.company">
           <div className="sec-container company">
             <div className="company-visual reveal">
-              <img src={records.profile.companyImage} alt={t.company.imgAlt} width={806} height={536} loading="lazy" />
+              {!lowBandwidth && <img src={records.profile.companyImage} alt={t.company.imgAlt} width={806} height={536} loading="lazy" />}
               <div className="company-badge">{t.company.badge1}<br />{t.company.badge2}</div>
             </div>
             <div className="company-text reveal" style={{ transitionDelay: '120ms' }}>
