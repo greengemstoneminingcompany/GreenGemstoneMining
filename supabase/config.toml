@@ -1,0 +1,5 @@
+# Public, anonymous, aggregate-only analytics. The function validates origin and
+# dimensions and writes through a server-side service-role RPC. Rate limiting
+# must be configured at the hosting gateway before enabling public traffic.
+[functions.site-analytics]
+verify_jwt = false
