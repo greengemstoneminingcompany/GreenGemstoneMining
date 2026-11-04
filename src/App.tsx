@@ -4,6 +4,7 @@ import Gallery from '@/components/Gallery';
 import ContactForm from '@/components/ContactForm';
 import MarketReference from '@/components/MarketReference';
 import SiteAnalytics from '@/components/SiteAnalytics';
+import EvidenceRegister from '@/components/EvidenceRegister';
 import SomalilandMap from '@/components/SomalilandMap';
 import { Counter, Crystal3D, ScrollProgress } from '@/components/Effects';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
@@ -250,6 +251,8 @@ export default function App() {
             <div className="reveal"><SomalilandMap projects={records.projects} /></div>
           </div>
         </section>
+
+        <EvidenceRegister projects={records.projects} />
 
         <section className="sec" data-editor-id="home.history">
           <div className="sec-container">
