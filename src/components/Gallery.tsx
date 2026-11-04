@@ -5,7 +5,7 @@ import type { MediaUpload } from '@/lib/supabase';
 
 type GalleryFolder = { id: string; name: string; parent_id: string | null; sort_order: number };
 
-export default function Gallery({ uploads: _uploads }: { uploads: MediaUpload[] }) {
+export default function Gallery(_props: { uploads: MediaUpload[] }) {
   const [folders, setFolders] = useState<GalleryFolder[]>([]);
   const [current, setCurrent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
