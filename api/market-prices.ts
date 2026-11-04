@@ -10,19 +10,20 @@ export default async function handler(request: Request): Promise<Response> {
   if (!upstream || !token) return new Response(JSON.stringify({ quotes: [], status: 'unconfigured' }), { status: 503, headers });
   let url: URL;
   try { url = new URL(upstream); } catch { return new Response(JSON.stringify({ error: 'Invalid provider configuration' }), { status: 503, headers }); }
-  if (url.protocol !== 'https:' || url.username || url.password)
+  if (url.protocol !== 'https:' || url.username || url.password || url.hash)
     return new Response(JSON.stringify({ error: 'Invalid provider configuration' }), { status: 503, headers });
   try {
     const result = await fetch(url, {
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
       signal: AbortSignal.timeout(8000),
       cache: 'no-store',
+      redirect: 'error',
     });
     if (!result.ok) throw new Error('Provider unavailable');
     const body: unknown = await result.json();
     const quotes = body && typeof body === 'object' && Array.isArray((body as { quotes?: unknown }).quotes)
       ? (body as { quotes: unknown[] }).quotes : [];
-    const clean = quotes.filter((q): q is Record<string, unknown> => {
+    const clean = quotes.slice(0, 100).filter((q): q is Record<string, unknown> => {
       if (!q || typeof q !== 'object') return false;
       const v = q as Record<string, unknown>;
       return typeof v.symbol === 'string' && v.symbol.length <= 50
