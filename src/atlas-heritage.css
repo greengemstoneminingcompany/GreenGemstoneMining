@@ -35,10 +35,19 @@
 html[lang="ar"] body, html[dir="rtl"] body {
   font-family: 'Noto Naskh Arabic', 'Noto Sans Arabic', Tahoma, sans-serif;
 }
-html[lang="zh"] body, html[lang="zh-CN"] body {
+html[lang="zh"] body, html[lang="zh-Hans"] body, html[lang="zh-CN"] body {
   font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 html[dir="rtl"] .hdr-nav { direction: rtl; }
 @media (prefers-reduced-motion: reduce) {
   .app .hero::after { display: none; }
+}
+
+/* Logical spacing keeps the layout consistent in Arabic RTL. */
+html[dir="rtl"] .app .hero-kicker { letter-spacing: 0; }
+html[dir="rtl"] .app .hero-inner { text-align: start; }
+html[dir="rtl"] .app .hdr-nav { text-align: start; }
+@media (max-width: 760px) {
+  .app .hero-inner { max-width: 100%; }
+  .app .hero::after { opacity: .07; }
 }
