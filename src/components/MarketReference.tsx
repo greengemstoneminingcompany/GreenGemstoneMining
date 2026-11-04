@@ -8,7 +8,7 @@ const isQuote = (q: unknown): q is Quote => {
   const x = q as Record<string, unknown>;
   return typeof x.symbol === 'string' && typeof x.price === 'number' && Number.isFinite(x.price) && x.price > 0
     && typeof x.currency === 'string' && typeof x.unit === 'string'
-    && typeof x.source === 'string' && x.source.length > 0 && x.source.length <= 120 && typeof x.asOf === 'string'
+    && typeof x.source === 'string' && x.source.length > 0 && x.source.length <= 120 && typeof x.asOf === 'string' && x.asOf.length <= 64
     && !Number.isNaN(Date.parse(x.asOf)) && (x.delayMinutes === undefined || (typeof x.delayMinutes === 'number' && Number.isFinite(x.delayMinutes) && x.delayMinutes >= 0));
 };
 /** Quotes must be supplied by a licensed, same-origin server endpoint. No simulated values. */
