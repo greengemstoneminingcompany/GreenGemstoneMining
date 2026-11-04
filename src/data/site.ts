@@ -1,6 +1,16 @@
 import type { GalleryItem, GalleryGroup } from '@/lib/media';
 
-const IMG = '/assets/images';
+// Configure a company-controlled HTTPS image CDN to serve the same optimized WebP filenames.
+// Local assets remain a safe fallback until the CDN files have been verified.
+const configuredMediaBase = import.meta.env.VITE_MEDIA_BASE_URL?.trim() || '';
+const IMG = (() => {
+  if (!configuredMediaBase) return '/assets/images';
+  try {
+    const url = new URL(configuredMediaBase);
+    if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) return '/assets/images';
+    return url.href.replace(/\\/$/, '');
+  } catch { return '/assets/images'; }
+})();
 
 export const SITE = {
   name: 'Green Gemstone Mining Company',
