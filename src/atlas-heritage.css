@@ -51,3 +51,13 @@ html[dir="rtl"] .app .hdr-nav { text-align: start; }
   .app .hero-inner { max-width: 100%; }
   .app .hero::after { opacity: .07; }
 }
+
+/* Sourced-only mineral reference board. */
+.atlas-market { background: var(--atlas-paper); color: var(--atlas-ink); }
+.atlas-market .eyebrow, .atlas-market .display { color: var(--atlas-ink); }
+.atlas-market .body-text { color: #46574e; }
+.atlas-market-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-top: 28px; }
+.atlas-market-item { padding: 22px; border: 1px solid rgba(23, 40, 32, .2); background: rgba(255,255,255,.35); min-width: 0; }
+.atlas-market-item h3 { font-family: var(--display); font-size: 1.3rem; margin-bottom: 18px; }
+.atlas-market-item strong { display: block; overflow-wrap: anywhere; }
+.atlas-market-item p, .atlas-market-item small { display: block; margin-top: 8px; font-size: .82rem; color: #52645a; }
