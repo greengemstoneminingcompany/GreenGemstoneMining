@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Evidence, ProjectArea } from '@/data/company';
 import { useI18n } from '@/i18n/core';
 
@@ -20,6 +20,15 @@ export default function EvidenceRegister({ projects }: { projects: readonly Proj
   const t = words[lang];
   const [filter, setFilter] = useState<Evidence | 'all'>('all');
   const [selected, setSelected] = useState<ProjectArea | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!selected) return;
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButtonRef.current?.focus();
+    const handleEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelected(null); };
+    document.addEventListener('keydown', handleEscape);
+    return () => { document.removeEventListener('keydown', handleEscape); previous?.focus(); };
+  }, [selected]);
   const visible = useMemo(() => projects.filter((p) => filter === 'all' || p.findings.some((f) => f.evidence === filter)), [projects, filter]);
   return <section className="sec atlas-evidence" data-editor-id="home.evidence">
     <div className="sec-container">
@@ -37,9 +46,9 @@ export default function EvidenceRegister({ projects }: { projects: readonly Proj
           <button type="button" onClick={() => setSelected(p)}>{t.open}</button>
         </article>)}
       </div>
-      {selected && <div className="atlas-dossier-backdrop" role="presentation" onClick={() => setSelected(null)}>
-        <aside className="atlas-dossier" role="dialog" aria-modal="true" aria-label={selected.name} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => { if (event.key === 'Escape') setSelected(null); }}>
-          <button type="button" onClick={() => setSelected(null)} autoFocus>{t.close}</button>
+      {selected && <div className="atlas-dossier-backdrop" onClick={() => setSelected(null)}>
+        <aside className="atlas-dossier" role="dialog" aria-modal="true" aria-label={selected.name} onClick={(event) => event.stopPropagation()}>
+          <button type="button" ref={closeButtonRef} onClick={() => setSelected(null)}>{t.close}</button>
           <h2>{selected.name}</h2>
           <p>{t.region}: {selected.region}</p>
           <p>{t.coordinates}: {selected.lat == null || selected.lon == null ? '—' : `${selected.lat.toFixed(3)}°N, ${selected.lon.toFixed(3)}°E`}</p>
