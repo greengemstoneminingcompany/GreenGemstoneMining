@@ -5,8 +5,9 @@
 export default async function handler(request: Request): Promise<Response> {
   const headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
   if (request.method !== 'GET') return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers });
-  const upstream = process.env.MARKET_DATA_URL;
-  const token = process.env.MARKET_DATA_TOKEN;
+  const runtime = globalThis as typeof globalThis & { process?: { env?: Record<string, string | undefined> } };
+  const upstream = runtime.process?.env?.MARKET_DATA_URL;
+  const token = runtime.process?.env?.MARKET_DATA_TOKEN;
   if (!upstream || !token) return new Response(JSON.stringify({ quotes: [], status: 'unconfigured' }), { status: 503, headers });
   let url: URL;
   try { url = new URL(upstream); } catch { return new Response(JSON.stringify({ error: 'Invalid provider configuration' }), { status: 503, headers }); }
