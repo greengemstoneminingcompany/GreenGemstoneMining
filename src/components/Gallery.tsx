@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, Folder } from 'lucide-react';
 import { getSupabase } from '@/lib/supabase';
 import type { MediaUpload } from '@/lib/supabase';
+import type { GalleryItem } from '@/data/site';
 
 type GalleryFolder = { id: string; name: string; parent_id: string | null; sort_order: number };
 
-export default function Gallery(props: { uploads: MediaUpload[] }) {
+export default function Gallery(props: { uploads: MediaUpload[]; items?: GalleryItem[] }) {
   void props.uploads; // Preserve the existing public component API until media is folder-linked.
   const [folders, setFolders] = useState<GalleryFolder[]>([]);
   const [current, setCurrent] = useState<string | null>(null);
