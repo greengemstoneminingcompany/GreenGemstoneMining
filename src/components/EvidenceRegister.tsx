@@ -22,9 +22,10 @@ export default function EvidenceRegister({ projects }: { projects: readonly Proj
   const [selected, setSelected] = useState<ProjectArea | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (!selected) return;
-    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : previousFocusRef.current;
     closeButtonRef.current?.focus();
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setSelected(null);
@@ -53,7 +54,7 @@ export default function EvidenceRegister({ projects }: { projects: readonly Proj
         {visible.map((p) => <article className="atlas-evidence-card" key={p.id}>
           <span>{p.region} · {p.findings.length ? Array.from(new Set(p.findings.map((f) => evidenceWords[lang][f.evidence]))).join(' / ') : t.none}</span>
           <h3>{p.name}</h3>
-          <button type="button" onClick={() => setSelected(p)}>{t.open}</button>
+          <button type="button" onClick={(event) => { previousFocusRef.current = event.currentTarget; setSelected(p); }}>{t.open}</button>
         </article>)}
       </div>
       {selected && <div className="atlas-dossier-backdrop" onClick={() => setSelected(null)}>
