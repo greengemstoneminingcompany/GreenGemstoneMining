@@ -31,7 +31,7 @@ export default async function handler(request: Request): Promise<Response> {
         && typeof v.currency === 'string' && v.currency.length <= 8
         && typeof v.unit === 'string' && v.unit.length <= 24
         && typeof v.source === 'string' && v.source.length > 0 && v.source.length <= 120
-        && typeof v.asOf === 'string' && !Number.isNaN(Date.parse(v.asOf));
+        && typeof v.asOf === 'string' && v.asOf.length <= 64 && !Number.isNaN(Date.parse(v.asOf));
     }).map((q) => ({
       symbol: q.symbol, price: q.price, currency: q.currency, unit: q.unit,
       source: q.source, asOf: q.asOf,
