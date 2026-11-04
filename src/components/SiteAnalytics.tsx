@@ -10,7 +10,7 @@ export default function SiteAnalytics({ route }: { route: string }) {
     if (!endpoint || !ROUTES.has(route) || navigator.doNotTrack === '1') return;
     let url: URL;
     try { url = new URL(endpoint); } catch { return; }
-    if (url.protocol !== 'https:') return;
+    if (url.protocol !== 'https:' || url.username || url.password || url.hash) return;
     const controller = new AbortController();
     void fetch(url.toString(), {
       method: 'POST', mode: 'cors', cache: 'no-store', keepalive: true,
