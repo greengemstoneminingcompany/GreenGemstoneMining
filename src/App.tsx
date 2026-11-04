@@ -5,6 +5,7 @@ import ContactForm from '@/components/ContactForm';
 import MarketReference from '@/components/MarketReference';
 import SiteAnalytics from '@/components/SiteAnalytics';
 import EvidenceRegister from '@/components/EvidenceRegister';
+import PartnershipPaths from '@/components/PartnershipPaths';
 import SomalilandMap from '@/components/SomalilandMap';
 import { Counter, Crystal3D, ScrollProgress } from '@/components/Effects';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
@@ -151,6 +152,8 @@ export default function App() {
           </div>
           <div className="hero-foot"><span>{t.hero.foot}</span></div>
         </section>
+
+        <PartnershipPaths />
 
         <section className="showcase-values" aria-label="Company principles" data-editor-id="home.values">
           <div><ShieldCheck aria-hidden="true" /><strong>{t.mission.points[0].t}</strong><span>{t.mission.points[0].d}</span></div>
