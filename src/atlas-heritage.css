@@ -77,3 +77,14 @@ html[dir="rtl"] .app .hdr-nav { text-align: start; }
 .atlas-dossier h2 { font-family: var(--display); font-size: 2.4rem; margin: 28px 0; }
 .atlas-dossier h3 { margin-top: 24px; }
 .atlas-dossier p, .atlas-dossier li { line-height: 1.7; margin: 12px 0; }
+
+/* Low-bandwidth mode removes nonessential imagery and animation. */
+.atlas-bandwidth-toggle { font: inherit; font-size: 12px; padding: 7px 9px; border: 1px solid rgba(221,199,151,.45); color: #e9d4a4; border-radius: 2px; white-space: nowrap; }
+.atlas-bandwidth-toggle[aria-pressed="true"] { background: #d7b975; color: #14231b; }
+.app.low-bandwidth .hero-bg, .app.low-bandwidth .company-visual img,
+.app.low-bandwidth .g-item img, .app.low-bandwidth .crystal-3d { display: none !important; }
+.app.low-bandwidth .hero::after, .app.low-bandwidth .grain { display: none !important; }
+.app.low-bandwidth *, .app.low-bandwidth *::before, .app.low-bandwidth *::after {
+  animation-duration: .01ms !important; transition-duration: .01ms !important;
+}
+@media (max-width: 1000px) { .atlas-bandwidth-toggle { font-size: 11px; } }
