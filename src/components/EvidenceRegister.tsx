@@ -25,7 +25,7 @@ export default function EvidenceRegister({ projects }: { projects: readonly Proj
   const previousFocusRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (!selected) return;
-    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : previousFocusRef.current;
+    const previous = previousFocusRef.current;
     closeButtonRef.current?.focus();
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setSelected(null);
