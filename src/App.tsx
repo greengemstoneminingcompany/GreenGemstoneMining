@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useState } from 'react';
 import { Atom, ArrowRight, ArrowUpRight, ChevronDown, Gem, Hammer, Handshake, Linkedin, Mail, MapPin, Menu, Mountain, ShieldCheck, Sparkles, X } from 'lucide-react';
 import Gallery from '@/components/Gallery';
 import ContactForm from '@/components/ContactForm';
+import MarketReference from '@/components/MarketReference';
 import SomalilandMap from '@/components/SomalilandMap';
 import { Counter, Crystal3D, ScrollProgress } from '@/components/Effects';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
@@ -215,6 +216,8 @@ export default function App() {
             </div>
           </div>
         </section>
+
+        <MarketReference minerals={records.minerals.map((mineral) => mineral.name)} />
 
         <section id="mission" className="sec" data-editor-id="home.mission">
           <div className="sec-container">
