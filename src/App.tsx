@@ -3,6 +3,7 @@ import { Atom, ArrowRight, ArrowUpRight, ChevronDown, Gem, Hammer, Handshake, Li
 import Gallery from '@/components/Gallery';
 import ContactForm from '@/components/ContactForm';
 import MarketReference from '@/components/MarketReference';
+import SiteAnalytics from '@/components/SiteAnalytics';
 import SomalilandMap from '@/components/SomalilandMap';
 import { Counter, Crystal3D, ScrollProgress } from '@/components/Effects';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
@@ -65,6 +66,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <SiteAnalytics route={currentPage} />
       <a className="skip-link" href="#main">{t.ui.skip}</a>
       <ScrollProgress />
 
