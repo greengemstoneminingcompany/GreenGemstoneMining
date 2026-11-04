@@ -21,11 +21,21 @@ export default function EvidenceRegister({ projects }: { projects: readonly Proj
   const [filter, setFilter] = useState<Evidence | 'all'>('all');
   const [selected, setSelected] = useState<ProjectArea | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!selected) return;
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     closeButtonRef.current?.focus();
-    const handleEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelected(null); };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelected(null);
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter((node) => !node.hasAttribute('disabled'));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
     document.addEventListener('keydown', handleEscape);
     return () => { document.removeEventListener('keydown', handleEscape); previous?.focus(); };
   }, [selected]);
@@ -47,7 +57,7 @@ export default function EvidenceRegister({ projects }: { projects: readonly Proj
         </article>)}
       </div>
       {selected && <div className="atlas-dossier-backdrop" onClick={() => setSelected(null)}>
-        <aside className="atlas-dossier" role="dialog" aria-modal="true" aria-label={selected.name} onClick={(event) => event.stopPropagation()}>
+        <aside ref={dialogRef} className="atlas-dossier" role="dialog" aria-modal="true" aria-label={selected.name} onClick={(event) => event.stopPropagation()}>
           <button type="button" ref={closeButtonRef} onClick={() => setSelected(null)}>{t.close}</button>
           <h2>{selected.name}</h2>
           <p>{t.region}: {selected.region}</p>
