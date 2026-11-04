@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, Folder } from 'lucide-react';
 import { getSupabase } from '@/lib/supabase';
 import type { MediaUpload } from '@/lib/supabase';
-import type { GalleryItem } from '@/data/site';
+import type { GalleryItem } from '@/lib/media';
 
 type GalleryFolder = { id: string; name: string; parent_id: string | null; sort_order: number };
 
