@@ -23,7 +23,7 @@ export default function MarketReference({ minerals }: { minerals: readonly strin
         if (!res.ok) throw new Error('Market data unavailable');
         const body: unknown = await res.json();
         if (!body || typeof body !== 'object' || !Array.isArray((body as Feed).quotes)) throw new Error('Invalid feed');
-        return (body as Feed).quotes.filter(isQuote);
+        return (body as Feed).quotes.slice(0, 100).filter(isQuote);
       })
       .then((valid) => {
         if (controller.signal.aborted) return;
