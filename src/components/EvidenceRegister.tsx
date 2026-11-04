@@ -9,6 +9,12 @@ const words = {
   so: { heading: 'Diiwaanka caddaynta goobta', intro: 'Diiwaannada shirkadda; ma aha qiyaas khayraad macdan ama caddeyn ruqsad.', all: 'Dhammaan', evidence: 'Caddayn', region: 'Gobol', coordinates: 'Isku-duwaha', findings: 'Waxyaabaha la diiwaangeliyay', none: 'Wax la diiwaangeliyay ma jiro', close: 'Xir galka', open: 'Fur galka', source: 'Diiwaannada shirkadda' },
   ar: { heading: 'سجل الأدلة الميدانية', intro: 'سجلات ميدانية للشركة وليست تقديرات للموارد المعدنية أو إثباتاً للترخيص.', all: 'الكل', evidence: 'الدليل', region: 'المنطقة', coordinates: 'الإحداثيات', findings: 'النتائج المسجلة', none: 'لا توجد نتائج مسجلة', close: 'إغلاق الملف', open: 'فتح الملف', source: 'سجلات الشركة الميدانية' },
 } as const;
+const evidenceWords: Record<'en' | 'zh' | 'so' | 'ar', Record<Evidence, string>> = {
+  en: { observed: 'Observed', reported: 'Reported', unverified: 'Unverified', inferred: 'Inferred', confirmed: 'Confirmed' },
+  zh: { observed: '实地观察', reported: '报告', unverified: '未核实', inferred: '推断', confirmed: '已确认' },
+  so: { observed: 'La arkay', reported: 'La soo sheegay', unverified: 'Lama xaqiijin', inferred: 'La qiyaasay', confirmed: 'La xaqiijiyay' },
+  ar: { observed: 'ملاحظ', reported: 'مبلغ عنه', unverified: 'غير متحقق', inferred: 'مستنتج', confirmed: 'مؤكد' },
+};
 export default function EvidenceRegister({ projects }: { projects: readonly ProjectArea[] }) {
   const { lang } = useI18n();
   const t = words[lang];
@@ -22,11 +28,11 @@ export default function EvidenceRegister({ projects }: { projects: readonly Proj
       <p className="body-text">{t.intro}</p>
       <div className="atlas-evidence-filters" role="group" aria-label={t.evidence}>
         {(['all', ...statuses] as const).map((value) =>
-          <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{value === 'all' ? t.all : value}</button>)}
+          <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{value === 'all' ? t.all : evidenceWords[lang][value]}</button>)}
       </div>
       <div className="atlas-evidence-grid">
         {visible.map((p) => <article className="atlas-evidence-card" key={p.id}>
-          <span>{p.region} · {p.findings.length ? Array.from(new Set(p.findings.map((f) => f.evidence))).join(' / ') : t.none}</span>
+          <span>{p.region} · {p.findings.length ? Array.from(new Set(p.findings.map((f) => evidenceWords[lang][f.evidence]))).join(' / ') : t.none}</span>
           <h3>{p.name}</h3>
           <button type="button" onClick={() => setSelected(p)}>{t.open}</button>
         </article>)}
@@ -38,7 +44,7 @@ export default function EvidenceRegister({ projects }: { projects: readonly Proj
           <p>{t.region}: {selected.region}</p>
           <p>{t.coordinates}: {selected.lat == null || selected.lon == null ? '—' : `${selected.lat.toFixed(3)}°N, ${selected.lon.toFixed(3)}°E`}</p>
           <h3>{t.findings}</h3>
-          {selected.findings.length ? <ul>{selected.findings.map((f, index) => <li key={index}>{f.mineral} — {f.evidence}</li>)}</ul> : <p>{t.none}</p>}
+          {selected.findings.length ? <ul>{selected.findings.map((f, index) => <li key={index}>{f.mineral} — {evidenceWords[lang][f.evidence]}</li>)}</ul> : <p>{t.none}</p>}
           <p><small>{t.intro}</small></p>
         </aside>
       </div>}
