@@ -34,7 +34,7 @@ export default function App() {
       <ScrollProgress />
 
       <header className={`hdr ${scrolled || menuOpen ? 'scrolled' : ''}`}>
-        <a className="hdr-brand" href="#top"><Gem size={22} aria-hidden="true" /><span>Green Gemstone Mining Company</span></a>
+        <a className="hdr-brand" href="#top"><img className="hdr-brand-mark" src="/brand-emblem.webp" width={43} height={39} alt="" aria-hidden="true" /><span className="brand-wordmark brand-wordmark--on-dark">Green Gemstone Mining Company</span></a>
         <nav id="main-nav" className={`hdr-nav ${menuOpen ? 'open' : ''}`} aria-label={t.ui.mainNav}>
           <a href="#top" onClick={() => setMenuOpen(false)}>{t.nav.overview}</a>
           <div className="nav-menu-item">
@@ -274,7 +274,7 @@ export default function App() {
       <footer className="footer">
         <div className="footer-grid">
           <div>
-            <div className="footer-brand"><Gem size={20} aria-hidden="true" /> Green Gemstone Mining Company</div>
+            <div className="footer-brand"><img className="footer-brand-mark" src="/brand-emblem.webp" width={30} height={26} alt="" aria-hidden="true" /><span className="brand-wordmark brand-wordmark--on-dark">Green Gemstone Mining Company</span></div>
             <p className="footer-tag">{t.footer.tagline}</p>
           </div>
           <div className="footer-col">
