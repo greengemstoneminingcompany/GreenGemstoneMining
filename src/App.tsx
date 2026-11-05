@@ -68,7 +68,7 @@ export default function App() {
       <ScrollProgress />
 
       <header className={`hdr ${scrolled || menuOpen ? 'scrolled' : ''}`} data-editor-id="site.header">
-        <a className="hdr-brand" data-editor-id="site.brand" href="#/home"><Gem size={22} aria-hidden="true" /><span>{records.profile.legalName}</span></a>
+        <a className="hdr-brand" data-editor-id="site.brand" href="#/home"><img className="hdr-brand-mark" src="/brand-emblem.webp" width={43} height={39} alt="" aria-hidden="true" /><span className="brand-wordmark brand-wordmark--on-dark">{records.profile.legalName}</span></a>
         <nav id="main-nav" data-editor-id="site.navigation" className={`hdr-nav ${menuOpen ? 'open' : ''}`} aria-label={t.ui.mainNav}>
           <a href="#/home" onClick={() => setMenuOpen(false)}>{t.nav.overview}</a>
           <div className="nav-menu-item">
@@ -320,7 +320,7 @@ export default function App() {
       <footer className="footer">
         <div className="footer-grid">
           <div>
-            <div className="footer-brand"><Gem size={20} aria-hidden="true" /> {records.profile.legalName}</div>
+            <div className="footer-brand"><img className="footer-brand-mark" src="/brand-emblem.webp" width={30} height={26} alt="" aria-hidden="true" /><span className="brand-wordmark brand-wordmark--on-dark">{records.profile.legalName}</span></div>
             <p className="footer-tag">{t.footer.tagline}</p>
           </div>
           <div className="footer-col">
