@@ -912,3 +912,13 @@ html[lang='zh-Hans'] .display, html[lang='ar'] .display { font-size: clamp(26px,
 .brand-wordmark--on-dark { color: #f5fff8; }
 .brand-wordmark--on-light { color: #07462f; }
 @media (max-width: 640px) { .hdr-brand-mark { width: 32px; height: 31px; flex-basis: 32px; } .footer-brand-mark { width: 26px; height: 23px; flex-basis: 26px; } }
+
+/* Compact homepage partnership invitation; the complete form lives on Contact. */
+.home-contact-compact { min-height: 420px; }
+.home-contact-compact .contact-panel .body-text { margin-bottom: 24px; }
+.portfolio-group { margin: 36px 0 52px; scroll-margin-top: 90px; }
+.portfolio-group .page-section-heading { margin-bottom: 22px; }
+.portfolio-group .content-pill-list { justify-content: center; }
+@media (max-width: 760px) {
+  .home-contact-compact .contact-visual { min-height: 180px; }
+}

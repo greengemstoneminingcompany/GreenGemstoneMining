@@ -1,9 +1,7 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { Atom, ArrowRight, ArrowUpRight, ChevronDown, Gem, Hammer, Handshake, Linkedin, Mail, MapPin, Menu, Mountain, ShieldCheck, Sparkles, X } from 'lucide-react';
+import { Atom, ArrowRight, ArrowUpRight, ChevronDown, Gem, Hammer, Menu, Mountain, X } from 'lucide-react';
 import Gallery from '@/components/Gallery';
-import ContactForm from '@/components/ContactForm';
-import SomalilandMap from '@/components/SomalilandMap';
-import { Counter, Crystal3D, ScrollProgress } from '@/components/Effects';
+import { Crystal3D, ScrollProgress } from '@/components/Effects';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { DEPOSITS } from '@/data/site';
 import { useCompanyRecords } from '@/lib/companyRecords';
@@ -56,7 +54,6 @@ export default function App() {
   }, []);
   const { t } = useI18n();
   const records = useCompanyRecords();
-  const metals = records.minerals.filter((m) => m.cat === 'Metal' || m.cat === 'Precious');
   const scrolled = useScrollHeader();
   const { uploads, refresh } = useUploads();
   const admin = useAdminSession(mediaOpen);
@@ -83,17 +80,17 @@ export default function App() {
           <div className="nav-menu-item">
             <a href="#/minerals" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
             <details className="nav-dropdown"><summary aria-label={`${t.nav.portfolio} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
-              <a href="#/about?section=gemstones" onClick={() => setMenuOpen(false)}>Gemstones</a>
-              <a href="#/about?section=industrial-metals" onClick={() => setMenuOpen(false)}>Industrial &amp; precious metals</a>
-              <a href="#/about?section=services" onClick={() => setMenuOpen(false)}>Services</a>
+              <a href="#/minerals?section=gemstones" onClick={() => setMenuOpen(false)}>Gemstones</a>
+              <a href="#/minerals?section=industrial-metals" onClick={() => setMenuOpen(false)}>Industrial &amp; precious metals</a>
+              <a href="#/projects?section=services" onClick={() => setMenuOpen(false)}>Services</a>
             </div></details>
           </div>
           <div className="nav-menu-item">
             <a href="#/projects" onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
             <details className="nav-dropdown"><summary aria-label={`${t.nav.projects} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
-              <a href="#/about?section=development-projects" onClick={() => setMenuOpen(false)}>Mining development</a>
+              <a href="#/projects?section=development-projects" onClick={() => setMenuOpen(false)}>Mining development</a>
               <a href="#/about?section=rural-development" onClick={() => setMenuOpen(false)}>Rural development &amp; community support</a>
-              <a href="#/about?section=operations" onClick={() => setMenuOpen(false)}>Operations &amp; equipment</a>
+              <a href="#/projects?section=operations" onClick={() => setMenuOpen(false)}>Operations &amp; equipment</a>
             </div></details>
           </div>
           <a href="#/gallery" onClick={() => setMenuOpen(false)}>{t.nav.gallery}</a>
@@ -146,16 +143,6 @@ export default function App() {
           <div className="hero-foot"><span>{t.hero.foot}</span></div>
         </section>
 
-        <section className="showcase-values" aria-label="Company principles" data-editor-id="home.values">
-          <div><ShieldCheck aria-hidden="true" /><strong>{t.mission.points[0].t}</strong><span>{t.mission.points[0].d}</span></div>
-          <div><Handshake aria-hidden="true" /><strong>{t.mission.points[1].t}</strong><span>{t.mission.points[1].d}</span></div>
-          <div><Sparkles aria-hidden="true" /><strong>{t.mission.points[2].t}</strong><span>{t.mission.points[2].d}</span></div>
-        </section>
-
-        <section className="marquee" data-editor-id="home.marquee">
-          <div className="marquee-track">{[...t.marquee, ...t.marquee].map((word, i) => <span key={`${word}-${i}`}><Gem size={12} /> {word}</span>)}</div>
-        </section>
-
         <section id="company" className="sec" data-editor-id="home.company">
           <div className="sec-container company">
             <div className="company-visual reveal">
@@ -167,7 +154,6 @@ export default function App() {
               <h2 className="display">{t.company.h2a}<br /><em>{t.company.h2b}</em></h2>
               <p className="body-lg">{t.company.lead}</p>
               <p className="body-text">{t.company.p1}</p>
-              <p className="body-text">{t.company.p2}</p>
               <a className="link-go" href="#/about">{t.company.link} <ArrowRight size={15} /></a>
             </div>
           </div>
@@ -192,45 +178,11 @@ export default function App() {
                   <div className="deposit-body">
                     <h3>{text.name}</h3>
                     <p>{text.desc}</p>
-                    <a href="#/contact">{t.resources.discuss} <ArrowUpRight size={14} /></a>
+                    <a href="#/minerals">{t.nav.portfolio} <ArrowUpRight size={14} /></a>
                   </div>
                 </article>
               );
               })}
-            </div>
-          </div>
-        </section>
-
-        <section className="split" data-editor-id="home.industrial">
-          <div className="split-img split-panel"><ul aria-label={t.industrial.listLabel}>{metals.map((m) => <li key={m.name}>{t.catalogue.minerals[m.name] ?? m.name}</li>)}</ul></div>
-          <div className="split-text">
-            <div className="reveal">
-              <p className="eyebrow">{t.industrial.eyebrow}</p>
-              <h2 className="display light">{t.industrial.h2a}<br /><em>{t.industrial.h2b}</em></h2>
-              <p className="body-text">{t.industrial.text}</p>
-              <div className="split-stats">
-                {records.industrialStats.map((stat, index) => <Counter key={stat.label} value={Number(stat.value) || 0} label={stat.label} plus={index === 0} />)}
-              </div>
-              <a className="btn btn-gold" href="#/projects">{t.industrial.cta} <ArrowRight size={16} /></a>
-            </div>
-          </div>
-        </section>
-
-        <section id="mission" className="sec" data-editor-id="home.mission">
-          <div className="sec-container">
-            <div className="mission-head reveal">
-              <p className="eyebrow">{t.mission.eyebrow}</p>
-              <h2 className="display">{t.mission.h2a}<br /><em>{t.mission.h2b}</em></h2>
-              <p className="body-text">{t.mission.text}</p>
-            </div>
-            <div className="mission-grid">
-              {t.mission.points.map((point, index) => (
-                <div className="mission-card reveal" key={index} style={{ transitionDelay: `${index * 120}ms` }}>
-                  <span className="num">{String(index + 1).padStart(2, '0')}</span>
-                  <h3>{point.t}</h3>
-                  <p>{point.d}</p>
-                </div>
-              ))}
             </div>
           </div>
         </section>
@@ -242,25 +194,18 @@ export default function App() {
               <h2 className="display light">{t.projects.h2a}<br /><em>{t.projects.h2b}</em></h2>
               <p className="body-text">{t.projects.text}</p>
             </div>
-            <div className="reveal"><SomalilandMap projects={records.projects} /></div>
-          </div>
-        </section>
-
-        <section className="sec" data-editor-id="home.history">
-          <div className="sec-container">
-            <div className="reveal center-block">
-              <p className="eyebrow center">{t.history.eyebrow}</p>
-              <h2 className="display">{t.history.h2a}<br /><em>{t.history.h2b}</em></h2>
-            </div>
-            <div className="timeline-rail">
-              {records.timeline.map((item, index) => (
-                <div className="tl-node reveal" key={item.year} style={{ transitionDelay: `${index * 120}ms` }}>
-                  <span className="tl-dot" />
-                  <span className="tl-year">{item.year}</span>
-                  <h3>{t.history.timeline[index].title}</h3>
-                  <p>{t.history.timeline[index].desc}</p>
-                </div>
+            <div className="project-card-grid">
+              {records.projects.slice(0, 3).map((project) => (
+                <article className="project-card" key={project.id}>
+                  <div className="project-card-body">
+                    <p>{project.region}</p>
+                    <h3>{project.name}</h3>
+                  </div>
+                </article>
               ))}
+            </div>
+            <div className="reveal center-block">
+              <a className="btn btn-gold" href="#/projects">{t.nav.projects} <ArrowRight size={16} aria-hidden="true" /></a>
             </div>
           </div>
         </section>
@@ -276,26 +221,7 @@ export default function App() {
           <Gallery uploads={uploads} items={records.gallery} />
         </section>
 
-        <section className="sec" data-editor-id="home.minerals">
-          <div className="sec-container">
-            <div className="reveal center-block">
-              <p className="eyebrow center">{t.catalogue.eyebrow}</p>
-              <h2 className="display">{t.catalogue.h2a}<br /><em>{t.catalogue.h2b}</em></h2>
-              <p className="body-text">{t.catalogue.text}</p>
-            </div>
-            <div className="mineral-grid reveal">
-              {records.minerals.map((mineral, index) => (
-                <div className="mineral" key={mineral.name}>
-                  <span className="mineral-num">{String(index + 1).padStart(2, '0')}</span>
-                  <Gem size={18} />
-                  <div className="mineral-info"><strong>{t.catalogue.minerals[mineral.name] ?? mineral.name}</strong><small>{t.catalogue.cats[mineral.cat] ?? mineral.cat}</small></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="contact" className="contact-sec" data-editor-id="home.contact">
+        <section id="contact" className="contact-sec home-contact-compact" data-editor-id="home.contact">
           <div className="contact-visual">
             <div className="contact-stamp">{t.contact.stamp1}<strong>{t.contact.stamp2}</strong></div>
           </div>
@@ -304,13 +230,7 @@ export default function App() {
               <p className="eyebrow">{t.contact.eyebrow}</p>
               <h2 className="display light">{t.contact.h2a}<br /><em>{t.contact.h2b}</em></h2>
               <p className="body-text">{t.contact.text}</p>
-              <div className="contact-info">
-                <a href={`mailto:${records.profile.email}`}><Mail size={16} aria-hidden="true" /> {records.profile.email}</a>
-                <span><MapPin size={16} aria-hidden="true" /> {records.profile.officeAddress}</span>
-                {records.profile.linkedin && <a href={records.profile.linkedin} rel="noopener noreferrer" target="_blank"><Linkedin size={16} aria-hidden="true" /> LinkedIn</a>}
-              </div>
-              <ContactForm />
-              <p className="privacy-note">{t.contact.privacyBefore} <a href="#privacy">{t.contact.privacyLink}</a>.</p>
+              <a className="btn btn-gold" href="#/contact">{t.nav.contact} <ArrowRight size={16} aria-hidden="true" /></a>
             </div>
           </div>
         </section>
