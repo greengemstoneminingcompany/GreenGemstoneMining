@@ -829,3 +829,11 @@ html[lang='zh-Hans'] .display, html[lang='ar'] .display { font-size: clamp(26px,
 .eb-reported { color: #f6cf62; border-color: rgba(246, 207, 98, 0.45); }
 .eb-unverified { color: #ffa070; border-color: rgba(255, 138, 76, 0.45); }
 .eb-inferred { color: #9dcaf0; border-color: rgba(143, 193, 234, 0.45); }
+
+/* GGMC original gemstone emblem: responsive brand identity on dark/light surfaces. */
+.hdr-brand-mark { display: block; width: 43px; height: 39px; flex: 0 0 43px; object-fit: contain; filter: drop-shadow(0 2px 5px rgba(0,0,0,.2)); }
+.footer-brand-mark { display: block; width: 30px; height: 26px; flex: 0 0 30px; object-fit: contain; }
+.brand-wordmark { display: inline-block; line-height: 1.12; }
+.brand-wordmark--on-dark { color: #f5fff8; }
+.brand-wordmark--on-light { color: #07462f; }
+@media (max-width: 640px) { .hdr-brand-mark { width: 32px; height: 31px; flex-basis: 32px; } .footer-brand-mark { width: 26px; height: 23px; flex-basis: 26px; } }
