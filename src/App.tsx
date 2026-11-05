@@ -16,15 +16,6 @@ import { supabaseConfigured } from '@/lib/supabase';
 const DEPOSIT_ICONS = { gem: Gem, atom: Atom, hammer: Hammer, mountain: Mountain } as const;
 const METALS = MINERALS.filter((m) => m.cat === 'Metal' || m.cat === 'Precious');
 
-const NAV_LINKS = [
-  ['overview', '#top'],
-  ['company', '#company'],
-  ['portfolio', '#resources'],
-  ['projects', '#projects'],
-  ['gallery', '#gallery'],
-  ['contact', '#contact'],
-] as const;
-
 const MediaPanel = lazy(() => import('@/components/MediaPanel'));
 
 export default function App() {
@@ -44,9 +35,24 @@ export default function App() {
       <header className={`hdr ${scrolled || menuOpen ? 'scrolled' : ''}`}>
         <a className="hdr-brand" href="#top"><img className="hdr-brand-mark" src="/brand-emblem.webp" width={43} height={39} alt="" aria-hidden="true" /><span className="brand-wordmark brand-wordmark--on-dark">Green Gemstone Mining Company</span></a>
         <nav id="main-nav" className={`hdr-nav ${menuOpen ? 'open' : ''}`} aria-label={t.ui.mainNav}>
-          {NAV_LINKS.map(([key, href]) => (
-            <a key={href} href={href} onClick={() => setMenuOpen(false)}>{t.nav[key]}</a>
-          ))}
+          <a href="#top" onClick={() => setMenuOpen(false)}>{t.nav.overview}</a>
+          <div className="nav-menu-item">
+            <a href="#company" onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
+            <details className="nav-dropdown"><summary aria-label={`${t.nav.company} submenu`}><ChevronDown size={13} aria-hidden="true" /></summary><div className="nav-dropdown-panel">
+              <a href="#company" onClick={() => setMenuOpen(false)}>Company overview</a>
+              <a href="#mission" onClick={() => setMenuOpen(false)}>Mission &amp; values</a>
+            </div></details>
+          </div>
+          <div className="nav-menu-item">
+            <a href="#resources" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
+            <details className="nav-dropdown"><summary aria-label={`${t.nav.portfolio} submenu`}><ChevronDown size={13} aria-hidden="true" /></summary><div className="nav-dropdown-panel">
+              <a href="#resources" onClick={() => setMenuOpen(false)}>Mineral resources</a>
+              <a href="#industrial-metals" onClick={() => setMenuOpen(false)}>Industrial metals</a>
+            </div></details>
+          </div>
+          <a href="#projects" onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
+          <a href="#gallery" onClick={() => setMenuOpen(false)}>{t.nav.gallery}</a>
+          <a href="#contact" onClick={() => setMenuOpen(false)}>{t.nav.contact}</a>
           <LanguageSwitcher />
           <a className="hdr-cta" href="#contact" onClick={() => setMenuOpen(false)}>{t.nav.cta} <ArrowUpRight size={14} aria-hidden="true" /></a>
         </nav>
@@ -135,7 +141,7 @@ export default function App() {
           </div>
         </section>
 
-        <section className="split">
+        <section id="industrial-metals" className="split">
           <div className="split-img split-panel"><ul aria-label={t.industrial.listLabel}>{METALS.map((m) => <li key={m.name}>{t.catalogue.minerals[m.name] ?? m.name}</li>)}</ul></div>
           <div className="split-text">
             <div className="reveal">
