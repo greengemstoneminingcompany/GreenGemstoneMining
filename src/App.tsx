@@ -39,7 +39,7 @@ export default function App() {
           <a href="#top" onClick={() => setMenuOpen(false)}>{t.nav.overview}</a>
           <div className="nav-menu-item">
             <a href="#company" onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
-            <details className="nav-dropdown"><summary aria-label="Open company submenu"><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
+            <details className="nav-dropdown"><summary aria-label={`${t.nav.company} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#company-profile" onClick={() => setMenuOpen(false)}>Company profile</a>
               <a href="#vision-mission" onClick={() => setMenuOpen(false)}>Vision &amp; mission</a>
               <a href="#leadership" onClick={() => setMenuOpen(false)}>Leadership</a>
@@ -48,7 +48,7 @@ export default function App() {
           </div>
           <div className="nav-menu-item">
             <a href="#resources" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
-            <details className="nav-dropdown"><summary aria-label="Open portfolio submenu"><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
+            <details className="nav-dropdown"><summary aria-label={`${t.nav.portfolio} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#gemstones" onClick={() => setMenuOpen(false)}>Gemstones</a>
               <a href="#industrial-metals" onClick={() => setMenuOpen(false)}>Industrial &amp; precious metals</a>
               <a href="#services" onClick={() => setMenuOpen(false)}>Services</a>
@@ -56,7 +56,7 @@ export default function App() {
           </div>
           <div className="nav-menu-item">
             <a href="#projects" onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
-            <details className="nav-dropdown"><summary aria-label="Open projects submenu"><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
+            <details className="nav-dropdown"><summary aria-label={`${t.nav.projects} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#development-projects" onClick={() => setMenuOpen(false)}>Mining development</a>
               <a href="#rural-development" onClick={() => setMenuOpen(false)}>Rural development &amp; community support</a>
               <a href="#operations" onClick={() => setMenuOpen(false)}>Operations &amp; equipment</a>

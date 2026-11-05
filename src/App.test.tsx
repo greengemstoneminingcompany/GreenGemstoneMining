@@ -24,6 +24,19 @@ describe('App', () => {
     expect(document.querySelector('#main-nav')?.classList.contains('open')).toBe(true);
   });
 
+
+  it('preserves the three grouped submenus and links to existing content sections', () => {
+    render(<App />);
+    const nav = document.querySelector('#main-nav');
+    expect(nav?.querySelectorAll('details.nav-dropdown')).toHaveLength(3);
+    for (const link of Array.from(nav?.querySelectorAll<HTMLAnchorElement>('.nav-dropdown-panel a') ?? [])) {
+      expect(document.querySelector(link.getAttribute('href')!)).toBeTruthy();
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    fireEvent.click(nav!.querySelector<HTMLAnchorElement>('a[href="#company-profile"]')!);
+    expect(document.querySelector('#main-nav')?.classList.contains('open')).toBe(false);
+  });
+
   it('does not link to a LinkedIn page that is not configured', () => {
     render(<App />);
     expect(screen.queryByText('LinkedIn')).toBeNull();
