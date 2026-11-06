@@ -1,277 +1,88 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { Atom, ArrowRight, ArrowUpRight, ChevronDown, Gem, Hammer, Menu, Mountain, X } from 'lucide-react';
-import Gallery from '@/components/Gallery';
-import { Crystal3D, ScrollProgress } from '@/components/Effects';
+import { ArrowUpRight, ChevronDown, Menu, X } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { DEPOSITS } from '@/data/site';
+import { ScrollProgress } from '@/components/Effects';
 import { useCompanyRecords } from '@/lib/companyRecords';
 import { useI18n } from '@/i18n/core';
 import { useAdminSession } from '@/hooks/useAdminSession';
 import { useReveals } from '@/hooks/useReveals';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
 import { useUploads } from '@/hooks/useUploads';
-import { supabaseConfigured } from '@/lib/supabase';
 import CompanyPages, { type CompanyPage } from '@/components/CompanyPages';
+import OwnerHome from '@/components/OwnerHome';
+import OwnerTopicPage from '@/components/OwnerTopicPage';
+import OwnerStudio from '@/components/OwnerStudio';
+import { ownerCopy } from '@/components/ownerCopy';
+import './components/OwnerNavigation.css';
 
-const DEPOSIT_ICONS = { gem: Gem, atom: Atom, hammer: Hammer, mountain: Mountain } as const;
-
-const readPage = (): CompanyPage => {
-  const route = window.location.hash.replace(/^#\/?/, '').split(/[/?]/)[0];
-  return (['home', 'about', 'projects', 'minerals', 'gallery', 'contact'].includes(route) ? route : 'home') as CompanyPage;
+type SitePage = CompanyPage | 'operations' | 'responsibility' | 'studio';
+const allowedPages = new Set<string>(['home','about','projects','minerals','gallery','contact','operations','responsibility','studio']);
+const readPage = ():SitePage => {
+  const route=window.location.hash.replace(/^#\/?/,'').split(/[/?]/)[0];
+  return (allowedPages.has(route)?route:'home') as SitePage;
 };
+const MediaPanel = lazy(()=>import('@/components/MediaPanel'));
 
-const MediaPanel = lazy(() => import('@/components/MediaPanel'));
-
-export default function App() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<CompanyPage>(readPage);
-  useEffect(() => {
-    const syncRoute = () => {
-      setCurrentPage(readPage());
-      setMenuOpen(false);
-      // Wait until React renders the destination page before locating its section.
-      window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
-        const section = new URLSearchParams(window.location.hash.split('?')[1] || '').get('section');
-        const target = section ? document.getElementById(section) : null;
-        if (target) target.scrollIntoView({ behavior: 'auto', block: 'start' });
-        else window.scrollTo({ top: 0, behavior: 'auto' });
-      }));
-    };
-    window.addEventListener('hashchange', syncRoute);
-    syncRoute();
-    return () => window.removeEventListener('hashchange', syncRoute);
-  }, []);
-  const [mediaOpen, setMediaOpen] = useState(false);
-  const [mediaRequest, setMediaRequest] = useState<{ requestId: string; mediaType: 'image' | 'video' } | null>(null);
-  useEffect(() => {
-    const openMedia = (event: Event) => {
-      const detail = (event as CustomEvent).detail;
-      setMediaRequest(detail && typeof detail.requestId === 'string' && ['image', 'video'].includes(detail.mediaType) ? detail : null);
-      setMediaOpen(true);
-    };
-    window.addEventListener('ggmc-open-media', openMedia);
-    return () => window.removeEventListener('ggmc-open-media', openMedia);
-  }, []);
-  const { t } = useI18n();
-  const records = useCompanyRecords();
-  const scrolled = useScrollHeader();
-  const { uploads, refresh } = useUploads();
-  const admin = useAdminSession(mediaOpen);
-  useReveals();
-
-  return (
-    <div className="app">
-      <a className="skip-link" href="#main">{t.ui.skip}</a>
-      <ScrollProgress />
-
-      <header className={`hdr ${scrolled || menuOpen ? 'scrolled' : ''}`} data-editor-id="site.header">
-        <a className="hdr-brand" data-editor-id="site.brand" href="#/home"><img className="hdr-brand-mark" src="/brand-emblem.webp" width={43} height={39} alt="" aria-hidden="true" /><span className="brand-wordmark brand-wordmark--on-dark">{records.profile.legalName}</span></a>
-        <nav id="main-nav" data-editor-id="site.navigation" className={`hdr-nav ${menuOpen ? 'open' : ''}`} aria-label={t.ui.mainNav}>
-          <a href="#/home" onClick={() => setMenuOpen(false)}>{t.nav.overview}</a>
-          <div className="nav-menu-item">
-            <a href="#/about" onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
-            <details className="nav-dropdown"><summary aria-label={`${t.nav.company} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
-              <a href="#/about?section=company-profile" onClick={() => setMenuOpen(false)}>Company profile</a>
-              <a href="#/about?section=vision-mission" onClick={() => setMenuOpen(false)}>Vision &amp; mission</a>
-              <a href="#/about?section=leadership" onClick={() => setMenuOpen(false)}>Leadership</a>
-              <a href="#/about?section=history-details" onClick={() => setMenuOpen(false)}>Company history</a>
-            </div></details>
-          </div>
-          <div className="nav-menu-item">
-            <a href="#/minerals" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
-            <details className="nav-dropdown"><summary aria-label={`${t.nav.portfolio} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
-              <a href="#/minerals?section=gemstones" onClick={() => setMenuOpen(false)}>Gemstones</a>
-              <a href="#/minerals?section=industrial-metals" onClick={() => setMenuOpen(false)}>Industrial &amp; precious metals</a>
-              <a href="#/projects?section=services" onClick={() => setMenuOpen(false)}>Services</a>
-            </div></details>
-          </div>
-          <div className="nav-menu-item">
-            <a href="#/projects" onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
-            <details className="nav-dropdown"><summary aria-label={`${t.nav.projects} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
-              <a href="#/projects?section=development-projects" onClick={() => setMenuOpen(false)}>Mining development</a>
-              <a href="#/about?section=rural-development" onClick={() => setMenuOpen(false)}>Rural development &amp; community support</a>
-              <a href="#/projects?section=operations" onClick={() => setMenuOpen(false)}>Operations &amp; equipment</a>
-            </div></details>
-          </div>
-          <a href="#/gallery" onClick={() => setMenuOpen(false)}>{t.nav.gallery}</a>
-          <a href="#/contact" onClick={() => setMenuOpen(false)}>{t.nav.contact}</a>
-          {document.querySelector('meta[name="ggmc-preview-editor"]')?.getAttribute('content') === 'enabled' && (
-            <details className="nav-dropdown owner-menu"><summary>Employee portal</summary><div className="nav-dropdown-panel">
-              <a href="?edit=1" onClick={(event) => { event.preventDefault(); setMenuOpen(false); event.currentTarget.closest('details')?.removeAttribute('open'); window.dispatchEvent(new Event('ggmc-open-editor')); }}>Employee portal sign-in</a>
-            </div></details>
-          )}
-          <LanguageSwitcher />
-          <a className="hdr-cta" data-editor-id="site.primary-cta" href="#/contact" onClick={() => setMenuOpen(false)}>{t.nav.cta} <ArrowUpRight size={14} aria-hidden="true" /></a>
-        </nav>
-        <button type="button" className="hdr-burger" aria-expanded={menuOpen} aria-controls="main-nav" onClick={() => setMenuOpen((v) => !v)} aria-label={menuOpen ? t.ui.menuClose : t.ui.menuOpen}>
-          {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-        </button>
-      </header>
-
-      {mediaOpen && (
-        <Suspense fallback={null}>
-          <MediaPanel open={mediaOpen} onClose={() => { setMediaOpen(false); setMediaRequest(null); }} onUploaded={refresh} admin={admin} selectionType={mediaRequest?.mediaType} onSelect={mediaRequest ? (asset) => {
-            window.dispatchEvent(new CustomEvent('ggmc-media-selected', { detail: { requestId: mediaRequest.requestId, url: asset.public_url, title: asset.title, mediaType: asset.media_type } }));
-            setMediaOpen(false); setMediaRequest(null);
-          } : undefined} />
-        </Suspense>
-      )}
-
-      <main id="main">
-        {currentPage === 'home' ? (<>
-        <section id="top" className="hero" data-editor-id="home.hero">
-          <img className="hero-bg" src={records.profile.heroImage} alt="" width={806} height={536} fetchPriority="high" />
-          <div className="hero-overlay" />
-          <Crystal3D />
-          <div className="hero-inner">
-            <p className="hero-kicker">{t.hero.kicker}</p>
-            <h1>{t.hero.h1a} <span className="h1-line">{t.hero.h1b}</span></h1>
-            <p className="hero-sub">{t.hero.sub}</p>
-            <div className="hero-cta">
-              <a className="btn btn-gold" href="#/contact">{t.hero.primary} <ArrowRight size={16} aria-hidden="true" /></a>
-              <a className="btn-ghost" href="#/minerals">{t.hero.secondary} <ChevronDown size={16} aria-hidden="true" /></a>
-            </div>
-            <div className="hero-metrics">
-              {records.metrics.map((metric) => (
-                <div key={metric.label} className="metric-card">
-                  <strong>{metric.value}</strong>
-                  <span>{metric.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="hero-foot"><span>{t.hero.foot}</span></div>
-        </section>
-
-        <section id="company" className="sec" data-editor-id="home.company">
-          <div className="sec-container company">
-            <div className="company-visual reveal">
-              <img src={records.profile.companyImage} alt={t.company.imgAlt} width={806} height={536} loading="lazy" />
-              <div className="company-badge">{t.company.badge1}<br />{t.company.badge2}</div>
-            </div>
-            <div className="company-text reveal" style={{ transitionDelay: '120ms' }}>
-              <p className="eyebrow">{t.company.eyebrow}</p>
-              <h2 className="display">{t.company.h2a}<br /><em>{t.company.h2b}</em></h2>
-              <p className="body-lg">{t.company.lead}</p>
-              <p className="body-text">{t.company.p1}</p>
-              <a className="link-go" href="#/about">{t.company.link} <ArrowRight size={15} /></a>
-            </div>
-          </div>
-        </section>
-
-        <section id="resources" className="sec sec-dark" data-editor-id="home.resources">
-          <div className="sec-container">
-            <div className="deposits-head reveal">
-              <div>
-                <p className="eyebrow">{t.resources.eyebrow}</p>
-                <h2 className="display light">{t.resources.h2a}<br /><em>{t.resources.h2b}</em></h2>
-              </div>
-              <p>{t.resources.intro}</p>
-            </div>
-            <div className="deposits-grid">
-              {DEPOSITS.map((deposit, index) => {
-                const text = t.resources.deposits[index];
-                return (
-                <article className="deposit reveal" key={text.name} style={{ transitionDelay: `${index * 100}ms` }}>
-                  <div className={`deposit-art tone-${deposit.tone}`} aria-hidden="true">{(() => { const Icon = DEPOSIT_ICONS[deposit.icon]; return <Icon size={96} strokeWidth={0.6} />; })()}</div>
-                  <span className="deposit-tag">{text.tag}</span>
-                  <div className="deposit-body">
-                    <h3>{text.name}</h3>
-                    <p>{text.desc}</p>
-                    <a href="#/minerals">{t.nav.portfolio} <ArrowUpRight size={14} /></a>
-                  </div>
-                </article>
-              );
-              })}
-            </div>
-          </div>
-        </section>
-
-        <section id="projects" className="sec sec-dark" data-editor-id="home.projects">
-          <div className="sec-container">
-            <div className="reveal center-block">
-              <p className="eyebrow center">{t.projects.eyebrow}</p>
-              <h2 className="display light">{t.projects.h2a}<br /><em>{t.projects.h2b}</em></h2>
-              <p className="body-text">{t.projects.text}</p>
-            </div>
-            <div className="project-card-grid">
-              {records.projects.slice(0, 3).map((project) => (
-                <article className="project-card" key={project.id}>
-                  <div className="project-card-body">
-                    <p>{project.region}</p>
-                    <h3>{project.name}</h3>
-                  </div>
-                </article>
-              ))}
-            </div>
-            <div className="reveal center-block">
-              <a className="btn btn-gold" href="#/projects">{t.nav.projects} <ArrowRight size={16} aria-hidden="true" /></a>
-            </div>
-          </div>
-        </section>
-
-        <section id="gallery" className="sec sec-dark" data-editor-id="home.gallery">
-          <div className="sec-container">
-            <div className="reveal center-block">
-              <p className="eyebrow center">{t.gallery.eyebrow}</p>
-              <h2 className="display light">{t.gallery.h2a}<br /><em>{t.gallery.h2b}</em></h2>
-              <p className="body-text">{t.gallery.text}</p>
-            </div>
-          </div>
-          <Gallery uploads={uploads} items={records.gallery} />
-        </section>
-
-        <section id="contact" className="contact-sec home-contact-compact" data-editor-id="home.contact">
-          <div className="contact-visual">
-            <div className="contact-stamp">{t.contact.stamp1}<strong>{t.contact.stamp2}</strong></div>
-          </div>
-          <div className="contact-panel">
-            <div className="reveal">
-              <p className="eyebrow">{t.contact.eyebrow}</p>
-              <h2 className="display light">{t.contact.h2a}<br /><em>{t.contact.h2b}</em></h2>
-              <p className="body-text">{t.contact.text}</p>
-              <a className="btn btn-gold" href="#/contact">{t.nav.contact} <ArrowRight size={16} aria-hidden="true" /></a>
-            </div>
-          </div>
-        </section>
-        </>) : <CompanyPages page={currentPage} uploads={uploads} />}
-      </main>
-
-      <footer className="footer">
-        <div className="footer-grid">
-          <div>
-            <div className="footer-brand"><img className="footer-brand-mark" src="/brand-emblem.webp" width={30} height={26} alt="" aria-hidden="true" /><span className="brand-wordmark brand-wordmark--on-dark">{records.profile.legalName}</span></div>
-            <p className="footer-tag">{t.footer.tagline}</p>
-          </div>
-          <div className="footer-col">
-            <h3>{t.footer.company}</h3>
-            <a href="#/about">{t.footer.about}</a>
-            <a href="#/about?section=vision-mission">{t.footer.mission}</a>
-            <a href="#/projects">{t.footer.projects}</a>
-          </div>
-          <div className="footer-col">
-            <h3>{t.footer.resources}</h3>
-            <a href="#/minerals">{t.footer.deposits}</a>
-            <a href="#/gallery">{t.footer.gallery}</a>
-            <a href="#/contact">{t.footer.contact}</a>
-          </div>
-          <div className="footer-col">
-            <h3>{t.footer.connect}</h3>
-            <a href={`mailto:${records.profile.email}`}>{t.footer.email}</a>
-            {records.profile.linkedin && <a href={records.profile.linkedin} rel="noopener noreferrer" target="_blank">LinkedIn</a>}
-            <a href="#/contact">{t.footer.partner}</a>
-          </div>
-        </div>
-        <div className="footer-base">
-          <span>© {new Date().getFullYear()} {records.profile.legalName}</span>
-          <span>{records.profile.publicLocation}</span>
-          {supabaseConfigured && <button type="button" className="owner-link" onClick={() => setMediaOpen(true)}>{t.footer.ownerLogin}</button>}
-        </div>
-        <section id="privacy" className="privacy">
-          <h3>{t.footer.privacyTitle}</h3>
-          <p>{t.footer.privacyText} <a href={`mailto:${records.profile.email}`}>{records.profile.email}</a>.</p>
-        </section>
-      </footer>
-    </div>
-  );
+export default function App(){
+  const [menuOpen,setMenuOpen]=useState(false);
+  const [currentPage,setCurrentPage]=useState<SitePage>(readPage);
+  const [mediaOpen,setMediaOpen]=useState(false);
+  const [mediaRequest,setMediaRequest]=useState<{requestId:string;mediaType:'image'|'video'}|null>(null);
+  const {t,lang}=useI18n();const copy=ownerCopy(lang);const records=useCompanyRecords();
+  const scrolled=useScrollHeader();const {uploads,refresh}=useUploads();const admin=useAdminSession(mediaOpen);useReveals();
+  const isPreview=typeof document!=='undefined' && document.querySelector('meta[name="ggmc-preview-editor"]')?.getAttribute('content')==='enabled';
+  useEffect(()=>{
+    const syncRoute=()=>{setCurrentPage(readPage());setMenuOpen(false);window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>{
+      const section=new URLSearchParams(window.location.hash.split('?')[1]||'').get('section');const target=section?document.getElementById(section):null;
+      if(target)target.scrollIntoView({behavior:'auto',block:'start'});else window.scrollTo({top:0,behavior:'auto'});
+    }));};
+    window.addEventListener('hashchange',syncRoute);syncRoute();return()=>window.removeEventListener('hashchange',syncRoute);
+  },[]);
+  useEffect(()=>{
+    const openMedia=(event:Event)=>{const data=(event as CustomEvent).detail;
+      setMediaRequest(data && typeof data.requestId==='string' && ['image','video'].includes(data.mediaType)?data:null);setMediaOpen(true);};
+    window.addEventListener('ggmc-open-media',openMedia);return()=>window.removeEventListener('ggmc-open-media',openMedia);
+  },[]);
+  const closeNav=()=>{setMenuOpen(false);document.querySelectorAll('.owner-mega[open]').forEach(item=>item.removeAttribute('open'));};
+  return <div className="app owner-shell">
+    <a className="skip-link" href="#main">{t.ui.skip}</a><ScrollProgress />
+    <header className={`hdr owner-header ${scrolled||menuOpen?'scrolled':''}`} data-editor-id="site.header">
+      <a className="hdr-brand owner-brand" href="#/home" onClick={closeNav} data-editor-id="site.brand"><img className="hdr-brand-mark" src="/brand-emblem.webp" width={43} height={39} alt="" aria-hidden="true"/><span className="brand-wordmark brand-wordmark--on-dark">{records.profile.legalName}</span></a>
+      <nav id="main-nav" className={`hdr-nav owner-main-nav ${menuOpen?'open':''}`} data-editor-id="site.navigation" aria-label={t.ui.mainNav}>
+        <a href="#/home" onClick={closeNav}>{copy.overview}</a>
+        <details className="owner-mega"><summary>{copy.company} <ChevronDown size={14} aria-hidden="true"/></summary><div className="owner-mega-panel">
+          <a href="#/about" onClick={closeNav}>{copy.profile}</a><a href="#/about?section=vision-mission" onClick={closeNav}>{t.mission.eyebrow}</a><a href="#/about?section=leadership" onClick={closeNav}>{copy.people}</a><a href="#/responsibility" onClick={closeNav}>{copy.responsibility}</a>
+        </div></details>
+        <details className="owner-mega"><summary>{copy.work} <ChevronDown size={14} aria-hidden="true"/></summary><div className="owner-mega-panel">
+          <a href="#/projects" onClick={closeNav}>{copy.projects}</a><a href="#/minerals" onClick={closeNav}>{copy.minerals}</a><a href="#/operations" onClick={closeNav}>{copy.operations}</a><a href="#/projects?section=services" onClick={closeNav}>{copy.services}</a>
+        </div></details>
+        <a href="#/operations" onClick={closeNav}>{copy.operations}</a>
+        <a href="#/responsibility" onClick={closeNav}>{copy.responsibility}</a>
+        <a href="#/gallery" onClick={closeNav}>{copy.gallery}</a>
+        <a href="#/contact" onClick={closeNav}>{copy.contact}</a>
+        {isPreview&&<a href="#/studio" className="owner-portal-link" onClick={closeNav}>{copy.studio}</a>}
+        <LanguageSwitcher />
+        <a className="hdr-cta owner-contact-cta" data-editor-id="site.primary-cta" href="#/contact" onClick={closeNav}>{t.nav.cta}<ArrowUpRight size={15} aria-hidden="true"/></a>
+      </nav>
+      <button type="button" className="hdr-burger owner-burger" aria-expanded={menuOpen} aria-controls="main-nav" aria-label={menuOpen?t.ui.menuClose:t.ui.menuOpen} onClick={()=>setMenuOpen(previous=>!previous)}>{menuOpen?<X aria-hidden="true"/>:<Menu aria-hidden="true"/>}</button>
+    </header>
+    {mediaOpen&&<Suspense fallback={null}><MediaPanel open={mediaOpen} onClose={()=>{setMediaOpen(false);setMediaRequest(null);}} onUploaded={refresh} admin={admin} selectionType={mediaRequest?.mediaType} onSelect={mediaRequest?(asset)=>{
+      window.dispatchEvent(new CustomEvent('ggmc-media-selected',{detail:{requestId:mediaRequest.requestId,url:asset.public_url,title:asset.title,mediaType:asset.media_type}}));setMediaOpen(false);setMediaRequest(null);
+    }:undefined}/></Suspense>}
+    <main id="main">
+      {currentPage==='home'?<OwnerHome uploads={uploads}/>:
+      currentPage==='operations'?<OwnerTopicPage topic="operations"/>:
+      currentPage==='responsibility'?<OwnerTopicPage topic="responsibility"/>:
+      currentPage==='studio'?<OwnerStudio uploads={uploads} onOpenMedia={()=>setMediaOpen(true)}/>:
+      <CompanyPages page={currentPage} uploads={uploads}/>}
+    </main>
+    <footer className="footer owner-footer"><div className="footer-grid">
+      <div><div className="footer-brand"><img className="footer-brand-mark" src="/brand-emblem.webp" width={30} height={26} alt="" aria-hidden="true"/><span className="brand-wordmark brand-wordmark--on-dark">{records.profile.legalName}</span></div><p className="footer-tag">{t.footer.tagline}</p></div>
+      <div className="footer-col"><h3>{t.footer.company}</h3><a href="#/about">{t.footer.about}</a><a href="#/about?section=vision-mission">{t.footer.mission}</a><a href="#/operations">{copy.operations}</a><a href="#/responsibility">{copy.responsibility}</a></div>
+      <div className="footer-col"><h3>{t.footer.resources}</h3><a href="#/minerals">{copy.minerals}</a><a href="#/projects">{copy.projects}</a><a href="#/gallery">{copy.gallery}</a></div>
+      <div className="footer-col"><h3>{t.footer.connect}</h3><a href={`mailto:${records.profile.email}`}>{t.footer.email}</a><a href="#/contact">{t.footer.partner}</a>{records.profile.linkedin&&<a href={records.profile.linkedin} rel="noopener noreferrer" target="_blank">LinkedIn</a>}</div>
+    </div><div className="footer-base"><span>© {new Date().getFullYear()} {records.profile.legalName}</span><span>{records.profile.publicLocation}</span>{isPreview&&<a href="#/studio" className="owner-link">{copy.studio}</a>}</div>
+      <section id="privacy" className="privacy"><h3>{t.footer.privacyTitle}</h3><p>{t.footer.privacyText} <a href={`mailto:${records.profile.email}`}>{records.profile.email}</a>.</p></section>
+    </footer>
+  </div>;
 }

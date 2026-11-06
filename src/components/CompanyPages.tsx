@@ -7,6 +7,8 @@ import SomalilandMap from '@/components/SomalilandMap';
 import { useCompanyRecords } from '@/lib/companyRecords';
 import { useI18n } from '@/i18n/core';
 import { companyPageCopy } from '@/i18n/company-pages';
+import { ownerCopy } from './ownerCopy';
+import './OwnerSubpages.css';
 
 export type CompanyPage = 'home' | 'about' | 'projects' | 'minerals' | 'gallery' | 'contact';
 
@@ -36,18 +38,20 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
     return entries;
   }, [records.minerals, records.mineralInterests, records.gemstoneInterests]);
   const cp = companyPageCopy(lang);
+  const owner = ownerCopy(lang);
   if (page === 'home') return null;
   const localizedPage = { about: { title: `${t.company.h2a} ${t.company.h2b}`, description: t.company.lead }, projects: { title: `${t.projects.h2a} ${t.projects.h2b}`, description: t.projects.text }, minerals: { title: `${t.catalogue.h2a} ${t.catalogue.h2b}`, description: t.catalogue.text }, gallery: { title: `${t.gallery.h2a} ${t.gallery.h2b}`, description: t.gallery.text }, contact: { title: `${t.contact.h2a} ${t.contact.h2b}`, description: t.contact.text } }[page];
   const localizedEyebrow = { about: t.nav.company, projects: t.nav.projects, minerals: t.nav.portfolio, gallery: t.nav.gallery, contact: t.nav.contact }[page];
   return (
-    <div className={`company-page company-page-${page}`} data-editor-id={`page.${page}`}>
+    <div className={`company-page owner-subpage company-page-${page}`} data-editor-id={`page.${page}`}>
       <section className="page-hero" data-editor-id={`${page}.hero`}>
         <div className="page-hero-image" />
         <div className="page-hero-content">
+          <p className="owner-page-overline">GREEN GEMSTONE MINING COMPANY <span>/ {localizedEyebrow}</span></p>
           <p className="eyebrow">{localizedEyebrow}</p>
           <h1>{localizedPage.title}</h1>
           <p>{localizedPage.description}</p>
-          <a className="btn btn-gold" href="#/contact">{t.nav.cta} <ArrowUpRight size={16} /></a>
+          <div className="owner-page-hero-actions"><a className="btn btn-gold" href="#/contact">{t.nav.cta} <ArrowUpRight size={16} /></a>{page === 'projects' && <a className="owner-page-hero-secondary" href="#/operations">{owner.operations} <ArrowUpRight size={15}/></a>}{page === 'about' && <a className="owner-page-hero-secondary" href="#/responsibility">{owner.responsibility} <ArrowUpRight size={15}/></a>}</div>
         </div>
       </section>
       {page === 'about' && <div data-editor-id="about.content"><CompanyContent /></div>}
@@ -79,7 +83,7 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
             ))}
           </div>
         </section>
-        <p className="content-note">{cp.metalsNote} {cp.dueDiligence}</p>
+        <p className="content-note owner-mineral-disclosure">{cp.metalsNote} {cp.dueDiligence}</p>
       </div></section>}
       {page === 'gallery' && <section className="sec sec-dark" data-editor-id="gallery.collection"><div className="sec-container"><div className="page-section-heading"><p className="eyebrow">{t.gallery.eyebrow}</p><h2 className="display light">{t.gallery.h2a} {t.gallery.h2b}</h2><p className="body-text">{t.gallery.text}</p></div></div><Gallery uploads={uploads} items={records.gallery}/></section>}
       {page === 'contact' && <section className="sec sec-dark" data-editor-id="contact.details"><div className="sec-container page-contact-grid"><div><p className="eyebrow">{t.contact.eyebrow}</p><h2 className="display light">{cp.contactHeading}</h2><div className="page-contact-detail"><Mail size={18}/><a href={`mailto:${records.profile.email}`}>{records.profile.email}</a></div><div className="page-contact-detail"><MapPin size={18}/><span>{records.profile.officeAddress}</span></div><p className="page-contact-note">{cp.contactNote}</p></div><div className="page-contact-form"><ContactForm/></div></div></section>}
