@@ -1,9 +1,8 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { Atom, ArrowRight, ArrowUpRight, ChevronDown, Gem, Hammer, Menu, Mountain, X } from 'lucide-react';
-import Gallery from '@/components/Gallery';
-import { Crystal3D, ScrollProgress } from '@/components/Effects';
+import { ArrowUpRight, ChevronDown, Menu, X } from 'lucide-react';
+import { ScrollProgress } from '@/components/Effects';
+import BuyerVisionHome from '@/components/BuyerVisionHome';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { DEPOSITS } from '@/data/site';
 import { useCompanyRecords } from '@/lib/companyRecords';
 import { useI18n } from '@/i18n/core';
 import { useAdminSession } from '@/hooks/useAdminSession';
@@ -12,8 +11,6 @@ import { useScrollHeader } from '@/hooks/useScrollHeader';
 import { useUploads } from '@/hooks/useUploads';
 import { supabaseConfigured } from '@/lib/supabase';
 import CompanyPages, { type CompanyPage } from '@/components/CompanyPages';
-
-const DEPOSIT_ICONS = { gem: Gem, atom: Atom, hammer: Hammer, mountain: Mountain } as const;
 
 const readPage = (): CompanyPage => {
   const route = window.location.hash.replace(/^#\/?/, '').split(/[/?]/)[0];
@@ -118,123 +115,7 @@ export default function App() {
       )}
 
       <main id="main">
-        {currentPage === 'home' ? (<>
-        <section id="top" className="hero" data-editor-id="home.hero">
-          <img className="hero-bg" src={records.profile.heroImage} alt="" width={806} height={536} fetchPriority="high" />
-          <div className="hero-overlay" />
-          <Crystal3D />
-          <div className="hero-inner">
-            <p className="hero-kicker">{t.hero.kicker}</p>
-            <h1>{t.hero.h1a} <span className="h1-line">{t.hero.h1b}</span></h1>
-            <p className="hero-sub">{t.hero.sub}</p>
-            <div className="hero-cta">
-              <a className="btn btn-gold" href="#/contact">{t.hero.primary} <ArrowRight size={16} aria-hidden="true" /></a>
-              <a className="btn-ghost" href="#/minerals">{t.hero.secondary} <ChevronDown size={16} aria-hidden="true" /></a>
-            </div>
-            <div className="hero-metrics">
-              {records.metrics.map((metric) => (
-                <div key={metric.label} className="metric-card">
-                  <strong>{metric.value}</strong>
-                  <span>{metric.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="hero-foot"><span>{t.hero.foot}</span></div>
-        </section>
-
-        <section id="company" className="sec" data-editor-id="home.company">
-          <div className="sec-container company">
-            <div className="company-visual reveal">
-              <img src={records.profile.companyImage} alt={t.company.imgAlt} width={806} height={536} loading="lazy" />
-              <div className="company-badge">{t.company.badge1}<br />{t.company.badge2}</div>
-            </div>
-            <div className="company-text reveal" style={{ transitionDelay: '120ms' }}>
-              <p className="eyebrow">{t.company.eyebrow}</p>
-              <h2 className="display">{t.company.h2a}<br /><em>{t.company.h2b}</em></h2>
-              <p className="body-lg">{t.company.lead}</p>
-              <p className="body-text">{t.company.p1}</p>
-              <a className="link-go" href="#/about">{t.company.link} <ArrowRight size={15} /></a>
-            </div>
-          </div>
-        </section>
-
-        <section id="resources" className="sec sec-dark" data-editor-id="home.resources">
-          <div className="sec-container">
-            <div className="deposits-head reveal">
-              <div>
-                <p className="eyebrow">{t.resources.eyebrow}</p>
-                <h2 className="display light">{t.resources.h2a}<br /><em>{t.resources.h2b}</em></h2>
-              </div>
-              <p>{t.resources.intro}</p>
-            </div>
-            <div className="deposits-grid">
-              {DEPOSITS.map((deposit, index) => {
-                const text = t.resources.deposits[index];
-                return (
-                <article className="deposit reveal" key={text.name} style={{ transitionDelay: `${index * 100}ms` }}>
-                  <div className={`deposit-art tone-${deposit.tone}`} aria-hidden="true">{(() => { const Icon = DEPOSIT_ICONS[deposit.icon]; return <Icon size={96} strokeWidth={0.6} />; })()}</div>
-                  <span className="deposit-tag">{text.tag}</span>
-                  <div className="deposit-body">
-                    <h3>{text.name}</h3>
-                    <p>{text.desc}</p>
-                    <a href="#/minerals">{t.nav.portfolio} <ArrowUpRight size={14} /></a>
-                  </div>
-                </article>
-              );
-              })}
-            </div>
-          </div>
-        </section>
-
-        <section id="projects" className="sec sec-dark" data-editor-id="home.projects">
-          <div className="sec-container">
-            <div className="reveal center-block">
-              <p className="eyebrow center">{t.projects.eyebrow}</p>
-              <h2 className="display light">{t.projects.h2a}<br /><em>{t.projects.h2b}</em></h2>
-              <p className="body-text">{t.projects.text}</p>
-            </div>
-            <div className="project-card-grid">
-              {records.projects.slice(0, 3).map((project) => (
-                <article className="project-card" key={project.id}>
-                  <div className="project-card-body">
-                    <p>{project.region}</p>
-                    <h3>{project.name}</h3>
-                  </div>
-                </article>
-              ))}
-            </div>
-            <div className="reveal center-block">
-              <a className="btn btn-gold" href="#/projects">{t.nav.projects} <ArrowRight size={16} aria-hidden="true" /></a>
-            </div>
-          </div>
-        </section>
-
-        <section id="gallery" className="sec sec-dark" data-editor-id="home.gallery">
-          <div className="sec-container">
-            <div className="reveal center-block">
-              <p className="eyebrow center">{t.gallery.eyebrow}</p>
-              <h2 className="display light">{t.gallery.h2a}<br /><em>{t.gallery.h2b}</em></h2>
-              <p className="body-text">{t.gallery.text}</p>
-            </div>
-          </div>
-          <Gallery uploads={uploads} items={records.gallery} />
-        </section>
-
-        <section id="contact" className="contact-sec home-contact-compact" data-editor-id="home.contact">
-          <div className="contact-visual">
-            <div className="contact-stamp">{t.contact.stamp1}<strong>{t.contact.stamp2}</strong></div>
-          </div>
-          <div className="contact-panel">
-            <div className="reveal">
-              <p className="eyebrow">{t.contact.eyebrow}</p>
-              <h2 className="display light">{t.contact.h2a}<br /><em>{t.contact.h2b}</em></h2>
-              <p className="body-text">{t.contact.text}</p>
-              <a className="btn btn-gold" href="#/contact">{t.nav.contact} <ArrowRight size={16} aria-hidden="true" /></a>
-            </div>
-          </div>
-        </section>
-        </>) : <CompanyPages page={currentPage} uploads={uploads} />}
+        {currentPage === 'home' ? <BuyerVisionHome /> : <CompanyPages page={currentPage} uploads={uploads} />}
       </main>
 
       <footer className="footer">
