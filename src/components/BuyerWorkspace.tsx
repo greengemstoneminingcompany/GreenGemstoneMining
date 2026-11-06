@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ArrowLeft, ArrowUpRight, FileCheck2, FileLock2, Folder, ImagePlus, Pencil, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, FileLock2, ImagePlus, Pencil, ShieldCheck } from 'lucide-react';
 import { defaultCompanyRecords, parseCompanyRecords, useCompanyRecords } from '@/lib/companyRecords';
 import type { MediaUpload } from '@/lib/supabase';
 import './BuyerWorkspace.css';
@@ -24,7 +24,7 @@ export function OwnerStudio({admin,onOpenMedia}:{admin:Admin;onOpenMedia:()=>voi
  const records=useCompanyRecords();const [companyEmail,setCompanyEmail]=useState(records.profile.email);const [companyLocation,setCompanyLocation]=useState(records.profile.publicLocation);const [companyAddress,setCompanyAddress]=useState(records.profile.officeAddress);const [quickDraft,setQuickDraft]=useState<{id:string;version:number}|null>(null);
  const sb=admin.client;const authorized=previewOk&&admin.isAdmin&&Boolean(sb);
  const refresh=useCallback(async()=>{if(!authorized||!sb)return;const result=await Promise.all([sb.from('gallery_folders').select('id,name,parent_id,sort_order').order('sort_order'),sb.from('gallery_folder_media').select('folder_id,media_id,sort_order'),sb.from('gallery_folder_covers').select('folder_id,media_id'),sb.from('media_uploads').select('id,title,description,media_type,storage_path,public_url,category,sort_order,is_active,created_at,updated_at').order('created_at',{ascending:false}),sb.from('buyer_evidence').select('id,category,title,status,reference,notes,storage_path,created_at').order('created_at',{ascending:false})]);const issue=result.find(x=>x.error)?.error;if(issue){setNotice('Cannot load Studio data: '+issue.message);return;}setFolders((result[0].data??[]) as FolderRow[]);setLinks((result[1].data??[]) as MediaLink[]);setCovers((result[2].data??[]) as MediaCover[]);setUploads((result[3].data??[]) as MediaUpload[]);setEvidence((result[4].data??[]) as Evidence[]);},[authorized,sb]);
- useEffect(()=>{void refresh();},[refresh]);
+ useEffect(()=>{const timer=window.setTimeout(()=>{void refresh();},0);return()=>window.clearTimeout(timer);},[refresh]);
  const folderLabels=useMemo(()=>{const byId=new Map(folders.map(f=>[f.id,f]));return folders.map(f=>{const path=[f.name],seen=new Set([f.id]);let parent=f.parent_id;while(parent&&!seen.has(parent)){seen.add(parent);const row=byId.get(parent);if(!row)break;path.unshift(row.name);parent=row.parent_id;}return {id:f.id,label:path.join(' / ')};}).sort((a,b)=>a.label.localeCompare(b.label));},[folders]);
  const assigned=links.filter(link=>link.folder_id===selectedFolder);const coverId=covers.find(c=>c.folder_id===selectedFolder)?.media_id;
  const act=async(run:()=>Promise<void>)=>{setBusy(true);setNotice('');try{await run();await refresh();setNotice('Saved to the preview database.');}catch(e){setNotice(e instanceof Error?e.message:'Action failed.');}finally{setBusy(false);}};

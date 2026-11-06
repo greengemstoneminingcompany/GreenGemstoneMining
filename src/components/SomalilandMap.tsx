@@ -1,3 +1,6 @@
+import { useSurveyExplorer, type MapViewport } from '@/features/research/survey';
+import { SurveyLayer, SurveyControls } from '@/features/research/SurveyExplorer';
+import { researchCopy } from '@/features/research/copy';
 import { useMemo, useRef, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { MAP_CORRIDOR, MAP_GEOLOGY, MAP_OUTLINE, MAP_PLACES, MAP_REGIONS, MAP_VIEWBOX } from '@/data/mapData';
@@ -41,6 +44,10 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
   const { t, lang } = useI18n();
   const F = FINDER[lang];
   const p = t.projects;
+  const survey = useSurveyExplorer();
+  const research = researchCopy(lang);
+  const [viewport, setViewport] = useState<MapViewport>({ x: 0, y: 0, w: W, h: H });
+  const zoom = (factor: number) => setViewport(v => { const w = Math.max(8, Math.min(W, v.w * factor)); const h = Math.max(8, Math.min(H, v.h * factor)); return { x: v.x + (v.w - w) / 2, y: v.y + (v.h - h) / 2, w, h }; });
   const [layer, setLayer] = useState<Layer>('regions');
   const [selected, setSelected] = useState<string>('awdal');
   const [occ, setOcc] = useState<string | null>('borama');
@@ -102,15 +109,17 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
               </button>
             ))}
           </div>
+          <button type="button" className="geomap-projects" aria-pressed={survey.enabled} onClick={() => survey.setEnabled(value => !value)}>{research.field}</button>
           <button type="button" className="geomap-projects" aria-pressed={showProjects} onClick={() => setShowProjects((v) => !v)}>{F.projects}</button>
         </div>
 
         <div className="geomap-frame">
+          <div className="map-zoom-controls"><button type="button" aria-label={research.zoomIn} onClick={() => zoom(0.5)}>+</button><button type="button" aria-label={research.zoomOut} onClick={() => zoom(2)}>−</button><button type="button" onClick={() => setViewport({ x: 0, y: 0, w: W, h: H })}>{research.reset}</button></div>
           <i className="corner tl" /><i className="corner tr" /><i className="corner bl" /><i className="corner br" />
           <svg
             ref={svgRef}
             className="geomap-svg"
-            viewBox={`0 0 ${W} ${H}`}
+            viewBox={`${viewport.x} ${viewport.y} ${viewport.w} ${viewport.h}`}
             role="group"
             aria-label={p.mapLabel}
             onPointerMove={onMove}
@@ -324,6 +333,7 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
               </g>
             )}
 
+            <SurveyLayer explorer={survey} viewport={viewport} focus={setViewport} />
             {/* scale bar and north arrow */}
             <g className="geomap-scale" transform={`translate(${W - KM100 - 30} ${H - 26})`} aria-hidden="true">
               <path d={`M0 0V6H${KM100}V0`} />
@@ -417,6 +427,8 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
       </aside>
 
       </div>
+
+      <SurveyControls explorer={survey} focus={setViewport} />
 
       <section className="geomap-finder" aria-label={F.title}>
         <div className="finder-head">
