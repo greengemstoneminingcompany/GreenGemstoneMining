@@ -1,3 +1,4 @@
+import ResearchContent from '@/features/research/ResearchContent';
 import { ArrowUpRight, MapPin, Mail } from 'lucide-react';
 import { useMemo, useState, type CSSProperties } from 'react';
 import Gallery from '@/components/Gallery';
@@ -60,7 +61,7 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
           <div className="project-card-grid">{visibleProjects.map((project, index) => <article className="project-card" key={project.id}><div className="project-card-art" style={{ '--card-index': index } as CSSProperties}><span>{String(index + 1).padStart(2, '0')}</span></div><div className="project-card-body"><p>{project.region}</p><h3>{project.name}</h3><div className="project-findings">{project.findings.slice(0, 4).map((finding) => <span key={`${finding.mineral}-${finding.evidence}`}>{finding.mineral} · {finding.evidence}</span>)}</div></div></article>)}</div>
         </section>
       </div></section>}
-      {page === 'projects' && <><AboutSection sectionKey="operations" /><AboutSection sectionKey="development" /><AboutSection sectionKey="services" /></>}
+      {page === 'projects' && <><ResearchContent kind="projects" /><ResearchContent kind="investor" /><AboutSection sectionKey="operations" /><AboutSection sectionKey="development" /><AboutSection sectionKey="services" /></>}
       {page === 'minerals' && <section className="sec" data-editor-id="minerals.directory"><div className="sec-container">
         <p className="body-text">{cp.directory}</p>
         <section id="industrial-metals" className="portfolio-group">
@@ -81,6 +82,8 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
         </section>
         <p className="content-note">{cp.metalsNote} {cp.dueDiligence}</p>
       </div></section>}
+      {page === 'minerals' && <ResearchContent kind="minerals" />}
+      {page === 'about' && <ResearchContent kind="company" />}
       {page === 'gallery' && <section className="sec sec-dark" data-editor-id="gallery.collection"><div className="sec-container"><div className="page-section-heading"><p className="eyebrow">{t.gallery.eyebrow}</p><h2 className="display light">{t.gallery.h2a} {t.gallery.h2b}</h2><p className="body-text">{t.gallery.text}</p></div></div><Gallery uploads={uploads} items={records.gallery}/></section>}
       {page === 'contact' && <section className="sec sec-dark" data-editor-id="contact.details"><div className="sec-container page-contact-grid"><div><p className="eyebrow">{t.contact.eyebrow}</p><h2 className="display light">{cp.contactHeading}</h2><div className="page-contact-detail"><Mail size={18}/><a href={`mailto:${records.profile.email}`}>{records.profile.email}</a></div><div className="page-contact-detail"><MapPin size={18}/><span>{records.profile.officeAddress}</span></div><p className="page-contact-note">{cp.contactNote}</p></div><div className="page-contact-form"><ContactForm/></div></div></section>}
       {page !== 'contact' && <section className="page-cta" data-editor-id={`${page}.cta`}><div><p className="eyebrow">{records.profile.legalName}</p><h2>{cp.cta}</h2></div><a className="btn btn-gold" href="#/contact">{t.nav.contact} <ArrowUpRight size={16}/></a></section>}

@@ -81,6 +81,7 @@ export default function App() {
             <a href="#/minerals" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
             <details className="nav-dropdown"><summary aria-label={`${t.nav.portfolio} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#/minerals?section=gemstones" onClick={() => setMenuOpen(false)}>Gemstones</a>
+              <a href="#/minerals?section=buyer-specifications">Buyer specifications</a>
               <a href="#/minerals?section=industrial-metals" onClick={() => setMenuOpen(false)}>Industrial &amp; precious metals</a>
               <a href="#/projects?section=services" onClick={() => setMenuOpen(false)}>Services</a>
             </div></details>
@@ -90,6 +91,7 @@ export default function App() {
             <details className="nav-dropdown"><summary aria-label={`${t.nav.projects} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#/projects?section=development-projects" onClick={() => setMenuOpen(false)}>Mining development</a>
               <a href="#/about?section=rural-development" onClick={() => setMenuOpen(false)}>Rural development &amp; community support</a>
+              <a href="#/projects?section=project-dossiers">Field notes &amp; laboratory evidence</a>
               <a href="#/projects?section=operations" onClick={() => setMenuOpen(false)}>Operations &amp; equipment</a>
             </div></details>
           </div>
