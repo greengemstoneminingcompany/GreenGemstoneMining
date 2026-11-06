@@ -1,3 +1,4 @@
+import ResearchContent from '@/features/research/ResearchContent';
 import { Suspense, lazy, useState } from 'react';
 import { Atom, ArrowRight, ArrowUpRight, ChevronDown, Gem, Hammer, Linkedin, Mail, MapPin, Menu, Mountain, X } from 'lucide-react';
 import Gallery from '@/components/Gallery';
@@ -59,6 +60,8 @@ export default function App() {
             <details className="nav-dropdown"><summary aria-label={`${t.nav.projects} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#development-projects" onClick={() => setMenuOpen(false)}>Mining development</a>
               <a href="#rural-development" onClick={() => setMenuOpen(false)}>Rural development &amp; community support</a>
+              <a href="#project-dossiers">Field notes &amp; laboratory evidence</a>
+              <a href="#buyer-specifications">Buyer specifications</a>
               <a href="#operations" onClick={() => setMenuOpen(false)}>Operations &amp; equipment</a>
             </div></details>
           </div>
@@ -219,6 +222,11 @@ export default function App() {
         </section>
 
         <CompanyContent />
+      <ResearchContent kind="company" />
+
+        <ResearchContent kind="projects" />
+        <ResearchContent kind="minerals" />
+        <ResearchContent kind="investor" />
 
         <section id="gallery" className="sec sec-dark">
           <div className="sec-container">

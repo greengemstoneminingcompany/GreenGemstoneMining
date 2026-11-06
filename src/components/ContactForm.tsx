@@ -1,4 +1,7 @@
-import { FormEvent, useState } from 'react';
+import EnquiryFields from '@/features/research/EnquiryFields';
+import { composeEnquiry, takeEnquiryDetails } from '@/features/research/enquiry';
+import '@/features/research/research.css';
+import { FormEvent, useEffect, useState } from 'react';
 import { ArrowRight, Check } from 'lucide-react';
 import { INTERESTS, submitLead, validateLead, type Interest, type LeadErrors } from '@/lib/leads';
 import { SITE } from '@/data/site';
@@ -10,6 +13,12 @@ export default function ContactForm() {
   const { t } = useI18n();
   const f = t.contact.form;
   const [form, setForm] = useState({ name: '', email: '', company: '', interest: INTERESTS[0] as Interest, message: '', website: '' });
+  const [details, setDetails] = useState(takeEnquiryDetails);
+  useEffect(() => {
+    const apply = () => setDetails(value => ({ ...value, ...takeEnquiryDetails() }));
+    window.addEventListener('ggmc-enquiry-context', apply);
+    return () => window.removeEventListener('ggmc-enquiry-context', apply);
+  }, []);
   const [errors, setErrors] = useState<LeadErrors>({});
   const [state, setState] = useState<State>('idle');
 
@@ -17,12 +26,13 @@ export default function ContactForm() {
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const found = validateLead(form);
+    const input = { ...form, message: composeEnquiry(form.message, details) };
+    const found = validateLead(input);
     setErrors(found);
     if (Object.keys(found).length > 0) return;
     setState('sending');
     try {
-      const result = await submitLead(form);
+      const result = await submitLead(input);
       setState(result.ok ? 'sent' : 'error');
     } catch {
       // Keep the form recoverable if the client or network fails unexpectedly.
@@ -60,6 +70,7 @@ export default function ContactForm() {
           {INTERESTS.map((i, idx) => <option key={i} value={i}>{f.interests[idx]}</option>)}
         </select>
       </div>
+      <EnquiryFields value={details} onChange={setDetails} />
       <div className="field field-wide">
         <label htmlFor="cf-message">{f.message}</label>
         <textarea id="cf-message" rows={4} maxLength={2000} value={form.message} onChange={set('message')} aria-invalid={Boolean(errors.message)} aria-describedby={errors.message ? 'cf-msg-err' : undefined} />
