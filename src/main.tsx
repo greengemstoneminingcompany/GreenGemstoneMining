@@ -1,6 +1,7 @@
 import { Component, StrictMode, useEffect, type ErrorInfo, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
+import BuyerConcept from './concept/BuyerConcept';
 import './index.css';
 import './approved-design.css';
 import './company-pages.css';
@@ -9,6 +10,7 @@ import { LanguageProvider } from './i18n/LanguageProvider';
 import { applyPublishedVisualEditorPayload, installVisualEditorBridge } from './lib/visualEditorBridge';
 import { CompanyRecordsProvider, defaultCompanyRecords } from './lib/companyRecords';
 
+const classicMode = new URLSearchParams(window.location.search).get('classic') === '1';
 installVisualEditorBridge();
 window.__GGMC_COMPANY_DEFAULT_RECORDS__ = JSON.parse(JSON.stringify(defaultCompanyRecords));
 
@@ -97,8 +99,8 @@ createRoot(document.getElementById('root')!).render(
     <PreviewRenderErrorBoundary>
       <LanguageProvider>
         <CompanyRecordsProvider>
-          <App />
-          <PublishedEditorContent />
+          {classicMode ? <App /> : <BuyerConcept />}
+          {classicMode && <PublishedEditorContent />}
         </CompanyRecordsProvider>
       </LanguageProvider>
     </PreviewRenderErrorBoundary>
