@@ -43,7 +43,7 @@ describe('Buyer-ready GGMC concept', () => {
   it('navigates to the project listing without changing the feature branch records', () => {
     render(<BuyerConcept/>);
     fireEvent.click(screen.getByRole('button', {name:'Projects'}));
-    fireEvent.hashChange(window);
+    fireEvent(window, new Event('hashchange'));
     expect(screen.getByRole('heading', {level:1}).textContent).toContain('Follow the source');
     expect(screen.getByText('14 records found')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', {name:'Priority'}));
