@@ -31,7 +31,7 @@ export default function OwnerStudio({ uploads, onOpenMedia }: { uploads: MediaUp
     if(!api||!previewEnabled){setSession({email:null,isAdmin:false});return;}
     try{setSession(await api.getSession());}catch(error){setNotice(error instanceof Error?error.message:'Could not verify editor access.');setSession({email:null,isAdmin:false});}
   },[api,previewEnabled]);
-  useEffect(()=>{void refresh();},[refresh]);
+  useEffect(()=>{if(!api||!previewEnabled)return;let active=true;void api.getSession().then(result=>{if(active)setSession(result);}).catch(error=>{if(active){setNotice(error instanceof Error?error.message:'Could not verify editor access.');setSession({email:null,isAdmin:false});}});return()=>{active=false;};},[api,previewEnabled]);
   useEffect(()=>{const onPicked=(event:Event)=>{const data=(event as CustomEvent).detail;if(!data||typeof data.url!=='string')return;if(data.requestId==='owner-home-photo')setForm(previous=>({...previous,heroImage:data.url}));if(data.requestId==='owner-company-photo')setForm(previous=>({...previous,companyImage:data.url}));};window.addEventListener('ggmc-media-selected',onPicked);return()=>window.removeEventListener('ggmc-media-selected',onPicked);},[]);
   const login=async(event:FormEvent)=>{event.preventDefault();if(!api)return;setBusy(true);setNotice('');try{await api.signIn(email.trim(),password);setPassword('');await refresh();}catch(error){setNotice(error instanceof Error?error.message:'Sign-in failed.');}finally{setBusy(false);}};
   const logout=async()=>{if(!api)return;setBusy(true);try{await api.signOut();setSession({email:null,isAdmin:false});setDraft(null);setNotice('Signed out.');}catch(error){setNotice(error instanceof Error?error.message:'Could not sign out.');}finally{setBusy(false);}};
