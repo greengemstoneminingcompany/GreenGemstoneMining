@@ -19,7 +19,8 @@ const features = [
 
 export default function BuyerVisionHome() {
   const { profile, projects } = useCompanyRecords();
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
+  const english = lang === 'en';
   const [expanded, setExpanded] = useState<number | null>(0);
   const featured = projects.filter(project => project.findings.length > 0).slice(0, 3);
   return (
@@ -30,8 +31,8 @@ export default function BuyerVisionHome() {
         <div className="bv-hero-container">
           <div className="bv-hero-content">
             <div className="bv-eyebrow"><span className="bv-eyebrow-line" /> GREEN GEMSTONE MINING COMPANY <span className="bv-hero-dot">·</span> SOMALILAND</div>
-            <h1>From mineral<br />potential to <em>informed opportunity.</em></h1>
-            <p className="bv-hero-copy">Explore our company, mineral interests and project areas through a clearer, evidence-conscious view of our work and development ambitions.</p>
+            <h1>{english ? <>From mineral<br />potential to <em>informed opportunity.</em></> : <>{t.hero.h1a}<br/><em>{t.hero.h1b}</em></>}</h1>
+            <p className="bv-hero-copy">{english ? 'Explore our company, mineral interests and project areas through a clearer, evidence-conscious view of our work and development ambitions.' : t.hero.sub}</p>
             <div className="bv-actions">
               <a className="bv-button bv-button-primary" href="#/projects">Explore our projects <ArrowUpRight size={17} /></a>
               <a className="bv-button bv-button-outline" href="#/contact">Start a conversation <ArrowRight size={17} /></a>

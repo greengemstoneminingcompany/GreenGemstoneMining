@@ -1,74 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, Folder } from 'lucide-react';
-import { getSupabase } from '@/lib/supabase';
-import type { MediaUpload } from '@/lib/supabase';
+import { ArrowLeft, ArrowUpRight, Folder, X } from 'lucide-react';
+import { getSupabase, type MediaUpload } from '@/lib/supabase';
 import type { GalleryItem } from '@/lib/media';
-
-type GalleryFolder = { id: string; name: string; parent_id: string | null; sort_order: number };
-
-export default function Gallery(props: { uploads: MediaUpload[]; items?: GalleryItem[] }) {
-  void props.uploads; // Preserve the existing public component API until media is folder-linked.
-  const [folders, setFolders] = useState<GalleryFolder[]>([]);
-  const [current, setCurrent] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    void (async () => {
-      try {
-        const client = await getSupabase();
-        if (!client) throw new Error('Gallery folders are unavailable until Supabase is configured.');
-        const { data, error: queryError } = await client.from('gallery_folders')
-          .select('id,name,parent_id,sort_order').order('sort_order', { ascending: true });
-        if (queryError) throw queryError;
-        if (active) setFolders((data ?? []) as GalleryFolder[]);
-      } catch (reason) {
-        if (active) setError(reason instanceof Error ? reason.message : 'Unable to load gallery folders.');
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-    return () => { active = false; };
-  }, []);
-
-  const children = useMemo(() => folders.filter((folder) => folder.parent_id === current)
-    .sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name)), [folders, current]);
-  const selected = folders.find((folder) => folder.id === current);
-  const breadcrumbs: GalleryFolder[] = [];
-  let cursor = selected;
-  while (cursor) {
-    breadcrumbs.unshift(cursor);
-    cursor = folders.find((folder) => folder.id === cursor?.parent_id);
-  }
-
-  return (
-    <section className="gallery-folder-browser" aria-label="Gallery folders">
-      <nav aria-label="Gallery breadcrumb" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
-        <button type="button" onClick={() => setCurrent(null)}>Gallery</button>
-        {breadcrumbs.map((folder) => (
-          <button key={folder.id} type="button" onClick={() => setCurrent(folder.id)} aria-current={folder.id === current ? 'page' : undefined}>
-            / {folder.name}
-          </button>
-        ))}
-      </nav>
-      {current && <button type="button" onClick={() => setCurrent(selected?.parent_id ?? null)} style={{ marginBottom: '1rem' }}>
-        <ChevronLeft size={16} aria-hidden="true" /> Back
-      </button>}
-      {loading && <p role="status">Loading folders…</p>}
-      {error && <p role="alert">{error}</p>}
-      {!loading && !error && (
-        children.length > 0
-          ? <div className="gallery-folder-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-              {children.map((folder) => (
-                <button key={folder.id} type="button" onClick={() => setCurrent(folder.id)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1.5rem', border: '1px solid currentColor', borderRadius: '0.75rem', background: 'transparent', color: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
-                  <Folder size={22} aria-hidden="true" /><span>{folder.name}</span>
-                </button>
-              ))}
-            </div>
-          : <p>This folder is empty.</p>
-      )}
-    </section>
-  );
+import './BuyerWorkspace.css';
+type FolderRow={id:string;name:string;parent_id:string|null;sort_order:number};type Link={folder_id:string;media_id:string;sort_order:number};type Cover={folder_id:string;media_id:string};
+export default function Gallery({uploads}:{uploads:MediaUpload[];items?:GalleryItem[]}){
+ const [folders,setFolders]=useState<FolderRow[]>([]);const [links,setLinks]=useState<Link[]>([]);const [covers,setCovers]=useState<Cover[]>([]);const [current,setCurrent]=useState<string|null>(null);const [opened,setOpened]=useState<MediaUpload|null>(null);const [loading,setLoading]=useState(true);const [error,setError]=useState<string|null>(null);
+ useEffect(()=>{let live=true;void(async()=>{try{const sb=await getSupabase();if(!sb)throw new Error('Gallery database is not configured.');const result=await sb.from('gallery_folders').select('id,name,parent_id,sort_order').order('sort_order');if(result.error)throw result.error;if(live)setFolders((result.data??[]) as FolderRow[]);const [l,c]=await Promise.all([sb.from('gallery_folder_media').select('folder_id,media_id,sort_order'),sb.from('gallery_folder_covers').select('folder_id,media_id')]);if(live){if(!l.error)setLinks((l.data??[]) as Link[]);if(!c.error)setCovers((c.data??[]) as Cover[]);}}catch(e){if(live)setError(e instanceof Error?e.message:'Gallery unavailable.');}finally{if(live)setLoading(false);}})();return()=>{live=false;};},[]);
+ useEffect(()=>{if(!opened)return;const key=(e:KeyboardEvent)=>{if(e.key==='Escape')setOpened(null);};document.addEventListener('keydown',key);return()=>document.removeEventListener('keydown',key);},[opened]);
+ const media=useMemo(()=>new Map(uploads.filter(m=>m.is_active).map(m=>[m.id,m])),[uploads]);const children=folders.filter(f=>f.parent_id===current).sort((a,b)=>a.sort_order-b.sort_order||a.name.localeCompare(b.name));const currentFolder=folders.find(f=>f.id===current);const crumbs:FolderRow[]=[];const seen=new Set<string>();let cursor=currentFolder;while(cursor&&!seen.has(cursor.id)){seen.add(cursor.id);crumbs.unshift(cursor);cursor=folders.find(f=>f.id===cursor?.parent_id);}
+ const visible=links.filter(l=>l.folder_id===current).sort((a,b)=>a.sort_order-b.sort_order).map(l=>media.get(l.media_id)).filter((m):m is MediaUpload=>Boolean(m));const coversByFolder=new Map(covers.map(c=>[c.folder_id,c.media_id]));
+ return <section className="bw-gallery" aria-label="Gallery folders"><div className="bw-gallery-heading"><span>GREEN GEMSTONE / COLLECTIONS</span><h3>{currentFolder?.name??'Explore the Gallery'}</h3><p>Browse published media organized by subject. Empty collections are shown honestly until approved company photographs are assigned.</p></div><nav aria-label="Gallery breadcrumb" className="bw-crumbs"><button type="button" onClick={()=>setCurrent(null)}>Gallery</button>{crumbs.map(c=><button key={c.id} aria-current={c.id===current?'page':undefined} type="button" onClick={()=>setCurrent(c.id)}> / {c.name}</button>)}</nav>{current&&<button type="button" className="bw-gallery-back" onClick={()=>setCurrent(currentFolder?.parent_id??null)}><ArrowLeft size={14}/> Back</button>}{loading&&<p role="status">Loading folders…</p>}{error&&<p role="alert">{error}</p>}{!loading&&!error&&<><div className="bw-folder-grid">{children.map(f=>{const cover=media.get(coversByFolder.get(f.id)??'');return <button className="bw-folder" key={f.id} type="button" onClick={()=>setCurrent(f.id)}><div className="bw-folder-image">{cover?.media_type==='image'?<img src={cover.public_url} alt="" loading="lazy"/>:<Folder size={65} strokeWidth={1}/>}</div><div className="bw-folder-caption"><strong>{f.name}</strong><ArrowUpRight size={18}/></div></button>;})}</div>{visible.length>0&&<div className="bw-photo-grid">{visible.map(m=><button key={m.id} type="button" onClick={()=>setOpened(m)}>{m.media_type==='image'?<img src={m.public_url} alt={m.title} loading="lazy"/>:<div className="bw-video">Video</div>}<span>{m.title}</span></button>)}</div>}{children.length===0&&visible.length===0&&<div className="bw-empty"><Folder size={34}/><p>No published photographs in this collection yet.</p></div>}</>}{opened&&<div role="dialog" aria-modal="true" aria-label={opened.title} className="bw-photo-viewer"><button type="button" aria-label="Close viewer" onClick={()=>setOpened(null)}><X size={21}/></button>{opened.media_type==='image'?<img src={opened.public_url} alt={opened.title}/>:<video controls src={opened.public_url}/>}<p>{opened.title} {opened.description??''}</p></div>}</section>;
 }

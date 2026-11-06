@@ -7,6 +7,7 @@ import SomalilandMap from '@/components/SomalilandMap';
 import { useCompanyRecords } from '@/lib/companyRecords';
 import { useI18n } from '@/i18n/core';
 import { companyPageCopy } from '@/i18n/company-pages';
+import './BuyerVisionPages.css';
 
 export type CompanyPage = 'home' | 'about' | 'projects' | 'minerals' | 'gallery' | 'contact';
 
@@ -40,7 +41,7 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
   const localizedPage = { about: { title: `${t.company.h2a} ${t.company.h2b}`, description: t.company.lead }, projects: { title: `${t.projects.h2a} ${t.projects.h2b}`, description: t.projects.text }, minerals: { title: `${t.catalogue.h2a} ${t.catalogue.h2b}`, description: t.catalogue.text }, gallery: { title: `${t.gallery.h2a} ${t.gallery.h2b}`, description: t.gallery.text }, contact: { title: `${t.contact.h2a} ${t.contact.h2b}`, description: t.contact.text } }[page];
   const localizedEyebrow = { about: t.nav.company, projects: t.nav.projects, minerals: t.nav.portfolio, gallery: t.nav.gallery, contact: t.nav.contact }[page];
   return (
-    <div className={`company-page company-page-${page}`} data-editor-id={`page.${page}`}>
+    <div className={`company-page buyer-secondary company-page-${page}`} data-editor-id={`page.${page}`}>
       <section className="page-hero" data-editor-id={`${page}.hero`}>
         <div className="page-hero-image" />
         <div className="page-hero-content">

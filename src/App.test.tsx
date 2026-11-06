@@ -6,7 +6,7 @@ import CompanyPages from '@/components/CompanyPages';
 import ContactForm from '@/components/ContactForm';
 import Gallery from '@/components/Gallery';
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); window.history.replaceState(null, '', '/#/home'); });
 
 describe('App', () => {
   it('renders one h1, a skip link and a closed mobile menu', () => {
@@ -56,11 +56,16 @@ describe('Gallery', () => {
 });
 
 describe('Consolidated information architecture', () => {
+  it('shows the public buyer diligence checklist', () => {
+    window.location.hash = '#/buyers'; render(<App />);
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('Credibility');
+    expect(screen.getByText(/Public verification status: not confirmed/i)).toBeTruthy();
+  });
   it('has six purposeful homepage sections without a duplicate form, map or mission cards', () => {
     window.location.hash = '#/home';
     render(<App />);
-    const sections = [...document.querySelectorAll('main section[data-editor-id^="home."]')].map(section => section.getAttribute('data-editor-id'));
-    expect(sections).toEqual(['home.hero', 'home.company', 'home.resources', 'home.projects', 'home.gallery', 'home.contact']);
+    const sections = [...document.querySelectorAll('main section[data-editor-id^="buyer."]')].map(section => section.getAttribute('data-editor-id'));
+    expect(sections).toEqual(['buyer.hero', 'buyer.intro', 'buyer.focus', 'buyer.projects', 'buyer.evidence', 'buyer.contact']);
     expect(document.querySelector('#main #contact form')).toBeNull();
     expect(document.querySelector('section[data-editor-id="home.values"]')).toBeNull();
     expect(document.querySelector('section[data-editor-id="home.history"]')).toBeNull();

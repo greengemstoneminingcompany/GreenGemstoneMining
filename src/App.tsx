@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { ArrowUpRight, ChevronDown, Menu, X } from 'lucide-react';
 import { ScrollProgress } from '@/components/Effects';
+import { BuyerInformation, OwnerStudio } from '@/components/BuyerWorkspace';
 import BuyerVisionHome from '@/components/BuyerVisionHome';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useCompanyRecords } from '@/lib/companyRecords';
@@ -12,16 +13,17 @@ import { useUploads } from '@/hooks/useUploads';
 import { supabaseConfigured } from '@/lib/supabase';
 import CompanyPages, { type CompanyPage } from '@/components/CompanyPages';
 
-const readPage = (): CompanyPage => {
+type SitePage = CompanyPage | 'buyers' | 'studio';
+const readPage = (): SitePage => {
   const route = window.location.hash.replace(/^#\/?/, '').split(/[/?]/)[0];
-  return (['home', 'about', 'projects', 'minerals', 'gallery', 'contact'].includes(route) ? route : 'home') as CompanyPage;
+  return (['home', 'about', 'projects', 'minerals', 'gallery', 'contact', 'buyers', 'studio'].includes(route) ? route : 'home') as SitePage;
 };
 
 const MediaPanel = lazy(() => import('@/components/MediaPanel'));
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<CompanyPage>(readPage);
+  const [currentPage, setCurrentPage] = useState<SitePage>(readPage);
   useEffect(() => {
     const syncRoute = () => {
       setCurrentPage(readPage());
@@ -53,7 +55,7 @@ export default function App() {
   const records = useCompanyRecords();
   const scrolled = useScrollHeader();
   const { uploads, refresh } = useUploads();
-  const admin = useAdminSession(mediaOpen);
+  const admin = useAdminSession(mediaOpen || currentPage === 'studio');
   useReveals();
 
   return (
@@ -72,6 +74,7 @@ export default function App() {
               <a href="#/about?section=vision-mission" onClick={() => setMenuOpen(false)}>Vision &amp; mission</a>
               <a href="#/about?section=leadership" onClick={() => setMenuOpen(false)}>Leadership</a>
               <a href="#/about?section=history-details" onClick={() => setMenuOpen(false)}>Company history</a>
+              <a href="#/buyers" onClick={() => setMenuOpen(false)}>Buyer information</a>
             </div></details>
           </div>
           <div className="nav-menu-item">
@@ -94,7 +97,7 @@ export default function App() {
           <a href="#/contact" onClick={() => setMenuOpen(false)}>{t.nav.contact}</a>
           {document.querySelector('meta[name="ggmc-preview-editor"]')?.getAttribute('content') === 'enabled' && (
             <details className="nav-dropdown owner-menu"><summary>Employee portal</summary><div className="nav-dropdown-panel">
-              <a href="?edit=1" onClick={(event) => { event.preventDefault(); setMenuOpen(false); event.currentTarget.closest('details')?.removeAttribute('open'); window.dispatchEvent(new Event('ggmc-open-editor')); }}>Employee portal sign-in</a>
+              <a href="#/studio" onClick={() => setMenuOpen(false)}>Owner Studio</a>
             </div></details>
           )}
           <LanguageSwitcher />
@@ -115,7 +118,7 @@ export default function App() {
       )}
 
       <main id="main">
-        {currentPage === 'home' ? <BuyerVisionHome /> : <CompanyPages page={currentPage} uploads={uploads} />}
+        {currentPage === 'home' ? <BuyerVisionHome /> : currentPage === 'buyers' ? <BuyerInformation /> : currentPage === 'studio' ? <OwnerStudio admin={admin} onOpenMedia={() => setMediaOpen(true)} /> : <CompanyPages page={currentPage} uploads={uploads} />}
       </main>
 
       <footer className="footer">
@@ -129,6 +132,7 @@ export default function App() {
             <a href="#/about">{t.footer.about}</a>
             <a href="#/about?section=vision-mission">{t.footer.mission}</a>
             <a href="#/projects">{t.footer.projects}</a>
+            <a href="#/buyers">Buyer information</a>
           </div>
           <div className="footer-col">
             <h3>{t.footer.resources}</h3>
@@ -146,7 +150,7 @@ export default function App() {
         <div className="footer-base">
           <span>© {new Date().getFullYear()} {records.profile.legalName}</span>
           <span>{records.profile.publicLocation}</span>
-          {supabaseConfigured && <button type="button" className="owner-link" onClick={() => setMediaOpen(true)}>{t.footer.ownerLogin}</button>}
+          {supabaseConfigured && <a className="owner-link" href="#/studio">{t.footer.ownerLogin}</a>}
         </div>
         <section id="privacy" className="privacy">
           <h3>{t.footer.privacyTitle}</h3>
