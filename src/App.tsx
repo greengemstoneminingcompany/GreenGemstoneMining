@@ -1,3 +1,4 @@
+import ResearchContent from '@/features/research/ResearchContent';
 import { Suspense, lazy, useState } from 'react';
 import { Atom, ArrowRight, ArrowUpRight, ChevronDown, Gem, Hammer, Linkedin, Mail, MapPin, Menu, Mountain, X } from 'lucide-react';
 import Gallery from '@/components/Gallery';
@@ -46,10 +47,12 @@ export default function App() {
           <div className="nav-menu-item">
             <a href="#resources" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
             <details className="nav-dropdown"><summary aria-label={`${t.nav.portfolio} submenu`}><ChevronDown size={13} aria-hidden="true" /></summary><div className="nav-dropdown-panel">
+              <a href="#buyer-specifications">Buyer specifications</a>
               <a href="#resources" onClick={() => setMenuOpen(false)}>Mineral resources</a>
               <a href="#industrial-metals" onClick={() => setMenuOpen(false)}>Industrial metals</a>
             </div></details>
           </div>
+          <a href="#project-dossiers">Field notes &amp; evidence</a>
           <a href="#projects" onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
           <a href="#gallery" onClick={() => setMenuOpen(false)}>{t.nav.gallery}</a>
           <a href="#contact" onClick={() => setMenuOpen(false)}>{t.nav.contact}</a>
@@ -206,6 +209,11 @@ export default function App() {
             </div>
           </div>
         </section>
+
+        <ResearchContent kind="projects" />
+        <ResearchContent kind="minerals" />
+        <ResearchContent kind="company" />
+        <ResearchContent kind="investor" />
 
         <section id="gallery" className="sec sec-dark">
           <div className="sec-container">
