@@ -21,7 +21,7 @@ const W = MAP_VIEWBOX.w;
 const H = MAP_VIEWBOX.h;
 const CX = W / 2;
 const CY = H / 2;
-const goContact = () => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+const goContact = () => { window.location.hash = '/contact'; };
 
 /** Standard geological-map fill patterns, also used by the legend swatches. */
 const PATTERN: Record<Zone, string> = { guban: 'gm-stipple', basement: 'gm-cross', mesozoic: 'gm-brick', haud: 'gm-lines' };
@@ -103,6 +103,7 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
   return (
     <div className={`geomap ${mineral ? 'is-finding' : ''}`}>
       <div className="geomap-main">
+      <div className="geomap-map-column">
       <div className="geomap-stage">
         <div className="geomap-toolbar">
           <span className="geomap-title"><i className="blink" />{p.mapTitle}</span>
@@ -372,6 +373,55 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
         </div>
       </div>
 
+      <section className="geomap-finder" aria-label={F.title}>
+        <div className="finder-head">
+          <h4>{F.title}</h4>
+          <p>{F.hint}</p>
+          {mineral && <button type="button" className="finder-clear" onClick={() => pickMineral(null)}>{F.clear}</button>}
+        </div>
+        <div className="finder-groups">
+          {GROUPS.map((g) => (
+            <div key={g} className="mg">
+              <span className="mg-label">{p.groups[g]}</span>
+              <span className="chips">
+                {Object.keys(MINERAL_GROUP).filter((m) => MINERAL_GROUP[m] === g && MINERAL_COUNT[m]).map((m) => (
+                  <button key={m} type="button" className={`chip chip-${g} chip-btn`} aria-pressed={mineral === m} onClick={() => pickMineral(mineral === m ? null : m)}>
+                    {mineralName(m, lang)} <small>{MINERAL_COUNT[m]}</small>
+                  </button>
+                ))}
+              </span>
+            </div>
+          ))}
+        </div>
+        {mineral && (
+          <div className="finder-results" aria-live="polite">
+            <h5>{mineralName(mineral, lang)} · {F.records(results.length)}</h5>
+            <ul>
+              {results.map((l) => (
+                <li key={l.id} className={`fr fr-${l.precision}`}>
+                  <button type="button" disabled={!(l.precision === 'point' && !l.outside && l.region)} aria-pressed={loc === l.id} onClick={() => { setLoc(l.id); setSelected(l.region!); }}>
+                    <strong>{l.name ?? (l.region ? p.regions[l.region].name : F.reported)}{l.name && l.region ? ` · ${p.regions[l.region].name}` : ''}</strong>
+                    <span className="fr-meta">
+                      {l.precision === 'point' ? `${fmt(l.lon!, l.lat!)} · ${F.point}` : l.precision === 'district' ? F.district : F.reported}
+                      {l.outside && ` · ${F.outside}`}
+                      {l.basis && ` · ${F.basis[l.basis]}`}
+                      {l.company && ` · ${F.company}`}
+                    </span>
+                    {l.evidence && <span className={`ev-badge eb-${l.evidence}`}>{F.evidence[l.evidence]}</span>}
+                    <span className="fr-src">{F.source}: {l.link ? <a href={l.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>{l.source}</a> : l.source}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <p className="finder-note">{F.precisionNote}</p>
+            {results.some((r) => r.company) && <p className="finder-note">{F.evidenceNote}</p>}
+          </div>
+        )}
+      </section>
+
+      <SurveyControls explorer={survey} focus={setViewport} />
+      </div>
+
       <aside className="geomap-panel">
         <div className="region-tabs" role="group" aria-label={p.regionsLabel}>
           {REGIONS.map((r) => (
@@ -432,53 +482,9 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
 
       </div>
 
-      <SurveyControls explorer={survey} focus={setViewport} />
 
-      <section className="geomap-finder" aria-label={F.title}>
-        <div className="finder-head">
-          <h4>{F.title}</h4>
-          <p>{F.hint}</p>
-          {mineral && <button type="button" className="finder-clear" onClick={() => pickMineral(null)}>{F.clear}</button>}
-        </div>
-        <div className="finder-groups">
-          {GROUPS.map((g) => (
-            <div key={g} className="mg">
-              <span className="mg-label">{p.groups[g]}</span>
-              <span className="chips">
-                {Object.keys(MINERAL_GROUP).filter((m) => MINERAL_GROUP[m] === g && MINERAL_COUNT[m]).map((m) => (
-                  <button key={m} type="button" className={`chip chip-${g} chip-btn`} aria-pressed={mineral === m} onClick={() => pickMineral(mineral === m ? null : m)}>
-                    {mineralName(m, lang)} <small>{MINERAL_COUNT[m]}</small>
-                  </button>
-                ))}
-              </span>
-            </div>
-          ))}
-        </div>
-        {mineral && (
-          <div className="finder-results" aria-live="polite">
-            <h5>{mineralName(mineral, lang)} · {F.records(results.length)}</h5>
-            <ul>
-              {results.map((l) => (
-                <li key={l.id} className={`fr fr-${l.precision}`}>
-                  <button type="button" disabled={!(l.precision === 'point' && !l.outside && l.region)} aria-pressed={loc === l.id} onClick={() => { setLoc(l.id); setSelected(l.region!); }}>
-                    <strong>{l.name ?? (l.region ? p.regions[l.region].name : F.reported)}{l.name && l.region ? ` · ${p.regions[l.region].name}` : ''}</strong>
-                    <span className="fr-meta">
-                      {l.precision === 'point' ? `${fmt(l.lon!, l.lat!)} · ${F.point}` : l.precision === 'district' ? F.district : F.reported}
-                      {l.outside && ` · ${F.outside}`}
-                      {l.basis && ` · ${F.basis[l.basis]}`}
-                      {l.company && ` · ${F.company}`}
-                    </span>
-                    {l.evidence && <span className={`ev-badge eb-${l.evidence}`}>{F.evidence[l.evidence]}</span>}
-                    <span className="fr-src">{F.source}: {l.link ? <a href={l.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>{l.source}</a> : l.source}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <p className="finder-note">{F.precisionNote}</p>
-            {results.some((r) => r.company) && <p className="finder-note">{F.evidenceNote}</p>}
-          </div>
-        )}
-      </section>
+
+
 
       <div className="geomap-foot">
         <p className="geomap-note">{p.note}</p>
