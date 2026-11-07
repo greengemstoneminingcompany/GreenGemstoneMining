@@ -1,0 +1,1 @@
+(()=>{let choice;try{choice=localStorage.getItem('ggmc-color-theme');}catch{}const theme=choice==='dark'||choice==='light'?choice:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=theme;document.documentElement.style.colorScheme=theme;})();

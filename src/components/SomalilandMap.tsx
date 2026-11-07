@@ -11,6 +11,9 @@ import { PROJECTS, type ProjectArea } from '@/data/company';
 import { LOCALITIES, MINERAL_COUNT, MINERAL_GROUP, mineralsInRegion, recordsFor } from '@/data/minerals';
 import { FINDER, mineralName } from '@/data/mineralText';
 import { useI18n } from '@/i18n/core';
+import PublicSearch from '@/components/PublicSearch';
+import {matchesPublicSearch} from '@/lib/publicSearch';
+import {buyerText} from '@/i18n/buyer-interface';
 
 type Layer = 'regions' | 'geology';
 type Zone = 'guban' | 'basement' | 'mesozoic' | 'haud';
@@ -48,6 +51,8 @@ const SWEEP = Array.from({ length: 10 }, (_, i) => {
 export default function SomalilandMap({ projects = PROJECTS }: { projects?: ProjectArea[] }) {
   const { t, lang } = useI18n();
   const F = FINDER[lang];
+  const [finderQuery,setFinderQuery]=useState('');
+  const finderMinerals=useMemo(()=>Object.keys(MINERAL_GROUP).filter(m=>MINERAL_COUNT[m]&&matchesPublicSearch(finderQuery,m,mineralName(m,lang))),[finderQuery,lang]);
   const p = t.projects;
   const survey = useSurveyExplorer();
   const research = researchCopy(lang);
@@ -430,12 +435,13 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
           <p>{F.hint}</p>
           {mineral && <button type="button" className="finder-clear" onClick={() => pickMineral(null)}>{F.clear}</button>}
         </div>
+        <PublicSearch label={buyerText(lang,'Search minerals on the map')} value={finderQuery} onChange={setFinderQuery} count={finderMinerals.length}/>
         <div className="finder-groups">
-          {GROUPS.map((g) => (
+          {GROUPS.filter(g=>finderMinerals.some(m=>MINERAL_GROUP[m]===g)).map((g) => (
             <div key={g} className="mg">
               <span className="mg-label">{p.groups[g]}</span>
               <span className="chips">
-                {Object.keys(MINERAL_GROUP).filter((m) => MINERAL_GROUP[m] === g && MINERAL_COUNT[m]).map((m) => (
+                {finderMinerals.filter((m) => MINERAL_GROUP[m] === g).map((m) => (
                   <button key={m} type="button" className={`chip chip-${g} chip-btn`} aria-pressed={mineral === m} onClick={() => pickMineral(mineral === m ? null : m)}>
                     {mineralName(m, lang)} <small>{MINERAL_COUNT[m]}</small>
                   </button>
@@ -459,8 +465,8 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
                       {l.company && ` · ${F.company}`}
                     </span>
                     {l.evidence && <span className={`ev-badge eb-${l.evidence}`}>{F.evidence[l.evidence]}</span>}
-                    <span className="fr-src">{F.source}: {l.link ? <a href={l.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>{l.source}</a> : l.source}</span>
                   </button>
+                    <span className="fr-src">{F.source}: {l.link ? <a href={l.link} target="_blank" rel="noopener noreferrer">{l.source}</a> : l.source}</span>
                 </li>
               ))}
             </ul>

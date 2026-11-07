@@ -1,0 +1,66 @@
+/* Theme surfaces preserve the emerald-and-gold identity in both modes. */
+:root {color-scheme:light;--theme-link:#006446;--theme-card:#fff;--theme-soft:#eaf3ed;--theme-input:#fff;--theme-accent:#735426;}
+.theme-switch {display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px 12px;border:1px solid #a8c4b4;border-radius:6px;color:#f8fbf7;background:#103d2d;font-size:14px;line-height:1.4;white-space:nowrap;}
+.theme-switch:hover {background:#205740;}
+.theme-switch svg {flex-shrink:0;}
+:root[data-theme='dark'] {color-scheme:dark;--paper:#0c1712;--paper-strong:#15271e;--ink:#eef5ee;--ink-muted:#c2d3c6;--surface:#15271e;--surface-2:#1b3226;--line:#527362;--line-soft:#3f5c4c;--readable-ink:#eef5ee;--readable-muted:#c2d3c6;--readable-border:#648572;--theme-link:#98e3b5;--theme-card:#15271e;--theme-soft:#1b3226;--theme-input:#0d1e15;--theme-accent:#e2c18a;}
+:root[data-theme='dark'] .buyer-vision {--bv-paper:var(--paper);--bv-ink:var(--ink);--bv-muted:var(--ink-muted);background:var(--paper);color:var(--ink);}
+:root[data-theme='dark'] :is(.bv-projects,.bv-cta,.bv-preview-disclaimer,.buyer-workspace-public,.bw-studio,.bw-gallery) {background:var(--paper);color:var(--ink);}
+:root[data-theme='dark'] :is(.bv-project-card,.content-card,.mission-card,.mineral,.page-info-grid article,.page-mineral-card,.page-contact-form,.project-card,.bw-folder,.bw-photo-grid button,.bw-panel,.bw-login) {background:var(--theme-card);color:var(--ink);border-color:var(--line);box-shadow:none;}
+:root[data-theme='dark'] :is(.sec-dark,.company-content .sec-dark,.split-text,.content-pill,.project-findings span,.bw-buyer-note,.bw-task-cards button) {background:var(--theme-soft);color:var(--ink);border-color:var(--line);}
+:root[data-theme='dark'] :is(.bv-intro-copy p,.bv-stat-strip small,.bv-finding-list small,.bv-section-top-dark>p,.bv-project-footer p,.bv-preview-disclaimer,.bv-cta p,.bw-buyer-body>div>p,.bw-buyer-accordions p,.bw-gallery-heading p,.bw-empty,.bw-panel>p,.bw-evidence-list small,.bw-assigned article span) {color:var(--ink-muted);}
+:root[data-theme='dark'] :is(.buyer-vision .bv-label:not(.bv-label-light),.bv-section-top-dark h2 em,.bv-cta h2 em,.buyer-workspace-public .bw-buyer-body>div:first-child>span,.buyer-workspace-public .bw-buyer-body h2 em,.buyer-workspace-public .bw-buyer-accordions button>span:first-child,.buyer-workspace-public .bw-buyer-accordions small,.bw-gallery-heading>span) {color:var(--theme-accent);}
+:root[data-theme='dark'] :is(.bv-text-link,.bw-crumbs,.bw-gallery-back,.bw-folder-caption,.bw-back,.bw-tabs button,.bw-assigned article button,.bw-evidence-list button,.bw-evidence-list a,.research-block a,.company-page .research-block .eyebrow,.company-page .research-text-button,.company-page .research-dossier dt,.company-page .research-date,.region-card dt,.buyer-secondary .project-card-body>p) {color:var(--theme-link);}
+:root[data-theme='dark'] :is(.bv-stat-strip,.bv-stat-strip>div,.bv-finding-list span,.bw-buyer-accordions>div,.bw-empty,.bw-tabs button,.bw-assigned article,.bw-evidence-list article) {border-color:var(--line);}
+:root[data-theme='dark'] :is(.bw-buyer-accordions button,.bw-login label,.bw-form label) {color:var(--ink);}
+:root[data-theme='dark'] .page-contact-form :is(input,textarea,select),
+:root[data-theme='dark'] :is(.research-select,.bw-login input,.bw-form input,.bw-form textarea,.bw-form select,.bw-evidence-list select) {background:var(--theme-input);color:var(--ink);border-color:var(--readable-border);}
+:root[data-theme='dark'] .page-contact-form :is(input,textarea)::placeholder {color:var(--ink-muted);}
+:root[data-theme='dark'] :is(.page-contact-form .contact-form label,.page-contact-form .research-enquiry,.page-contact-form .research-enquiry>summary) {color:var(--ink);}
+:root[data-theme='dark'] .project-filters button {background:var(--theme-card);color:var(--theme-link);border-color:var(--line);}
+:root[data-theme='dark'] .project-filters :is(button.active,button:hover) {background:#98e3b5;color:#09271a;border-color:#98e3b5;}
+:root[data-theme='dark'] .buyer-secondary .page-cta {background:var(--theme-soft);border-color:var(--line);}
+:root[data-theme='dark'] .buyer-secondary .page-cta :is(h2,p) {color:var(--ink);}
+:root[data-theme='dark'] .buyer-secondary .page-cta .eyebrow {color:var(--theme-accent);}
+:root[data-theme='dark'] .region-card :is(.chip-gems,.evidence.ev-strong,.ev-strong) {color:#99ebc4;border-color:#66b18e;}
+:root[data-theme='dark'] .region-card :is(.chip-metals,.evidence.ev-partial,.ev-partial) {color:#f5d886;border-color:#b9a365;}
+:root[data-theme='dark'] .region-card .chip-industrial {color:#b3e2f2;border-color:#72a5b4;}
+:root[data-theme='dark'] .region-card :is(.chip-energy,.evidence.ev-limited,.ev-limited) {color:#ffc2ba;border-color:#c38c80;}
+:root[data-theme='dark'] .region-card .chip-btn[aria-pressed='true'] {background:#98e3b5;color:#09271a;border-color:#98e3b5;}
+:root[data-theme='dark'] .page-contact-form .field-error {color:#ffb8ae;}
+:root[data-theme='dark'] :where(a,button,input,select,textarea,summary,[tabindex]):focus-visible {outline-color:#f1d987;}
+ .hdr .theme-switch {flex-shrink:0;margin-inline:8px;}
+@media (max-width:1450px) {.theme-switch span {display:none;} .hdr .theme-switch{width:44px;padding:0;}}
+@media (max-width:760px) {.hdr .theme-switch{margin-inline-start:auto;margin-inline-end:6px;}.hdr-burger{min-width:44px;min-height:44px;}}
+
+
+:root[data-theme='dark'] .buyer-secondary,
+:root[data-theme='dark'] .buyer-secondary .sec:not(.sec-dark),
+:root[data-theme='dark'] .buyer-secondary.company-page-gallery .sec-dark {background:var(--paper);color:var(--ink);}
+:root[data-theme='dark'] .buyer-secondary.company-page-gallery .sec-dark :is(.display,.body-text) {color:var(--ink);}
+:root[data-theme='dark'] .buyer-secondary .eyebrow:not(.page-hero .eyebrow) {color:var(--theme-accent);}
+:root[data-theme='dark'] .buyer-secondary .display em {color:var(--theme-link);}
+:root[data-theme='dark'] .buyer-secondary .content-note {color:var(--ink-muted);}
+:root[data-theme='dark'] .bw-alert {background:#302c20;color:#f7e5bf;}
+.bv-project-index,.bv-project-region {background:#092b21;color:#f8f4e9;border-radius:3px;padding:4px 8px;max-width:calc(100% - 44px);overflow-wrap:anywhere;}
+.bw-login label {font-size:14px;}
+.bw-login input,.bw-form input:not([type=file]),.bw-form textarea,.bw-form select {font-size:16px;}
+.bw-login button,.bw-tabs button,.bw-photo-viewer>button {min-width:44px;min-height:44px;}
+.public-search {max-width:38rem;margin-block:18px;display:grid;gap:7px;color:var(--ink);}
+.public-search label {font-size:15px;font-weight:700;line-height:1.5;}
+.public-search-input {display:flex;align-items:center;gap:8px;padding-inline:12px 4px;border:1px solid var(--readable-border);border-radius:7px;background:var(--theme-input);color:var(--ink);}
+.public-search-input input {flex:1;min-width:0;min-height:44px;color:inherit;font-size:16px;outline:0;}
+.public-search-input:focus-within {outline:3px solid #b87911;outline-offset:2px;}
+.public-search-input button {min-width:44px;min-height:44px;display:grid;place-items:center;}
+.public-search-input input::-webkit-search-cancel-button {-webkit-appearance:none;}
+.public-search [role='status'] {font-size:14px;color:var(--ink-muted);}
+.public-search [role='status']:empty {display:none;}
+.geomap-finder .public-search {margin-block:0;--theme-input:#142b26;--ink:#f3f7f3;--ink-muted:#d0dfd5;--readable-border:#648572;}
+.fr-src {display:block;padding:5px 12px 10px;font-size:14px;line-height:1.5;color:#c2d3c6;}
+.fr-src a {color:#a6ebce;text-decoration:underline;}
+.gallery-search-results {list-style:none;display:grid;gap:8px;}
+.gallery-search-results button {display:flex;align-items:center;gap:12px;text-align:start;width:100%;min-height:48px;padding:12px;border:1px solid var(--readable-border);border-radius:7px;background:var(--theme-card);color:var(--ink);}
+.gallery-search-results button:hover {background:var(--theme-soft);}
+.gallery-search-results button span {flex:1;overflow-wrap:anywhere;}
+.gallery-search-results button svg {flex-shrink:0;}
+.map-loading {padding:24px;font-size:16px;min-height:12rem;}

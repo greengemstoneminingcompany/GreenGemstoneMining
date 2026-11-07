@@ -1,14 +1,18 @@
 import ResearchContent from '@/features/research/ResearchContent';
 import { ArrowUpRight, MapPin, Mail } from 'lucide-react';
-import { useMemo, useState, type CSSProperties } from 'react';
+import { lazy, Suspense, useMemo, useState, type CSSProperties } from 'react';
 import Gallery from '@/components/Gallery';
 import CompanyContent, { AboutSection } from '@/components/CompanyContent';
 import ContactForm from '@/components/ContactForm';
-import SomalilandMap from '@/components/SomalilandMap';
+import PublicSearch from '@/components/PublicSearch';
+import {matchesPublicSearch} from '@/lib/publicSearch';
+import {buyerText} from '@/i18n/buyer-interface';
 import { useCompanyRecords } from '@/lib/companyRecords';
 import { useI18n } from '@/i18n/core';
 import { companyPageCopy } from '@/i18n/company-pages';
 import './BuyerVisionPages.css';
+
+const SomalilandMap=lazy(()=>import('@/components/SomalilandMap'));
 
 export type CompanyPage = 'home' | 'about' | 'projects' | 'minerals' | 'gallery' | 'contact';
 
@@ -22,6 +26,7 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
     if (projectFilter === 'port') return project.port === true;
     return true;
   }), [projectFilter, records.projects]);
+  const [catalogueQuery,setCatalogueQuery]=useState('');
   const catalogue = useMemo(() => {
     const entries: { name: string; cat: string }[] = [];
     const seen = new Set<string>();
@@ -37,6 +42,7 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
     records.gemstoneInterests.forEach(name => add(name, 'Gemstone'));
     return entries;
   }, [records.minerals, records.mineralInterests, records.gemstoneInterests]);
+  const filteredCatalogue=catalogue.filter(item=>matchesPublicSearch(catalogueQuery,item.name,t.catalogue.minerals[item.name]??item.name));
   const cp = companyPageCopy(lang);
   if (page === 'home') return null;
   const localizedPage = { about: { title: `${t.company.h2a} ${t.company.h2b}`, description: t.company.lead }, projects: { title: `${t.projects.h2a} ${t.projects.h2b}`, description: t.projects.text }, minerals: { title: `${t.catalogue.h2a} ${t.catalogue.h2b}`, description: t.catalogue.text }, gallery: { title: `${t.gallery.h2a} ${t.gallery.h2b}`, description: t.gallery.text }, contact: { title: `${t.contact.h2a} ${t.contact.h2b}`, description: t.contact.text } }[page];
@@ -55,7 +61,7 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
       {page === 'about' && <div data-editor-id="about.content"><CompanyContent /></div>}
       {page === 'projects' && <section className="sec sec-dark" data-editor-id="projects.overview"><div className="sec-container">
         <div className="page-section-heading"><p className="body-text">{cp.map}</p></div>
-        <SomalilandMap projects={records.projects} />
+        <Suspense fallback={<p className="map-loading" role="status">{buyerText(lang,'Loading interactive map…')}</p>}><SomalilandMap projects={records.projects} /></Suspense>
         <section className="project-directory" aria-label={cp.fieldRecords} data-editor-id="projects.directory">
           <div className="project-directory-head"><p className="eyebrow">{cp.fieldRecords}</p><h2>{cp.projectAreas} <em>{cp.evidenceHeading}</em></h2><p>{cp.recordsDisclaimer}</p></div>
           <div className="project-filters" role="group" aria-label={cp.filterProjects}>{([['all', cp.filterAll], ['priority', cp.filterPriority], ['other', cp.filterOther], ['port', cp.filterPort]] as const).map(([filter, label]) => <button key={filter} type="button" className={projectFilter === filter ? 'active' : ''} aria-pressed={projectFilter === filter} onClick={() => setProjectFilter(filter)}>{label}</button>)}</div>
@@ -65,10 +71,11 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
       {page === 'projects' && <><ResearchContent kind="projects" /><ResearchContent kind="investor" /><AboutSection sectionKey="operations" /><AboutSection sectionKey="development" /><AboutSection sectionKey="services" /></>}
       {page === 'minerals' && <section className="sec" data-editor-id="minerals.directory"><div className="sec-container">
         <p className="body-text">{cp.directory}</p>
+        <PublicSearch label={buyerText(lang,'Search the mineral catalogue')} value={catalogueQuery} onChange={setCatalogueQuery} count={filteredCatalogue.length}/>
         <section id="industrial-metals" className="portfolio-group">
           <div className="page-section-heading"><h2 className="display">{cp.metalsHeading} <em>{cp.metalsEmphasis}</em></h2><p className="body-text">{cp.metalsIntro}</p></div>
           <div className="content-pill-list">
-            {catalogue.filter(item => item.cat !== 'Gemstone').map(item => (
+            {filteredCatalogue.filter(item => item.cat !== 'Gemstone').map(item => (
               <span className="content-pill" key={item.name}>{t.catalogue.minerals[item.name] ?? item.name}</span>
             ))}
           </div>
@@ -76,7 +83,7 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
         <section id="gemstones" className="portfolio-group">
           <div className="page-section-heading"><h2 className="display">{cp.gemsHeading} <em>{cp.gemsEmphasis}</em></h2><p className="body-text">{cp.gemsIntro}</p></div>
           <div className="content-pill-list">
-            {catalogue.filter(item => item.cat === 'Gemstone').map(item => (
+            {filteredCatalogue.filter(item => item.cat === 'Gemstone').map(item => (
               <span className="content-pill" key={item.name}>{t.catalogue.minerals[item.name] ?? item.name}</span>
             ))}
           </div>
