@@ -68,25 +68,25 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
           {page !== 'gallery' && page !== 'contact' && <p>{localizedPage.description}</p>}
         </div>
       </section>
-      {page === 'about' && <div data-editor-id="about.content"><CompanyContent /></div>}
+      {page === 'about' && <div data-editor-id="about.content"><nav className="gallery-nav-actions about-section-nav" aria-label="On this page">{[['company-profile','Company profile'],['leadership','Leadership'],['history-details','Company history'],['rural-development','Community']].map(([id,label])=><a key={id} href={'#/about?section='+id}>{buyerText(lang,label)}</a>)}</nav><CompanyContent /></div>}
       {page === 'projects' && <section className="sec sec-dark" data-editor-id="projects.overview"><div className="sec-container">
         <div className="page-section-heading"><p className="body-text">{cp.map}</p></div>
-        <Suspense fallback={<p className="map-loading" role="status">{buyerText(lang,'Loading interactive map…')}</p>}><SomalilandMap projects={records.projects} /></Suspense>
+        <div id="project-map" className="project-map-anchor"><Suspense fallback={<p className="map-loading" role="status">{buyerText(lang,'Loading interactive map…')}</p>}><SomalilandMap projects={records.projects} /></Suspense></div>
         <section className="project-directory" aria-label={cp.fieldRecords} data-editor-id="projects.directory">
           <div className="project-directory-head"><p className="eyebrow">{cp.fieldRecords}</p><h2>{cp.projectAreas} <em>{cp.evidenceHeading}</em></h2><p>{cp.recordsDisclaimer}</p></div>
           <div className="project-filters" role="group" aria-label={cp.filterProjects}>{([['all', cp.filterAll], ['priority', cp.filterPriority], ['other', cp.filterOther], ['port', cp.filterPort]] as const).map(([filter, label]) => <button key={filter} type="button" className={projectFilter === filter ? 'active' : ''} aria-pressed={projectFilter === filter} onClick={() => setProjectFilter(filter)}>{label}</button>)}</div>
-          <div className="project-card-grid">{visibleProjects.map((project, index) => <article className="project-card" key={project.id}><div className="project-card-art" style={{ '--card-index': index } as CSSProperties}><span>{String(index + 1).padStart(2, '0')}</span></div><div className="project-card-body"><p>{project.region}</p><h3>{project.name}</h3><div className="project-findings">{project.findings.slice(0, 4).map((finding) => <span key={`${finding.mineral}-${finding.evidence}`}>{finding.mineral} · {finding.evidence}</span>)}</div></div></article>)}</div>
+          <div className="project-card-grid">{visibleProjects.map((project, index) => <article className="project-card" id={'project-'+project.id} key={project.id}><div className="project-card-art" style={{ '--card-index': index } as CSSProperties}><span>{String(index + 1).padStart(2, '0')}</span></div><div className="project-card-body"><p>{project.region}</p><h3>{project.name}</h3><div className="project-findings">{project.findings.slice(0, 4).map((finding) => <span key={`${finding.mineral}-${finding.evidence}`}>{finding.mineral} · {finding.evidence}</span>)}</div><div className="gallery-nav-actions">{Number.isFinite(project.lon)&&Number.isFinite(project.lat)&&<a href={'#/projects?section=project-map&mapProject='+encodeURIComponent(project.id)}>{buyerText(lang,"View map")}</a>}<a href={'#/contact?project='+encodeURIComponent(project.name)}>{buyerText(lang,"Enquire about this project")}</a>{/telluride/i.test(project.name)&&<a href="#/gallery?album=51333d5a-8c0f-547b-aef4-31c521207e70">{buyerText(lang,"View field media")}</a>}</div></div></article>)}</div>
         </section>
       </div></section>}
       {page === 'projects' && <><ResearchContent kind="projects" /><details className="compact-details"><summary>{cp.projectAreas}</summary><AboutSection sectionKey="operations" /><AboutSection sectionKey="development" /><AboutSection sectionKey="services" /></details></>}
       {page === 'minerals' && <section className="sec" data-editor-id="minerals.directory"><div className="sec-container">
         <p className="body-text">{cp.directory}</p>
-        <PublicSearch label={buyerText(lang,'Search the mineral catalogue')} value={catalogueQuery} onChange={setCatalogueQuery} count={filteredCatalogue.length}/>
+        <PublicSearch label={buyerText(lang,'Search the mineral catalogue')} value={catalogueQuery} onChange={setCatalogueQuery} count={filteredCatalogue.length}/><a href="#/minerals?section=buyer-specifications">{buyerText(lang,"Buyer specifications")}</a>
         <section id="industrial-metals" className="portfolio-group">
           <div className="page-section-heading"><h2 className="display">{cp.metalsHeading} <em>{cp.metalsEmphasis}</em></h2></div>
           <div className="content-pill-list">
             {filteredCatalogue.filter(item => item.cat !== 'Gemstone').map(item => (
-              <span className="content-pill" key={item.name}>{t.catalogue.minerals[item.name] ?? item.name}</span>
+              <a className="content-pill" key={item.name} href={'#/projects?section=project-map&mineral='+encodeURIComponent(item.name)}>{t.catalogue.minerals[item.name] ?? item.name}</a>
             ))}
           </div>
         </section>
@@ -94,7 +94,7 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
           <div className="page-section-heading"><h2 className="display">{cp.gemsHeading} <em>{cp.gemsEmphasis}</em></h2></div>
           <div className="content-pill-list">
             {filteredCatalogue.filter(item => item.cat === 'Gemstone').map(item => (
-              <span className="content-pill" key={item.name}>{t.catalogue.minerals[item.name] ?? item.name}</span>
+              <a className="content-pill" key={item.name} href={'#/projects?section=project-map&mineral='+encodeURIComponent(item.name)}>{t.catalogue.minerals[item.name] ?? item.name}</a>
             ))}
           </div>
         </section>
@@ -103,7 +103,7 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
       {page === 'minerals' && <ResearchContent kind="minerals" />}
       {page === 'about' && <ResearchContent kind="company" />}
       {page === 'gallery' && <section className="sec sec-dark" data-editor-id="gallery.collection"><Gallery uploads={uploads} items={records.gallery}/></section>}
-      {page === 'contact' && <section className="sec sec-dark" data-editor-id="contact.details"><div className="sec-container page-contact-grid"><div><p className="eyebrow">{t.contact.eyebrow}</p><h2 className="display light">{cp.contactHeading}</h2><div className="page-contact-detail"><Mail size={18}/><a href={`mailto:${records.profile.email}`}>{records.profile.email}</a></div><div className="page-contact-detail"><MapPin size={18}/><span>{records.profile.officeAddress}</span></div><p className="page-contact-note">{cp.contactNote}</p></div><div className="page-contact-form"><ContactForm/></div></div></section>}
+      {page === 'contact' && <section className="sec sec-dark" data-editor-id="contact.details"><div className="sec-container page-contact-grid"><div><p className="eyebrow">{t.contact.eyebrow}</p><h2 className="display light">{new URLSearchParams(window.location.hash.split('?')[1]).get('project') || cp.contactHeading}</h2><div className="page-contact-detail"><Mail size={18}/><a href={`mailto:${records.profile.email}`}>{records.profile.email}</a></div><div className="page-contact-detail"><MapPin size={18}/><span>{records.profile.officeAddress}</span></div><p className="page-contact-note">{cp.contactNote}</p></div><div className="page-contact-form"><ContactForm/></div></div></section>}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useSurveyExplorer, type MapViewport } from '@/features/research/survey';
 import { SurveyLayer, SurveyControls } from '@/features/research/SurveyExplorer';
 import { researchCopy } from '@/features/research/copy';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { MAP_CORRIDOR, MAP_GEOLOGY, MAP_OUTLINE, MAP_PLACES, MAP_REGIONS, MAP_VIEWBOX } from '@/data/mapData';
 import { EVIDENCE, OCCURRENCES, SOURCES } from '@/data/geology';
@@ -103,6 +103,24 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
   const results = useMemo(() => (mineral ? recordsFor(mineral) : []), [mineral]);
   const hitRegions = useMemo(() => new Set(results.map((r) => r.region)), [results]);
   const activeLoc = pins.find((l) => l.id === loc);
+  const [linkedProject, setLinkedProject] = useState<string | null>(null);
+  useEffect(() => {
+    const syncMapLink = () => {
+      const params = new URLSearchParams(window.location.hash.split('?')[1]);
+      if (params.get('section') !== 'project-map') return;
+      const requested = params.get('mineral');
+      const mineralKey = Object.keys(MINERAL_COUNT).find(name => name.toLowerCase() === requested?.toLowerCase());
+      const projectId = params.get('mapProject');
+      setMineral(mineralKey ?? null);
+      setLoc(null);
+      setLinkedProject(projectId);
+      if (projectId) setShowProjects(true);
+      document.getElementById('project-map')?.scrollIntoView({ block: 'start' });
+    };
+    syncMapLink();
+    window.addEventListener('hashchange', syncMapLink);
+    return () => window.removeEventListener('hashchange', syncMapLink);
+  }, []);
   const pickMineral = (m: string | null) => {
     setMineral(m);
     setLoc(null);
@@ -326,8 +344,8 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
                   const [x, y] = project(pr.lon!, pr.lat!);
                   return (
                     <g key={pr.id} transform={`translate(${x} ${y})`}>
-                      <path d="M0 -9L8 0L0 9L-8 0Z" className={`proj-mark ${pr.port ? 'is-port' : ''}`} />
-                      {(pr.priority === 1 || pr.port || pr.id === 'darimile') && <text x="11" y="4" className="proj-label">{pr.name}</text>}
+                      <path d="M0 -9L8 0L0 9L-8 0Z" className={`proj-mark ${pr.port ? 'is-port' : ''} ${pr.id === linkedProject ? 'is-linked' : ''}`} />
+                      {(pr.priority === 1 || pr.port || pr.id === 'darimile' || pr.id === linkedProject) && <text x="11" y="4" className="proj-label">{pr.name}</text>}
                       <title>{pr.name}{pr.priority ? ` · ${F.priority(pr.priority)}` : ''}{pr.port ? ` · ${F.port}` : ''}</title>
                     </g>
                   );

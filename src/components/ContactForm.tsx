@@ -13,7 +13,7 @@ export default function ContactForm() {
   const { t } = useI18n();
   const f = t.contact.form;
   const [form, setForm] = useState({ name: '', email: '', company: '', interest: INTERESTS[0] as Interest, message: '', website: '' });
-  const [details, setDetails] = useState(takeEnquiryDetails);
+  const [details, setDetails] = useState(() => { const details = takeEnquiryDetails(); const project = new URLSearchParams(window.location.hash.split('?')[1]).get('project'); return project ? { ...details, project: project.slice(0, 160) } : details; });
   useEffect(() => {
     const apply = () => setDetails(value => ({ ...value, ...takeEnquiryDetails() }));
     window.addEventListener('ggmc-enquiry-context', apply);

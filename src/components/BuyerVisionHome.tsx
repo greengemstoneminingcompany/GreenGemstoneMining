@@ -35,6 +35,7 @@ export default function BuyerVisionHome() {
             <h1>{english ? <>{buyerText(lang,"From mineral")}<br />{buyerText(lang,"potential to")} <em>{buyerText(lang,"informed opportunity.")}</em></> : <>{t.hero.h1a}<br/><em>{t.hero.h1b}</em></>}</h1>
             <p className="bv-hero-copy">{english ? 'Explore our company, mineral interests and project areas through a clearer, evidence-conscious view of our work and development ambitions.' : t.hero.sub}</p>
             <div className="bv-actions">
+              <a className="bv-button bv-button-outline" href="#/gallery">{buyerText(lang,"View field media")} <ArrowUpRight size={17} /></a>
               <a className="bv-button bv-button-primary" href="#/projects">{buyerText(lang,"Explore our projects")} <ArrowUpRight size={17} /></a>
               <a className="bv-button bv-button-outline" href="#/contact">{buyerText(lang,"Start a conversation")} <ArrowRight size={17} /></a>
             </div>
@@ -75,7 +76,7 @@ export default function BuyerVisionHome() {
           <div className="bv-project-grid">
             {featured.map((project, index) => <article className="bv-project-card" key={project.id}>
               <div className="bv-project-visual"><span className="bv-project-index">0{index + 1} {buyerText(lang,"/ PROJECT AREA")}</span><Mountain size={92} strokeWidth={0.6}/><span className="bv-project-region">{project.region}</span></div>
-              <div className="bv-project-details"><h3>{project.name}</h3><div className="bv-finding-list">{project.findings.slice(0, 3).map(finding => <span key={finding.mineral + finding.evidence}>{t.catalogue.minerals[finding.mineral] ?? finding.mineral} <small>· {buyerText(lang,finding.evidence)}</small></span>)}</div></div>
+              <div className="bv-project-details"><h3><a href={'#/projects?section=project-'+encodeURIComponent(project.id)}>{project.name}</a></h3><div className="bv-finding-list">{project.findings.slice(0, 3).map(finding => <span key={finding.mineral + finding.evidence}>{t.catalogue.minerals[finding.mineral] ?? finding.mineral} <small>· {buyerText(lang,finding.evidence)}</small></span>)}</div></div>
             </article>)}
           </div>
           <div className="bv-project-footer"><p>{buyerText(lang,"Evidence classifications describe the status of reported field information, not legal title, economic viability or production.")}</p><a className="bv-text-link" href="#/projects">{buyerText(lang,"View all project areas")} <ArrowUpRight size={17}/></a></div>

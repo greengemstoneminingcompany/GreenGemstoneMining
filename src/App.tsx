@@ -73,37 +73,37 @@ export default function App() {
       <header className={`hdr ${scrolled || menuOpen ? 'scrolled' : ''}`} data-editor-id="site.header">
         <a className="hdr-brand" data-editor-id="site.brand" href="#/home"><img className="hdr-brand-mark" src="/brand-emblem.webp" width={43} height={39} alt="" aria-hidden="true" /><span className="brand-wordmark brand-wordmark--on-dark">{records.profile.legalName}</span></a>
         <nav id="main-nav" data-editor-id="site.navigation" className={`hdr-nav ${menuOpen ? 'open' : ''}`} aria-label={t.ui.mainNav}>
-          <a href="#/home" onClick={() => setMenuOpen(false)}>{t.nav.overview}</a>
+          <a href="#/home" aria-current={currentPage === 'home' ? 'page' : undefined} onClick={() => setMenuOpen(false)}>{t.nav.overview}</a>
           <div className="nav-menu-item">
-            <a href="#/about" onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
+            <a href="#/about" aria-current={currentPage === 'about' ? 'page' : undefined} onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
             <details className="nav-dropdown"><summary aria-label={`${t.nav.company} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#/about?section=company-profile" onClick={() => setMenuOpen(false)}>{buyerText(lang,"Company profile")}</a>
               <a href="#/about?section=vision-mission" onClick={() => setMenuOpen(false)}>{buyerText(lang,"Vision &amp; mission")}</a>
               <a href="#/about?section=leadership" onClick={() => setMenuOpen(false)}>{buyerText(lang,"Leadership")}</a>
               <a href="#/about?section=history-details" onClick={() => setMenuOpen(false)}>{buyerText(lang,"Company history")}</a>
+              <a href="#/about?section=rural-development" onClick={() => setMenuOpen(false)}>{buyerText(lang,"Rural development &amp; community support")}</a>
               <a href="#/buyers" onClick={() => setMenuOpen(false)}>{buyerText(lang,"Buyer information")}</a>
             </div></details>
           </div>
           <div className="nav-menu-item">
-            <a href="#/minerals" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
+            <a href="#/minerals" aria-current={currentPage === 'minerals' ? 'page' : undefined} onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
             <details className="nav-dropdown"><summary aria-label={`${t.nav.portfolio} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#/minerals?section=gemstones" onClick={() => setMenuOpen(false)}>{buyerText(lang,"Gemstones")}</a>
               <a href="#/minerals?section=buyer-specifications">{buyerText(lang,"Buyer specifications")}</a>
               <a href="#/minerals?section=industrial-metals" onClick={() => setMenuOpen(false)}>{buyerText(lang,"Industrial &amp; precious metals")}</a>
-              <a href="#/projects?section=services" onClick={() => setMenuOpen(false)}>{buyerText(lang,"Services")}</a>
             </div></details>
           </div>
           <div className="nav-menu-item">
-            <a href="#/projects" onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
+            <a href="#/projects" aria-current={currentPage === 'projects' ? 'page' : undefined} onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
             <details className="nav-dropdown"><summary aria-label={`${t.nav.projects} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
               <a href="#/projects?section=development-projects" onClick={() => setMenuOpen(false)}>{buyerText(lang,"Mining development")}</a>
-              <a href="#/about?section=rural-development" onClick={() => setMenuOpen(false)}>{buyerText(lang,"Rural development &amp; community support")}</a>
               <a href="#/projects?section=project-dossiers">{buyerText(lang,"Field notes &amp; laboratory evidence")}</a>
               <a href="#/projects?section=operations" onClick={() => setMenuOpen(false)}>{buyerText(lang,"Operations &amp; equipment")}</a>
+              <a href="#/projects?section=services" onClick={() => setMenuOpen(false)}>{buyerText(lang,"Services")}</a>
             </div></details>
           </div>
-          <a href="#/gallery" onClick={() => setMenuOpen(false)}>{t.nav.gallery}</a>
-          <a href="#/contact" onClick={() => setMenuOpen(false)}>{t.nav.contact}</a>
+          <a href="#/gallery" aria-current={currentPage === 'gallery' ? 'page' : undefined} onClick={() => setMenuOpen(false)}>{t.nav.gallery}</a>
+          <a href="#/contact" aria-current={currentPage === 'contact' ? 'page' : undefined} onClick={() => setMenuOpen(false)}>{t.nav.contact}</a>
           {document.querySelector('meta[name="ggmc-preview-editor"]')?.getAttribute('content') === 'enabled' && (
             <details className="nav-dropdown owner-menu"><summary>{buyerText(lang,"Employee portal")}</summary><div className="nav-dropdown-panel">
               <a href="#/studio" onClick={() => setMenuOpen(false)}>{buyerText(lang,"Owner Studio")}</a>
@@ -160,7 +160,7 @@ export default function App() {
         <div className="footer-base">
           <span>© {new Date().getFullYear()} {records.profile.legalName}</span>
           <span>{records.profile.publicLocation}</span>
-          {supabaseConfigured && <a className="owner-link" href="#/studio">{t.footer.ownerLogin}</a>}
+          {supabaseConfigured && <a className="owner-link" href={currentPage==='gallery' ? '#/studio?album='+encodeURIComponent(new URLSearchParams(window.location.hash.split('?')[1]).get('album')??'') : '#/studio'}>{t.footer.ownerLogin}</a>}
         </div>
         <section id="privacy" className="privacy">
           <h3>{t.footer.privacyTitle}</h3>

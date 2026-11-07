@@ -19,3 +19,13 @@
 .gallery-featured { margin: 12px 0 18px; }
 .gallery-featured > div { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
 .gallery-featured a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--readable-border); border-radius: 6px; }
+
+#main-nav a[aria-current='page'] { text-decoration: underline; text-underline-offset: .3em; }
+.gallery-nav-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 12px; }
+.gallery-nav-actions :is(a,button) { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 12px; border: 1px solid currentColor; border-radius: 6px; }
+.gallery-nav-actions button[aria-pressed='true'] { font-weight: 700; text-decoration: underline; }
+.about-section-nav { max-width: 1200px; margin-inline: auto; padding-inline: 22px; }
+.project-card[id] { scroll-margin-top: 100px; }
+
+.project-map-anchor { scroll-margin-top: 100px; }
+.proj-mark.is-linked { stroke: #fff; stroke-width: 3px; }
