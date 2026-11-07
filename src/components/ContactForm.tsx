@@ -3,7 +3,7 @@ import { composeEnquiry, takeEnquiryDetails } from '@/features/research/enquiry'
 import '@/features/research/research.css';
 import { FormEvent, useEffect, useState } from 'react';
 import { ArrowRight, Check } from 'lucide-react';
-import { INTERESTS, submitLead, validateLead, type Interest, type LeadErrors } from '@/lib/leads';
+import { INTERESTS, submitLead, validateLead, type LeadErrors } from '@/lib/leads';
 import { SITE } from '@/data/site';
 import { useI18n } from '@/i18n/core';
 
