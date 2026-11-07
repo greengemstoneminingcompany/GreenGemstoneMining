@@ -5,6 +5,7 @@ import './index.css';
 import './approved-design.css';
 import './company-pages.css';
 import './showcase-design.css';
+import './readability.css';
 import { LanguageProvider } from './i18n/LanguageProvider';
 import { applyPublishedVisualEditorPayload, installVisualEditorBridge } from './lib/visualEditorBridge';
 import { CompanyRecordsProvider, defaultCompanyRecords } from './lib/companyRecords';
