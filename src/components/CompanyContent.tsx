@@ -223,6 +223,9 @@ export default function CompanyContent() {
             <Card label="Operations" title="Mr. Saeed Guled">
               <p>Operations Manager</p>
             </Card>
+            <Card label="Executive leadership" title="Mr. Abdillahi Omar Abdillahi">
+              <p>Executive Leadership</p>
+            </Card>
             <Card label="Head office" title="Hargeisa, Somaliland">
               <p>Omar Hashi Building, 4th Floor, Hargeisa, Somaliland.</p>
             </Card>
