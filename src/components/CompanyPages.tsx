@@ -1,6 +1,6 @@
 import ResearchContent from '@/features/research/ResearchContent';
-import { ArrowUpRight, MapPin, Mail } from 'lucide-react';
-import { lazy, Suspense, useMemo, useState, type CSSProperties } from 'react';
+import { MapPin, Mail } from 'lucide-react';
+import { lazy, Suspense, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import Gallery from '@/components/Gallery';
 import CompanyContent, { AboutSection } from '@/components/CompanyContent';
 import ContactForm from '@/components/ContactForm';
@@ -44,6 +44,17 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
   }, [records.minerals, records.mineralInterests, records.gemstoneInterests]);
   const filteredCatalogue=catalogue.filter(item=>matchesPublicSearch(catalogueQuery,item.name,t.catalogue.minerals[item.name]??item.name));
   const cp = companyPageCopy(lang);
+  useEffect(() => {
+    function revealSection() {
+      const section = new URLSearchParams(window.location.hash.split('?')[1]).get('section');
+      if (!section) return;
+      const details = document.getElementById(section)?.closest('details');
+      if (details) details.open = true;
+    }
+    revealSection();
+    window.addEventListener('hashchange', revealSection);
+    return () => window.removeEventListener('hashchange', revealSection);
+  }, [page]);
   if (page === 'home') return null;
   const localizedPage = { about: { title: `${t.company.h2a} ${t.company.h2b}`, description: t.company.lead }, projects: { title: `${t.projects.h2a} ${t.projects.h2b}`, description: t.projects.text }, minerals: { title: `${t.catalogue.h2a} ${t.catalogue.h2b}`, description: t.catalogue.text }, gallery: { title: `${t.gallery.h2a} ${t.gallery.h2b}`, description: t.gallery.text }, contact: { title: `${t.contact.h2a} ${t.contact.h2b}`, description: t.contact.text } }[page];
   const localizedEyebrow = { about: t.nav.company, projects: t.nav.projects, minerals: t.nav.portfolio, gallery: t.nav.gallery, contact: t.nav.contact }[page];
@@ -54,8 +65,7 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
         <div className="page-hero-content">
           <p className="eyebrow">{localizedEyebrow}</p>
           <h1>{localizedPage.title}</h1>
-          <p>{localizedPage.description}</p>
-          <a className="btn btn-gold" href="#/contact">{t.nav.cta} <ArrowUpRight size={16} /></a>
+          {page !== 'gallery' && page !== 'contact' && <p>{localizedPage.description}</p>}
         </div>
       </section>
       {page === 'about' && <div data-editor-id="about.content"><CompanyContent /></div>}
@@ -68,12 +78,12 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
           <div className="project-card-grid">{visibleProjects.map((project, index) => <article className="project-card" key={project.id}><div className="project-card-art" style={{ '--card-index': index } as CSSProperties}><span>{String(index + 1).padStart(2, '0')}</span></div><div className="project-card-body"><p>{project.region}</p><h3>{project.name}</h3><div className="project-findings">{project.findings.slice(0, 4).map((finding) => <span key={`${finding.mineral}-${finding.evidence}`}>{finding.mineral} · {finding.evidence}</span>)}</div></div></article>)}</div>
         </section>
       </div></section>}
-      {page === 'projects' && <><ResearchContent kind="projects" /><ResearchContent kind="investor" /><AboutSection sectionKey="operations" /><AboutSection sectionKey="development" /><AboutSection sectionKey="services" /></>}
+      {page === 'projects' && <><ResearchContent kind="projects" /><details className="compact-details"><summary>{cp.projectAreas}</summary><AboutSection sectionKey="operations" /><AboutSection sectionKey="development" /><AboutSection sectionKey="services" /></details></>}
       {page === 'minerals' && <section className="sec" data-editor-id="minerals.directory"><div className="sec-container">
         <p className="body-text">{cp.directory}</p>
         <PublicSearch label={buyerText(lang,'Search the mineral catalogue')} value={catalogueQuery} onChange={setCatalogueQuery} count={filteredCatalogue.length}/>
         <section id="industrial-metals" className="portfolio-group">
-          <div className="page-section-heading"><h2 className="display">{cp.metalsHeading} <em>{cp.metalsEmphasis}</em></h2><p className="body-text">{cp.metalsIntro}</p></div>
+          <div className="page-section-heading"><h2 className="display">{cp.metalsHeading} <em>{cp.metalsEmphasis}</em></h2></div>
           <div className="content-pill-list">
             {filteredCatalogue.filter(item => item.cat !== 'Gemstone').map(item => (
               <span className="content-pill" key={item.name}>{t.catalogue.minerals[item.name] ?? item.name}</span>
@@ -81,7 +91,7 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
           </div>
         </section>
         <section id="gemstones" className="portfolio-group">
-          <div className="page-section-heading"><h2 className="display">{cp.gemsHeading} <em>{cp.gemsEmphasis}</em></h2><p className="body-text">{cp.gemsIntro}</p></div>
+          <div className="page-section-heading"><h2 className="display">{cp.gemsHeading} <em>{cp.gemsEmphasis}</em></h2></div>
           <div className="content-pill-list">
             {filteredCatalogue.filter(item => item.cat === 'Gemstone').map(item => (
               <span className="content-pill" key={item.name}>{t.catalogue.minerals[item.name] ?? item.name}</span>
@@ -92,9 +102,8 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
       </div></section>}
       {page === 'minerals' && <ResearchContent kind="minerals" />}
       {page === 'about' && <ResearchContent kind="company" />}
-      {page === 'gallery' && <section className="sec sec-dark" data-editor-id="gallery.collection"><div className="sec-container"><div className="page-section-heading"><p className="eyebrow">{t.gallery.eyebrow}</p><h2 className="display light">{t.gallery.h2a} {t.gallery.h2b}</h2><p className="body-text">{t.gallery.text}</p></div></div><Gallery uploads={uploads} items={records.gallery}/></section>}
+      {page === 'gallery' && <section className="sec sec-dark" data-editor-id="gallery.collection"><Gallery uploads={uploads} items={records.gallery}/></section>}
       {page === 'contact' && <section className="sec sec-dark" data-editor-id="contact.details"><div className="sec-container page-contact-grid"><div><p className="eyebrow">{t.contact.eyebrow}</p><h2 className="display light">{cp.contactHeading}</h2><div className="page-contact-detail"><Mail size={18}/><a href={`mailto:${records.profile.email}`}>{records.profile.email}</a></div><div className="page-contact-detail"><MapPin size={18}/><span>{records.profile.officeAddress}</span></div><p className="page-contact-note">{cp.contactNote}</p></div><div className="page-contact-form"><ContactForm/></div></div></section>}
-      {page !== 'contact' && <section className="page-cta" data-editor-id={`${page}.cta`}><div><p className="eyebrow">{records.profile.legalName}</p><h2>{cp.cta}</h2></div><a className="btn btn-gold" href="#/contact">{t.nav.contact} <ArrowUpRight size={16}/></a></section>}
     </div>
   );
 }

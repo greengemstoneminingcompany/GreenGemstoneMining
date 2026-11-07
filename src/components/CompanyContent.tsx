@@ -34,6 +34,7 @@ export default function CompanyContent() {
         </div>
       </section>
 
+      <AboutSection sectionKey="leadership" />
       <section id="vision-mission" className="sec sec-dark">
         <div className="sec-container">
           <div className="content-intro reveal in">
@@ -60,7 +61,7 @@ export default function CompanyContent() {
         </div>
       </section>
 
-      {(['community', 'history', 'leadership'] as const).map((key) => <AboutSection key={key} sectionKey={key} />)}
+      {(['community', 'history'] as const).map((key) => <AboutSection key={key} sectionKey={key} />)}
     </div>
   );
 }

@@ -6,3 +6,16 @@
 .bw-photo-grid .bw-video { position: relative; overflow: hidden; }
 .bw-photo-grid .bw-video > img { height: 100%; }
 .bw-video-play { position: absolute; inset: 50% auto auto 50%; transform: translate(-50%, -50%); display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; color: #fff; background: rgba(0, 0, 0, .74); }
+
+
+.bw-buyer-hero { min-height: 0; padding-block: 106px 38px; }
+.bw-buyer-hero h1 { font-size: clamp(38px, 5vw, 68px); margin-block: 10px 14px; }
+.bw-buyer-body { padding-block: 32px; }
+.bw-studio { padding-top: 98px; }
+.bw-studio header { padding: 12px 22px; margin-bottom: 12px; }
+.bw-studio header h1 { font-size: clamp(30px, 4vw, 48px); margin: 8px 0; }
+.compact-details { max-width: 1200px; margin: 16px auto; padding-inline: 20px; }
+.compact-details summary { cursor: pointer; padding-block: 10px; font-weight: 700; }
+.gallery-featured { margin: 12px 0 18px; }
+.gallery-featured > div { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.gallery-featured a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--readable-border); border-radius: 6px; }

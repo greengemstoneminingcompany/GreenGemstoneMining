@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, ArrowUpRight, CheckCircle2, ChevronDown, Compass, FileCheck2, FileSearch, Gem, Layers3, MapPinned, Mountain, ShieldCheck } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, CheckCircle2, Compass, FileCheck2, FileSearch, Gem, Layers3, MapPinned, Mountain, ShieldCheck } from 'lucide-react';
 import { useCompanyRecords } from '@/lib/companyRecords';
 import { useI18n } from '@/i18n/core';
 import { buyerText } from '@/i18n/buyer-interface';
@@ -40,15 +40,9 @@ export default function BuyerVisionHome() {
             </div>
             <div className="bv-hero-bottom"><span><Compass size={16} /> {buyerText(lang,"Hargeisa · Somaliland")}</span><span><ShieldCheck size={16} /> {buyerText(lang,"Evidence-first presentation")}</span></div>
           </div>
-          <div className="bv-hero-aside" aria-label={buyerText(lang,"Company overview")}>
-            <div className="bv-aside-top"><span>{buyerText(lang,"COMPANY / OVERVIEW")}</span><span>01 — 04</span></div>
-            <div className="bv-aside-center"><Gem size={46} strokeWidth={1.1} /><span>{buyerText(lang,"DISCOVER THE PORTFOLIO")}</span></div>
-            <p>{buyerText(lang,"Projects, commodities and company-reported operations presented with transparent evidence classifications.")}</p>
-            <a href="#/about">{buyerText(lang,"Discover the company")} <ArrowUpRight size={16} /></a>
-          </div>
         </div>
-        <div className="bv-scroll-cue">{buyerText(lang,"SCROLL TO EXPLORE")} <ChevronDown size={15}/></div>
       </section>
+
 
       <section className="bv-intro" data-editor-id="buyer.intro">
         <div className="bv-wrap bv-intro-layout">
@@ -64,7 +58,7 @@ export default function BuyerVisionHome() {
 
       <section className="bv-focus" data-editor-id="buyer.focus">
         <div className="bv-wrap">
-          <div className="bv-section-top"><div><div className="bv-label bv-label-light">{buyerText(lang,"02 / OUR FOCUS")}</div><h2>{buyerText(lang,"Explore the")} <em>{buyerText(lang,"possibilities.")}</em></h2></div><p>{buyerText(lang,"Three clear ways to understand the company, its interests and the evidence available for review.")}</p></div>
+          <div className="bv-section-top"><div><div className="bv-label bv-label-light">{buyerText(lang,"02 / OUR FOCUS")}</div><h2>{buyerText(lang,"Explore the")} <em>{buyerText(lang,"possibilities.")}</em></h2></div></div>
           <div className="bv-focus-grid">
             {features.map((feature, index) => <article className="bv-focus-card" key={buyerText(lang,feature.title)}>
               <div className="bv-focus-card-top"><span>0{index + 1}</span><feature.icon size={28} strokeWidth={1.2}/></div>
