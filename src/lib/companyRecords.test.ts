@@ -25,7 +25,7 @@ it('migrates older snapshots without losing detailed company facts', () => {
   expect(records?.about).toEqual(defaultCompanyRecords.about);
   expect(records?.about.operations.cards[0].paragraphs[0]).toContain('not 600 tonnes of gold');
   expect(records?.about.operations.cards[2].items).toContain('15×0×250 jaw crusher (notation preserved from the supplied specification)');
-  expect(records?.about.leadership.cards.map(card => card.title)).toEqual(['Mr. Ahmed Saleiman', 'Mr. Saeed Guled']);
+  expect(records?.about.leadership.cards.map(card => card.title)).toEqual(['Mr. Ahmed Saleiman', 'Mr. Saeed Guled', 'Mr. Abdillahi Omar Abdillahi']);
 });
 
 it('bounds detailed records and renders content as plain strings', () => {
