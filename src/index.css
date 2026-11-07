@@ -875,3 +875,8 @@ html[lang='zh-Hans'] .display, html[lang='ar'] .display { font-size: clamp(26px,
   .hdr-cta { align-self: stretch; justify-content: center; margin-top: 14px; border-bottom: 1px solid var(--gold-dp) !important; }
 }
 @media (max-width: 640px) { .hdr-brand span { max-width: min(58vw, 300px); } }
+
+/* Keep mineral search directly below the canvas, independent of region-card height. */
+.geomap-map-column { min-width: 0; display: grid; align-content: start; gap: 20px; }
+.geomap-map-column > .geomap-stage { position: relative; top: auto; }
+.geomap-map-column > .geomap-finder, .geomap-map-column > .survey-controls { margin-top: 0; margin-bottom: 0; }
