@@ -49,13 +49,14 @@ test('shared About records update detailed sections and office details together'
     records.profile.officeAddress = 'Verified office acceptance';
     window.dispatchEvent(new CustomEvent('ggmc-company-records', { detail: records }));
   });
-  await expect(page.locator('#operations')).toContainText('Verified equipment acceptance');
-  await expect(page.locator('#development-projects')).toContainText('Verified development acceptance');
   await expect(page.locator('#rural-development')).toContainText('Verified community acceptance');
-  await expect(page.locator('#services')).toContainText('Verified service acceptance');
   await expect(page.locator('#history-details')).toContainText('Verified history acceptance');
   await expect(page.locator('#leadership')).toContainText('Verified leadership acceptance');
   await expect(page.locator('#leadership')).toContainText('Verified office acceptance');
+  await page.evaluate(() => { window.location.hash = '/projects'; });
+  await expect(page.locator('#operations')).toContainText('Verified equipment acceptance');
+  await expect(page.locator('#development-projects')).toContainText('Verified development acceptance');
+  await expect(page.locator('#services')).toContainText('Verified service acceptance');
   await page.getByRole('link', { name: 'Contact', exact: true }).first().click();
   await expect(page.locator('.page-contact-detail').last()).toContainText('Verified office acceptance');
 });
@@ -99,8 +100,9 @@ test.describe('localized company content', () => {
       await expect(page.locator('#vision-mission')).toContainText(vision);
       await expect(page.locator('#vision-mission')).toContainText(mission);
       await expect(page.locator('#vision-mission li')).toHaveCount(6);
+      await page.evaluate(() => { window.location.hash = '/minerals?section=gemstones'; });
       await expect(page.locator('#gemstones')).toContainText(gem);
-      await expect(page.locator('#gemstones .gemstone-card')).toHaveCount(11);
+      await expect(page.locator('#gemstones .content-pill')).toHaveCount(11);
     });
   }
 
@@ -134,15 +136,16 @@ test.describe('localized detailed About content', () => {
     ['zh', '实际资产。', '2公里'],
   ] as const) {
     test(`${lang} renders localized operational and community records`, async ({ page }) => {
-      await page.goto(`/${lang}/#/about?section=operations`);
+      await page.goto(`/${lang}/#/projects?section=operations`);
       await expect(page.locator('#operations')).toContainText(title);
-      await expect(page.locator('#rural-development')).toContainText(road);
       await expect(page.locator('#operations .content-card')).toHaveCount(5);
       await expect(page.locator('#services .content-card')).toHaveCount(6);
+      await page.evaluate(() => { window.location.hash = '/about?section=rural-development'; });
+      await expect(page.locator('#rural-development')).toContainText(road);
     });
   }
   test('Somali retains CMS-authored edits without reverting other translations', async ({ page }) => {
-    await page.goto('/so/#/about?section=operations');
+    await page.goto('/so/#/projects?section=operations');
     await page.evaluate(() => {
       const records = structuredClone(window.__GGMC_COMPANY_DEFAULT_RECORDS__!);
       records.about.operations.cards[0].title = 'Edited mineral title';
@@ -151,12 +154,13 @@ test.describe('localized detailed About content', () => {
     });
     await expect(page.locator('#operations')).toContainText('Edited mineral title');
     await expect(page.locator('#operations')).toContainText('Hanti dhab ah.');
+    await page.evaluate(() => { window.location.hash = '/about?section=rural-development'; });
     await expect(page.locator('#rural-development')).toContainText('Edited road detail');
   });
 });
 test('Arabic detailed About content is keyboard navigable at mobile width', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.goto('/ar/#/about?section=services');
+  await page.goto('/ar/#/projects?section=services');
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   const link = page.locator('#services a.link-go');
   await expect(link).toHaveCount(1);
