@@ -21,6 +21,11 @@ const W = MAP_VIEWBOX.w;
 const H = MAP_VIEWBOX.h;
 const CX = W / 2;
 const CY = H / 2;
+const boundViewport = (view: MapViewport): MapViewport => ({
+  ...view,
+  x: Math.max(0, Math.min(W - view.w, view.x)),
+  y: Math.max(0, Math.min(H - view.h, view.y)),
+});
 const goContact = () => { window.location.hash = '/contact'; };
 
 /** Standard geological-map fill patterns, also used by the legend swatches. */
@@ -47,7 +52,7 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
   const survey = useSurveyExplorer();
   const research = researchCopy(lang);
   const [viewport, setViewport] = useState<MapViewport>({ x: 0, y: 0, w: W, h: H });
-  const zoom = (factor: number) => setViewport(v => { const w = Math.max(8, Math.min(W, v.w * factor)); const h = Math.max(8, Math.min(H, v.h * factor)); return { x: v.x + (v.w - w) / 2, y: v.y + (v.h - h) / 2, w, h }; });
+  const zoom = (factor: number) => setViewport(v => { const w = Math.max(8, Math.min(W, v.w * factor)); const h = Math.max(8, Math.min(H, v.h * factor)); return boundViewport({ x: v.x + (v.w - w) / 2, y: v.y + (v.h - h) / 2, w, h }); });
   const [layer, setLayer] = useState<Layer>('regions');
   const [selected, setSelected] = useState<string>('awdal');
   const [occ, setOcc] = useState<string | null>('borama');
@@ -57,6 +62,35 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
   const [hovered, setHovered] = useState<string | null>(null);
   const [cursor, setCursor] = useState<string>('');
   const svgRef = useRef<SVGSVGElement>(null);
+  const drag = useRef<{ pointer: number; x: number; y: number; scale: number; view: MapViewport; moved: boolean } | null>(null);
+  const suppressClick = useRef(false);
+  const [isPanning, setIsPanning] = useState(false);
+  const beginPan = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (event.button !== 0 || (viewport.w >= W && viewport.h >= H)) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const scale = Math.min(rect.width / viewport.w, rect.height / viewport.h);
+    if (!Number.isFinite(scale) || scale <= 0) return;
+    drag.current = { pointer: event.pointerId, x: event.clientX, y: event.clientY, scale, view: { ...viewport }, moved: false };
+  };
+  const endPan = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (drag.current?.pointer !== event.pointerId) return;
+    suppressClick.current = drag.current.moved;
+    drag.current = null;
+    setIsPanning(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    window.setTimeout(() => { suppressClick.current = false; }, 0);
+  };
+  const panWithKeyboard = (event: React.KeyboardEvent<SVGSVGElement>) => {
+    if (event.target !== event.currentTarget) return;
+    if (event.key === 'Home') {
+      event.preventDefault(); setViewport({ x: 0, y: 0, w: W, h: H }); return;
+    }
+    const directions: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    const direction = directions[event.key];
+    if (!direction || (viewport.w >= W && viewport.h >= H)) return;
+    event.preventDefault();
+    setViewport(view => boundViewport({ ...view, x: view.x + direction[0] * view.w * .15, y: view.y + direction[1] * view.h * .15 }));
+  };
   const active = p.regions[selected];
 
   const markers = useMemo(() => OCCURRENCES.map((o) => ({ ...o, pos: project(o.lon, o.lat) })), []);
@@ -81,6 +115,19 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
   };
 
   const onMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    const activeDrag = drag.current;
+    if (activeDrag && activeDrag.pointer === e.pointerId) {
+      const dx = e.clientX - activeDrag.x, dy = e.clientY - activeDrag.y;
+      if (activeDrag.moved || Math.hypot(dx, dy) >= 4) {
+        if (!activeDrag.moved) {
+          activeDrag.moved = true;
+          suppressClick.current = true;
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setIsPanning(true);
+        }
+        setViewport(boundViewport({ ...activeDrag.view, x: activeDrag.view.x - dx / activeDrag.scale, y: activeDrag.view.y - dy / activeDrag.scale }));
+      }
+    }
     const svg = svgRef.current;
     const ctm = svg?.getScreenCTM();
     if (!svg || !ctm) return;
@@ -112,17 +159,25 @@ export default function SomalilandMap({ projects = PROJECTS }: { projects?: Proj
           </div>
           <button type="button" className="geomap-projects" aria-pressed={survey.enabled} onClick={() => survey.setEnabled(value => !value)}>{research.field}</button>
           <button type="button" className="geomap-projects" aria-pressed={showProjects} onClick={() => setShowProjects((v) => !v)}>{F.projects}</button>
+          <div className="map-zoom-controls"><button type="button" aria-label={research.zoomIn} onClick={() => zoom(0.5)}>+</button><button type="button" aria-label={research.zoomOut} onClick={() => zoom(2)}>−</button><button type="button" onClick={() => setViewport({ x: 0, y: 0, w: W, h: H })}>{research.reset}</button></div>
         </div>
 
         <div className="geomap-frame">
-          <div className="map-zoom-controls"><button type="button" aria-label={research.zoomIn} onClick={() => zoom(0.5)}>+</button><button type="button" aria-label={research.zoomOut} onClick={() => zoom(2)}>−</button><button type="button" onClick={() => setViewport({ x: 0, y: 0, w: W, h: H })}>{research.reset}</button></div>
+
           <i className="corner tl" /><i className="corner tr" /><i className="corner bl" /><i className="corner br" />
           <svg
             ref={svgRef}
-            className="geomap-svg"
+            className={`geomap-svg${viewport.w < W || viewport.h < H ? ' is-zoomed' : ''}${isPanning ? ' is-panning' : ''}`}
+            tabIndex={0}
             viewBox={`${viewport.x} ${viewport.y} ${viewport.w} ${viewport.h}`}
             role="group"
             aria-label={p.mapLabel}
+            onPointerDown={beginPan}
+            onPointerUp={endPan}
+            onPointerCancel={endPan}
+            onLostPointerCapture={endPan}
+            onKeyDown={panWithKeyboard}
+            onClickCapture={(event) => { if (suppressClick.current) { event.preventDefault(); event.stopPropagation(); } }}
             onPointerMove={onMove}
             onPointerLeave={() => setCursor('')}
           >

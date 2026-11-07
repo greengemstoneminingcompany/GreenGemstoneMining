@@ -927,3 +927,10 @@ html[lang='zh-Hans'] .display, html[lang='ar'] .display { font-size: clamp(26px,
 .geomap-map-column { min-width: 0; display: grid; align-content: start; gap: 20px; }
 .geomap-map-column > .geomap-stage { position: relative; top: auto; }
 .geomap-map-column > .geomap-finder, .geomap-map-column > .survey-controls { margin-top: 0; margin-bottom: 0; }
+
+/* Map controls belong in the toolbar, never over the map content. */
+.geomap-toolbar .map-zoom-controls { position: static; inset: auto; z-index: auto; display: inline-flex; flex-wrap: wrap; gap: 6px; margin-inline-start: auto; }
+.geomap-toolbar .map-zoom-controls button { min-width: 44px; min-height: 44px; }
+.geomap-svg.is-zoomed { cursor: grab; touch-action: none; user-select: none; }
+.geomap-svg.is-panning { cursor: grabbing; }
+.geomap-svg:focus-visible { outline: 2px solid var(--gold-br); outline-offset: 3px; }
