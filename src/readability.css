@@ -107,3 +107,57 @@
 .buyer-secondary.company-page-projects #development-projects .content-intro h2 em { color: #f8fbf7; }
 .buyer-secondary.company-page-projects #development-projects .content-intro .body-text { color: #d6e3dc; }
 .page-contact-form .research-enquiry, .page-contact-form .research-enquiry > summary { color: #163c2a; }
+
+/* Comfortable public-site type scale, retaining the established display typography. */
+body { font-size: 16px; }
+.bv-eyebrow, .buyer-vision .bv-label, .eyebrow,
+.bv-hero-bottom, .bv-aside-top, .bv-aside-center, .bv-scroll-cue,
+.bv-stat-strip small, .bv-focus-card-top, .bv-project-index, .bv-project-region,
+.bv-finding-list span, .bv-finding-list small, .bv-evidence-item button span:first-child,
+.bv-evidence-body span, .bv-preview-disclaimer,
+.bw-buyer-hero > span, .bw-buyer-body > div > span, .bw-buyer-note,
+.bw-buyer-accordions button span, .bw-buyer-accordions small,
+.bw-gallery-heading > span, .bw-crumbs button, .bw-gallery-back,
+.project-card-body > p, .project-findings span, .project-filters button,
+.geomap-title, .geomap-toggle button, .geomap-projects, .geomap-legend,
+.gm-tab, .region-card dt, .chip, .evidence, .geomap-note, .geomap-sources,
+.geomap-panel .national, .finder-clear, .finder-note,
+.research-sources, .research-date, .research-table-wrap caption,
+.research-disclosure > summary > span, .research-dossier dt, .survey-selection dt,
+.survey-filters label, .survey-note, .survey-results li button, .survey-controls h4 span,
+.contact-form label, .contact-form .field-error, .footer { font-size: 14px; line-height: 1.6; }
+.bv-hero-copy, .bv-hero-aside p, .bv-focus-card p, .bv-project-footer p,
+.bv-evidence-body p, .bv-section-top > p, .bv-evidence-lead > p,
+.bw-buyer-body > div > p, .bw-buyer-accordions p, .bw-gallery-heading p,
+.bw-photo-viewer p, .region-card dd, .finder-head p,
+.research-enquiry p, .research-dossier-aside p, .research-table-wrap table,
+.company-page .body-text, .page-contact-note { font-size: 16px; line-height: 1.7; }
+.bv-button, .bv-text-link, .bv-focus-card a, .bv-hero-aside a,
+.bw-buyer-hero a, .bw-buyer-footer a, .hdr-nav a, .hdr-nav summary { font-size: 14px; }
+.contact-form input, .contact-form textarea, .contact-form select,
+.research-enquiry input, .research-enquiry textarea, .research-enquiry select,
+.survey-filters input, .survey-filters select, .research-select { font-size: 16px; }
+.chip-btn small { font-size: 14px; opacity: 1; }
+.bv-finding-list span, .bv-finding-list small, .evidence, .bw-crumbs button { white-space: normal; }
+.bv-finding-list li { flex-wrap: wrap; gap: 6px 12px; }
+.bv-aside-top, .bv-aside-center { flex-wrap: wrap; gap: 8px; }
+.bw-crumbs { flex-wrap: wrap; }
+.hdr-nav a, .hdr-nav summary, .bw-crumbs button, .bw-gallery-back,
+.project-filters button, .chip-btn, .finder-clear, .gm-tab { min-height: 44px; }
+.buyer-secondary .geomap-panel .national, .buyer-secondary .geomap-note,
+.buyer-secondary .geomap-sources, .buyer-secondary .geomap-sources a { color: #d6e3dc; }
+.buyer-secondary .geomap-panel .national strong,
+.buyer-secondary .geomap-sources summary, .buyer-secondary .geomap-sources a:hover { color: #f1d987; }
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #b87911; outline-offset: 4px;
+}
+.bw-photo-viewer :focus-visible, .geomap-stage :focus-visible { outline-color: #f1d987; }
+@media (max-width: 760px) {
+  .bv-hero-copy { font-size: 17px; }
+  .bv-aside-top, .bv-aside-center, .bv-hero-bottom { letter-spacing: .04em; }
+  .bv-hero-bottom { flex-wrap: wrap; gap: 12px; }
+  .bv-preview-disclaimer { max-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
