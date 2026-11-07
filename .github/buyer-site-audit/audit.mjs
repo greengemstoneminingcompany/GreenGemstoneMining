@@ -238,10 +238,10 @@ await touch.close();
 const perf=await browser.newContext({viewport:{width:390,height:844},colorScheme:'light',reducedMotion:'reduce'});
 try{
  const page=await perf.newPage();
- await page.addInitScript(()=>{window.auditPerf={lcp:0,cls:0};new PerformanceObserver(list=>{for(const entry of list.getEntries())window.auditPerf.lcp=entry.startTime;}).observe({type:'largest-contentful-paint',buffered:true});new PerformanceObserver(list=>{for(const entry of list.getEntries())if(!entry.hadRecentInput)window.auditPerf.cls+=entry.value;}).observe({type:'layout-shift',buffered:true});});
+ await page.addInitScript(()=>{window.auditPerf={lcp:0,cls:0,shifts:[]};new PerformanceObserver(list=>{for(const entry of list.getEntries())window.auditPerf.lcp=entry.startTime;}).observe({type:'largest-contentful-paint',buffered:true});new PerformanceObserver(list=>{for(const entry of list.getEntries())if(!entry.hadRecentInput){window.auditPerf.cls+=entry.value;window.auditPerf.shifts.push({time:Math.round(entry.startTime),value:entry.value,nodes:entry.sources.map(s=>String(s.node?.className||s.node?.nodeName||'').slice(0,100))});}}).observe({type:'layout-shift',buffered:true});});
  const cdp=await perf.newCDPSession(page);await cdp.send('Network.enable');await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:150,downloadThroughput:200000,uploadThroughput:93750});await cdp.send('Emulation.setCPUThrottlingRate',{rate:4});
  await page.goto(base+'/#/home',{waitUntil:'networkidle',timeout:45000});await page.waitForTimeout(1200);
- const metrics=await page.evaluate(()=>{const nav=performance.getEntriesByType('navigation')[0];const items=performance.getEntriesByType('resource');return{lcpMs:Math.round(window.auditPerf.lcp),cls:Math.round(window.auditPerf.cls*1000)/1000,domReadyMs:Math.round(nav.domContentLoadedEventEnd),sameOriginBytes:items.filter(x=>new URL(x.name).origin===location.origin).reduce((a,b)=>a+b.transferSize,nav.transferSize),resources:items.length,loadedMap:items.some(x=>/SomalilandMap/.test(x.name))};});
+ const metrics=await page.evaluate(()=>{const nav=performance.getEntriesByType('navigation')[0];const items=performance.getEntriesByType('resource');return{lcpMs:Math.round(window.auditPerf.lcp),cls:Math.round(window.auditPerf.cls*1000)/1000,domReadyMs:Math.round(nav.domContentLoadedEventEnd),sameOriginBytes:items.filter(x=>new URL(x.name).origin===location.origin).reduce((a,b)=>a+b.transferSize,nav.transferSize),resources:items.length,shifts:window.auditPerf.shifts.slice(0,8),loadedMap:items.some(x=>/SomalilandMap/.test(x.name))};});
  emit('performanceLab',metrics);
 }catch(error){emit('flowError',{suite:'performance lab',error:error.message.slice(0,1000)});}
 await perf.close();
@@ -288,9 +288,27 @@ try{
 }catch(error){emit('flowError',{suite:'gallery media fixture',error:error.message.slice(0,1000)});}
 await fixture.close();
 
+
+const covers=await browser.newContext({viewport:{width:390,height:844},colorScheme:'dark',reducedMotion:'reduce'});
+try {
+ const page=await covers.newPage();const seen=new Map();const failures=[];const rounds=[];
+ for(let visit=0;visit<8;visit++){
+  await page.goto(base+'/?galleryAuditVisit='+visit+'#/gallery');
+  const artwork=page.locator('img[data-cover-artwork="true"]');await artwork.first().waitFor();
+  const images=await artwork.evaluateAll(async nodes=>Promise.all(nodes.map(async img=>{
+   img.loading='eager';let ok=false;try{await img.decode();ok=img.naturalWidth>0;}catch{}
+   return{folder:img.closest('button')?.querySelector('strong')?.textContent,url:new URL(img.src).pathname,ok,fit:getComputedStyle(img).objectFit};
+  })));
+  rounds.push(images.length);
+  for(const item of images){if(!seen.has(item.folder))seen.set(item.folder,new Set());seen.get(item.folder).add(item.url);if(!item.ok||item.fit!=='contain')failures.push(item);}
+ }
+ emit('rootCoverRotation',{rounds,uniqueByFolder:Object.fromEntries([...seen].map(([k,v])=>[k,v.size])),total:[...seen.values()].reduce((n,s)=>n+s.size,0),failures});
+} catch(error){emit('flowError',{suite:'root cover rotation',error:error.message.slice(0,1000)});}
+await covers.close();
+
 await browser.close();
 emit('summary', { pages: records.filter(r => r.type === 'page').length, flows: records.filter(r => r.type !== 'page').length, flowErrors: records.filter(r => r.type === 'flowError').length, contrastNodes: records.filter(r => r.type === 'page').reduce((sum, r) => sum + r.violations.filter(v => v.id === 'color-contrast').reduce((n, v) => n + v.nodes.length, 0), 0) });
 
 await writeFile('buyer-site-audit.json',JSON.stringify(records,null,2));
-const bad=records.some(r=>r.type==='flowError'||(r.type==='page'&&(r.status!==200||r.errors.length||r.network.length||r.metadata.overflow>2||r.metadata.h1!==1||r.violations.length))||(r.type==='map'&&(!r.panMoved||!r.resetWorks||!r.controlsAboveCanvas||r.finderGap>32))||(r.type==='formOutcome'&&(!r.passed||!r.recoverable))||(r.type==='accordions'&&!r.allPassed)||(r.type==='responsiveType'&&r.layouts.some(l=>l.overflow>2))||(r.type==='themeNavigation'&&(r.initial!=='light'||r.switched!=='dark'||r.persisted!=='dark'||r.reverted!=='light'||r.skipFocus!=='main'||r.skipRoute!=='#/projects'||r.brokenSections.length))||(r.type==='search'&&(r.galleryHeading!=='Monazite'||r.galleryClear||r.catalogueFiltered<1||r.catalogueFiltered>=r.catalogueInitial||r.finderFiltered<1||r.finderFiltered>=r.finderTotal||r.nestedLinks))||(r.type==='ownerGate'&&(!r.loginVisible||!r.loginReady||r.privatePanels||r.publicEditorMarker))||(r.type==='touchMap'&&!r.moved)||(r.type==='ownerRejected'&&(!r.stayedPrivate||!r.errorShown))||(r.type==='galleryMediaFixture'&&(!r.focusStayed||!r.imageLoaded||!r.focusRestored))||(r.type==='localized'&&(r.status!==200||r.dir!==r.expectedDir))||(r.type==='crossBrowser'&&(r.errors.length||r.status.some(x=>x.status!==200||x.overflow>2))));
+const bad=records.some(r=>r.type==='flowError'||(r.type==='page'&&(r.status!==200||r.errors.length||r.network.length||r.metadata.overflow>2||r.metadata.h1!==1||r.violations.length))||(r.type==='map'&&(!r.panMoved||!r.resetWorks||!r.controlsAboveCanvas||r.finderGap>32))||(r.type==='formOutcome'&&(!r.passed||!r.recoverable))||(r.type==='accordions'&&!r.allPassed)||(r.type==='responsiveType'&&r.layouts.some(l=>l.overflow>2))||(r.type==='themeNavigation'&&(r.initial!=='light'||r.switched!=='dark'||r.persisted!=='dark'||r.reverted!=='light'||r.skipFocus!=='main'||r.skipRoute!=='#/projects'||r.brokenSections.length))||(r.type==='search'&&(r.galleryHeading!=='Monazite'||r.galleryClear||r.catalogueFiltered<1||r.catalogueFiltered>=r.catalogueInitial||r.finderFiltered<1||r.finderFiltered>=r.finderTotal||r.nestedLinks))||(r.type==='ownerGate'&&(!r.loginVisible||!r.loginReady||r.privatePanels||r.publicEditorMarker))||(r.type==='rootCoverRotation'&&(r.total!==21||r.rounds.some(n=>n!==7)||r.failures.length||r.uniqueByFolder['Minerals']!==1||r.uniqueByFolder['Agriculture']!==4||r.uniqueByFolder['Livestock']!==1||r.uniqueByFolder['Fisheries']!==1||r.uniqueByFolder['Seaweed & Aquaculture']!==3||r.uniqueByFolder['Company & Corporate']!==3||r.uniqueByFolder['Media & Communications']!==8))||(r.type==='touchMap'&&!r.moved)||(r.type==='ownerRejected'&&(!r.stayedPrivate||!r.errorShown))||(r.type==='galleryMediaFixture'&&(!r.focusStayed||!r.imageLoaded||!r.focusRestored))||(r.type==='localized'&&(r.status!==200||r.dir!==r.expectedDir))||(r.type==='crossBrowser'&&(r.errors.length||r.status.some(x=>x.status!==200||x.overflow>2))));
 if(bad)process.exitCode=1;
