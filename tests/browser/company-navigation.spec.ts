@@ -57,7 +57,7 @@ test('shared About records update detailed sections and office details together'
   await expect(page.locator('#operations')).toContainText('Verified equipment acceptance');
   await expect(page.locator('#development-projects')).toContainText('Verified development acceptance');
   await expect(page.locator('#services')).toContainText('Verified service acceptance');
-  await page.getByRole('link', { name: 'Contact', exact: true }).first().click();
+  await page.locator('.footer-col a[href="#/contact"]').first().click();
   await expect(page.locator('.page-contact-detail').last()).toContainText('Verified office acceptance');
 });
 
