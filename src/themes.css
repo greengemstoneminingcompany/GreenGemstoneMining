@@ -64,3 +64,18 @@
 .gallery-search-results button span {flex:1;overflow-wrap:anywhere;}
 .gallery-search-results button svg {flex-shrink:0;}
 .map-loading {padding:24px;font-size:16px;min-height:12rem;}
+
+:root[data-theme='dark'] .buyer-secondary .content-card :is(.content-label,.link-go) {color:var(--theme-link);}
+.company-page .content-card p, .company-page .content-card li {font-size:16px;line-height:1.7;}
+.company-page :is(.content-label,.content-note,.content-card .link-go,.btn),
+.geomap-stage .map-zoom-controls button, .geomap-stage .geomap-readout,
+.geomap-finder :is(.mg-label,.chip,.fr-meta,.fr-src,.ev-badge),
+.region-card :is(.mg-label,.ev-badge,.occ-item small),
+.company-page :is(.research-heading small,.research-sources a,.research-text-button) {font-size:14px;line-height:1.6;}
+.company-page .btn {min-height:44px;}
+.geomap-finder .chip-btn {border-color:#648572;}
+.geomap-finder .chip-btn[aria-pressed='true'] {border-color:var(--neon);}
+.bw-folder {text-align:start;overflow:hidden;}
+.bw-folder-artwork {height:auto;aspect-ratio:16/9;background:#092b21;}
+.bw-folder-artwork img {object-fit:contain;}
+.bw-gallery-heading .gallery-artwork-note {font-size:14px;margin-top:6px;}

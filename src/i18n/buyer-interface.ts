@@ -669,6 +669,11 @@ const translations:Record<string,Record<Exclude<Lang,'en'>,string>>={
     "so": "Xogta ay shirkaddu sheegtay waxay u baahan tahay xaqiijin madax-bannaan.",
     "ar": "تتطلب المعلومات الواردة من الشركة تحققًا مستقلًا.",
     "zh": "公司报告的信息需要独立核实。"
+  },
+  "Collection covers are illustrative artwork.": {
+    "so": "Daboollada ururintu waa sawirro tusaale ah.",
+    "ar": "أغلفة المجموعات صور توضيحية.",
+    "zh": "各类别封面为示意图。"
   }
 };
 export function buyerText(lang:Lang,text:string):string{return lang==='en'?text:translations[text]?.[lang]??text;}
