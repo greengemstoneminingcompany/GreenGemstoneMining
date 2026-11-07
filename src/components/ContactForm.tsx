@@ -14,7 +14,10 @@ export default function ContactForm() {
   const f = t.contact.form;
   const [form, setForm] = useState(() => {
     const requested = new URLSearchParams(window.location.hash.split('?')[1]).get('interest');
-    return { name: '', email: '', company: '', interest: INTERESTS.find(item => item === requested) ?? INTERESTS[0], message: '', website: '' };
+    const request = new URLSearchParams(window.location.hash.split('?')[1]).get('request');
+    const requests: Record<string, string> = { 'technical-report': 'Technical report', 'site-visit': 'Site visit', 'management-call': 'Management call' };
+    const label = request ? requests[request] : undefined;
+    return { name: '', email: '', company: '', interest: INTERESTS.find(item => item === requested) ?? INTERESTS[0], message: label ? 'Request: ' + label + '\n\n' : '', website: '' };
   });
   const [details, setDetails] = useState(() => { const details = takeEnquiryDetails(); const project = new URLSearchParams(window.location.hash.split('?')[1]).get('project'); return project ? { ...details, project: project.slice(0, 160) } : details; });
   useEffect(() => {

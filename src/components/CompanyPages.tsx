@@ -75,13 +75,13 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
     <p className="body-text">Explore the company’s field media from geological surveying and excavation at Telluride.</p>
     <div className="gallery-nav-actions">
       <a href="#/gallery?album=241f9bd8-658c-50ce-8680-119f6fe4d438">Mining and Excavation</a>
-      <a href="#/contact?project=Telluride%20Gold%20Project">Discuss the project</a>
+      <a href="#/contact?project=Telluride%20Gold%20Project">Discuss the project</a><a href="#/buyers?section=project-finder">Find project information</a>
       <a href="/telluride-project-brief.md" download>Download the project brief</a><a href="#/buyers?section=public-documents">Public documents and updates</a>
     </div>
     <details className="compact-details">
       <summary>Evidence and project updates</summary>
       <p>Company field media documents activity at the site. Ask the company for dated records and the current project status.</p>
-      <a href="#/contact?project=Telluride%20Gold%20Project">Request supporting records</a>
+      <div className="gallery-nav-actions"><a href="#/contact?project=Telluride%20Gold%20Project&amp;request=technical-report">Technical report</a><a href="#/contact?project=Telluride%20Gold%20Project&amp;request=site-visit">Site visit</a><a href="#/contact?project=Telluride%20Gold%20Project&amp;request=management-call">Management call</a></div>
     </details>
   </div>
 </section>)}

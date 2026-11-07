@@ -1,3 +1,4 @@
+import ProjectAssistant from '@/components/ProjectAssistant';
 import { useEffect, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -47,6 +48,7 @@ export default function OwnerEnquiries({ client }: { client: SupabaseClient }) {
   const visible = rows.filter(row => [row.name, row.company, row.interest, row.message].some(value => value?.toLowerCase().includes(query)));
   return <section className="bw-panel">
     <h2>Enquiry inbox</h2>
+    {!loading && <p>{rows.length} enquiries on this page · {rows.filter(row => (workflow[row.id]?.status ?? 'New') === 'New').length} new · {rows.filter(row => workflow[row.id]?.status === 'Follow up').length} to follow up</p>}
     <label>Search this page <input value={search} onChange={event => setSearch(event.target.value)} /></label>
     {notice && <p role="status">{notice}</p>}
     {loading ? <p role="status">Loading enquiries…</p> : visible.length === 0 ? <p>No matching enquiries on this page.</p> :
@@ -58,6 +60,7 @@ export default function OwnerEnquiries({ client }: { client: SupabaseClient }) {
           <p><a href={`mailto:${row.email}`}>{row.email}</a></p><p style={{whiteSpace:'pre-wrap'}}>{row.message}</p>
           <label>Assigned to <input maxLength={120} value={item.assignee} onChange={event => edit({ assignee: event.target.value })} /></label>
           <label>Status <select value={item.status} onChange={event => edit({ status: event.target.value as Workflow['status'] })}>{statuses.map(status => <option key={status}>{status}</option>)}</select></label>
+          {import.meta.env.VITE_GGMC_AI_OWNER_UI==='true'&&<ProjectAssistant leadId={row.id} getToken={async()=> (await client.auth.getSession()).data.session?.access_token} />}
           <button type="button" disabled={saving !== null} onClick={() => void save(item)}>Save follow-up</button>
         </details></li>;
       })}</ul>}
