@@ -1,3 +1,4 @@
+import {writeFile} from 'node:fs/promises';
 import process from 'node:process';
 import { chromium } from 'playwright';
 import { AxeBuilder } from '@axe-core/playwright';
@@ -31,8 +32,8 @@ for (const width of [1440, 390]) {
         await page.evaluate(top => window.scrollTo(0, top), y); await page.waitForTimeout(30);
       }
       await page.evaluate(() => { for (const d of document.querySelectorAll('main details.research-sources, main details.research-disclosure')) d.open = true; window.scrollTo(0, 0); });
-      const axe = await new AxeBuilder({ page }).withRules(['color-contrast', 'button-name', 'link-name', 'label', 'image-alt', 'aria-valid-attr-value']).analyze();
-      const violations = axe.violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.map(n => ({ target: n.target, html: n.html.slice(0, 350), summary: n.failureSummary, checks: n.any.map(c => ({ id: c.id, data: c.data })) })) }));
+      const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      const violations = axe.violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.map(n => ({ target: n.target, html: n.html.slice(0, 180), summary: n.failureSummary })) }));
       const metadata = await page.evaluate(() => ({
         title: document.title, lang: document.documentElement.lang, dir: document.documentElement.dir,
         h1: document.querySelectorAll('main h1').length,
@@ -44,7 +45,7 @@ for (const width of [1440, 390]) {
         scripts: Array.from(document.scripts).map(s => s.src).filter(Boolean),
         timing: performance.getEntriesByType('navigation').map(n => ({ responseMs: Math.round(n.responseStart - n.requestStart), domReadyMs: Math.round(n.domContentLoadedEventEnd - n.startTime) })),
       }));
-      emit('page', { width, route, status: response?.status(), metadata, violations, incompleteContrast: axe.incomplete.filter(v => v.id === 'color-contrast').flatMap(v => v.nodes.map(n => n.target)), errors, network });
+      emit('page', { width, route, status: response?.status(), metadata, violations, incompleteContrastCount: axe.incomplete.filter(v => v.id === 'color-contrast').reduce((n,v)=>n+v.nodes.length,0), errors, network });
 
       if (route === '/#/home') {
         const destinations = ['#/about?section=leadership', '#/projects', '#/gallery', '#/contact'];
@@ -116,5 +117,58 @@ for (const width of [1440, 390]) {
   }
   await context.close();
 }
+
+const qaContext=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
+const qa=await qaContext.newPage();
+await qa.route('**/*',r=>r.request().method()==='POST'?r.abort():r.continue());
+try {
+ await qa.goto(base+'/#/home');
+ const homeAccordion=qa.locator('.bv-evidence-item button');
+ const homeStates=[];
+ for(let i=0;i<await homeAccordion.count();i++){const b=homeAccordion.nth(i);if(await b.getAttribute('aria-expanded')==='true')await b.click();await b.click();homeStates.push(await b.getAttribute('aria-expanded')==='true');await b.click();homeStates.push(await b.getAttribute('aria-expanded')==='false');}
+ await qa.goto(base+'/#/buyers');
+ const buyerAccordion=qa.locator('.bw-buyer-accordions button');const buyerStates=[];
+ for(let i=0;i<await buyerAccordion.count();i++){const b=buyerAccordion.nth(i);if(await b.getAttribute('aria-expanded')==='true')await b.click();await b.click();buyerStates.push(await b.getAttribute('aria-expanded')==='true');await b.click();buyerStates.push(await b.getAttribute('aria-expanded')==='false');}
+ emit('accordions',{homeCount:homeStates.length/2,buyerCount:buyerStates.length/2,allPassed:[...homeStates,...buyerStates].every(Boolean)});
+ await qa.goto(base+'/#/projects');
+ const filters=qa.locator('.project-filters button');const filterResults=[];
+ for(let i=0;i<await filters.count();i++){await filters.nth(i).click();filterResults.push({label:await filters.nth(i).textContent(),active:(await filters.nth(i).getAttribute('class')||'').includes('active'),cards:await qa.locator('.project-card').count()});}
+ const svg=qa.locator('.geomap-svg');const controls=qa.locator('.map-zoom-controls');
+ await controls.locator('button').first().click();const before=await svg.getAttribute('viewBox');await svg.focus();await qa.keyboard.press('ArrowRight');const after=await svg.getAttribute('viewBox');await qa.keyboard.press('Home');
+ emit('keyboardMap',{moved:before!==after,reset:await svg.getAttribute('viewBox')==='0 0 966 561',filters:filterResults});
+ for(const outcome of ['success','rejected','network']){
+  await qa.goto(base+'/#/contact');
+  await qa.unroute('**/rest/v1/leads*');
+  await qa.route('**/rest/v1/leads*',r=>outcome==='network'?r.abort():r.fulfill({status:outcome==='success'?201:429,contentType:'application/json',body:outcome==='success'?'':JSON.stringify({message:'Audit fixture: request rejected',code:'P0001'})}));
+  await qa.locator('#cf-name').fill('Website Audit');await qa.locator('#cf-email').fill('audit@example.invalid');await qa.locator('#cf-message').fill('This is a mocked browser test. Nothing is sent.');
+  await qa.locator('.contact-form button[type="submit"]').click();
+  await qa.locator(outcome==='success'?'.form-success':'.contact-form [role="alert"]').waitFor();
+  emit('formOutcome',{outcome,passed:outcome==='success'?await qa.locator('.form-success').isVisible():await qa.locator('.contact-form [role="alert"]').isVisible(),recoverable:outcome==='success'||await qa.locator('#cf-message').inputValue()==='This is a mocked browser test. Nothing is sent.',mocked:true});
+ }
+ const layouts=[];
+ for(const width of [320,768,1920]){
+  await qa.setViewportSize({width,height:1000});
+  for(const route of ['/#/home','/#/projects','/#/about','/#/gallery','/#/contact','/#/buyers']){
+   await qa.goto(base+route);await qa.locator('main').waitFor();await qa.waitForTimeout(300);
+   layouts.push(await qa.evaluate(({width,route})=>{
+    const tiny=[];for(const el of document.querySelectorAll('main *')){if(el.namespaceURI.includes('svg')||!el.getClientRects().length)continue;const text=[...el.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE).map(n=>n.textContent).join('').trim();if(!text)continue;const size=parseFloat(getComputedStyle(el).fontSize);if(size<14)tiny.push({tag:el.tagName,cls:el.className,size,text:text.slice(0,80)});}
+    return{width,route,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,tiny:tiny.slice(0,24),tinyCount:tiny.length};
+   },{width,route}));
+  }
+ }
+ emit('responsiveType',{layouts});
+ await qa.setViewportSize({width:1440,height:1000});await qa.goto(base+'/#/home');
+ const links=await qa.locator('a[href]').evaluateAll(nodes=>[...new Set(nodes.map(n=>n.href))].filter(h=>h.startsWith(location.origin)&&!h.includes('#')));
+ const checks=[];for(const url of links){const r=await qa.request.get(url);checks.push({url,status:r.status()});}
+ const response=await qa.request.get(base+'/');const headers=response.headers();
+ emit('headersLinks',{links:checks,csp:headers['content-security-policy'],frame:headers['x-frame-options'],nosniff:headers['x-content-type-options'],referrer:headers['referrer-policy'],hsts:headers['strict-transport-security']});
+ const assets=[];for(const p of ['/robots.txt','/sitemap.xml','/og-image.jpg']){const r=await qa.request.get(base+p);assets.push({path:p,status:r.status(),type:r.headers()['content-type'],length:(await r.body()).length});}emit('seoAssets',{assets});
+} catch(error){emit('flowError',{suite:'extended',error:error.message.slice(0,1000)});}
+await qaContext.close();
+
 await browser.close();
 emit('summary', { pages: records.filter(r => r.type === 'page').length, flows: records.filter(r => r.type !== 'page').length, flowErrors: records.filter(r => r.type === 'flowError').length, contrastNodes: records.filter(r => r.type === 'page').reduce((sum, r) => sum + r.violations.filter(v => v.id === 'color-contrast').reduce((n, v) => n + v.nodes.length, 0), 0) });
+
+await writeFile('buyer-site-audit.json',JSON.stringify(records,null,2));
+const bad=records.some(r=>r.type==='flowError'||(r.type==='page'&&(r.status!==200||r.errors.length||r.network.length||r.metadata.overflow>2||r.metadata.h1!==1||r.violations.length))||(r.type==='map'&&(!r.panMoved||!r.resetWorks||!r.controlsAboveCanvas||r.finderGap>32))||(r.type==='formOutcome'&&(!r.passed||!r.recoverable))||(r.type==='accordions'&&!r.allPassed)||(r.type==='responsiveType'&&r.layouts.some(l=>l.overflow>2)));
+if(bad)process.exitCode=1;
