@@ -1,0 +1,30 @@
+/* Readability corrections for the existing light showcase surfaces.
+   Keep the established forest, emerald and gold palette and the dark map canvas. */
+:root { --readable-ink: #163c2a; --readable-muted: #465f52; --readable-border: #688675; }
+.region-card { color: var(--readable-ink); border-color: var(--readable-border); }
+.region-card h3, .region-card dd { color: var(--readable-ink); }
+.region-card dt { color: var(--emerald-deep); }
+.gm-tab { color: var(--readable-ink); border-color: var(--readable-border); }
+.gm-tab:hover, .gm-tab[aria-pressed='true'] { color: var(--readable-ink); border-color: var(--emerald-deep); }
+.geomap-note, .geomap-sources, .geomap-sources a { color: var(--readable-muted); }
+.geomap-sources summary, .geomap-sources a:hover { color: var(--emerald-deep); }
+/* The map stage and finder have their own dark backgrounds; retain light text. */
+.geomap-stage { --line: #668a7b; --line-soft: #668a7b; }
+.geomap-stage .geomap-legend, .geomap-stage .geomap-toggle button { color: #d6e3dc; }
+.geomap-stage .geomap-toggle button[aria-pressed='true'] { color: #03201b; }
+.page-cta .eyebrow { color: var(--gold-br); }
+.page-cta h2 { color: #f8fbf7; }
+.content-card, .mission-card, .mineral, .project-card, .page-info-grid article,
+.page-mineral-card, .content-pill, .page-contact-form { border-color: var(--readable-border); }
+.content-card li::before { color: var(--emerald-deep); }
+.project-filters button { border-color: var(--readable-border); }
+.project-filters button.active, .project-filters button:hover { border-color: var(--emerald-deep); }
+.page-contact-form .contact-form input, .page-contact-form .contact-form textarea,
+.page-contact-form .contact-form select { border-color: var(--readable-border); }
+.page-contact-form input::placeholder, .page-contact-form textarea::placeholder { color: var(--readable-muted); opacity: 1; }
+.project-card-art span { background: #062c20; color: #f1d987; padding: 5px 7px; border-radius: 4px; align-self: flex-start; }
+
+.region-card .ev-badge { color: var(--readable-ink); border-color: var(--readable-border); }
+.region-card .ev-strong { color: #006446; border-color: #006446; }
+.region-card .ev-partial { color: #775510; border-color: #775510; }
+.region-card .ev-limited { color: #934414; border-color: #934414; }
