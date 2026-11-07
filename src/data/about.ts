@@ -267,6 +267,14 @@ export const ABOUT: AboutRecords = {
           "Operations Manager"
         ],
         "items": []
+      },
+      {
+        "label": "Executive leadership",
+        "title": "Mr. Abdillahi Omar Abdillahi",
+        "paragraphs": [
+          "Executive Leadership"
+        ],
+        "items": []
       }
     ]
   }
