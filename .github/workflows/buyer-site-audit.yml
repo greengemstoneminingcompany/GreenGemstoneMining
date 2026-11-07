@@ -1,0 +1,30 @@
+name: Buyer website user audit
+on:
+  push:
+    branches: [feature/buyer-ready-vision-2026]
+    paths:
+      - .github/workflows/buyer-site-audit.yml
+      - .github/buyer-site-audit/**
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save --ignore-scripts @playwright/test@1.56.1 @axe-core/playwright@4.10.2
+      - run: npx playwright install --with-deps chromium
+      - name: Exercise the public buyer website
+        env:
+          AUDIT_BASE_URL: https://green-gemstone-mining-nine.vercel.app
+        run: node .github/buyer-site-audit/audit.mjs
+      - name: Review dependency advisories
+        if: always()
+        run: npm audit --omit=dev --json || true
