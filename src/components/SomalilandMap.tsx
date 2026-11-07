@@ -21,7 +21,7 @@ const W = MAP_VIEWBOX.w;
 const H = MAP_VIEWBOX.h;
 const CX = W / 2;
 const CY = H / 2;
-const goContact = () => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+const goContact = () => { window.location.hash = '/contact'; };
 
 /** Standard geological-map fill patterns, also used by the legend swatches. */
 const PATTERN: Record<Zone, string> = { guban: 'gm-stipple', basement: 'gm-cross', mesozoic: 'gm-brick', haud: 'gm-lines' };
@@ -262,6 +262,7 @@ export default function SomalilandMap() {
             {showProjects && (
               <g className="gm-projects">
                 {PROJECTS.map((pr) => {
+                  if (pr.lon === null || pr.lat === null) return null;
                   const [x, y] = project(pr.lon, pr.lat);
                   return (
                     <g key={pr.id} transform={`translate(${x} ${y})`}>
