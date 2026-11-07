@@ -41,6 +41,7 @@ export default function App() {
             <a href="#company" onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
             <details className="nav-dropdown"><summary aria-label={`${t.nav.company} submenu`}><ChevronDown size={13} aria-hidden="true" /></summary><div className="nav-dropdown-panel">
               <a href="#company" onClick={() => setMenuOpen(false)}>Company overview</a>
+              <a href="#leadership" onClick={() => setMenuOpen(false)}>Leadership</a>
               <a href="#mission" onClick={() => setMenuOpen(false)}>Mission &amp; values</a>
             </div></details>
           </div>
@@ -112,6 +113,29 @@ export default function App() {
               <p className="body-text">{t.company.p1}</p>
               <p className="body-text">{t.company.p2}</p>
               <a className="link-go" href="#mission">{t.company.link} <ArrowRight size={15} /></a>
+            </div>
+          </div>
+        </section>
+
+        <section id="leadership" className="sec" aria-labelledby="leadership-title">
+          <div className="sec-container">
+            <div className="reveal center-block">
+              <p className="eyebrow center">Leadership</p>
+              <h2 id="leadership-title" className="display">Local leadership.<br /><em>Operational focus.</em></h2>
+            </div>
+            <div className="mission-grid">
+              <article className="mission-card reveal">
+                <h3>Mr. Ahmed Saleiman</h3>
+                <p>Executive Director</p>
+              </article>
+              <article className="mission-card reveal">
+                <h3>Mr. Saeed Guled</h3>
+                <p>Operations Manager</p>
+              </article>
+              <article className="mission-card reveal">
+                <h3>Mr. Abdillahi Omar Abdillahi</h3>
+                <p>Executive Leadership</p>
+              </article>
             </div>
           </div>
         </section>
