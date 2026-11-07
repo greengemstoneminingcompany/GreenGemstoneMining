@@ -73,7 +73,7 @@ const MRDS_LOC: Locality[] = MRDS.map((r) => ({
 }));
 
 const COMPANY_LOC: Locality[] = PROJECTS.flatMap((p) =>
-  p.findings.map((fd) => ({ id: `c-${p.id}-${fd.mineral}`, name: p.name, region: p.region, precision: 'point' as const, lon: p.lon, lat: p.lat, minerals: [fd.mineral], source: SOURCE_COMPANY, evidence: fd.evidence, company: true })),
+  p.findings.map((fd) => ({ id: `c-${p.id}-${fd.mineral}`, name: p.name, region: p.region, precision: p.lon !== null && p.lat !== null ? 'point' as const : 'reported' as const, lon: p.lon ?? undefined, lat: p.lat ?? undefined, minerals: [fd.mineral], source: SOURCE_COMPANY, evidence: fd.evidence, company: true })),
 );
 
 export const LOCALITIES: Locality[] = [...MRDS_LOC, ...COMPANY_LOC, ...DISTRICT];

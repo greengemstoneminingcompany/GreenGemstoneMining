@@ -34,7 +34,7 @@ describe('published gallery folder media', () => {
     expect(await screen.findByRole('button', { name: 'Field sample' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Video Field video' })).toBeTruthy();
     expect(screen.queryByText('Unpublished media')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Table', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'Table' }));
     expect(screen.getByRole('table')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Field video' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
