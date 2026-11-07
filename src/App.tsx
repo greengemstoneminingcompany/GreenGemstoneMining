@@ -1,12 +1,11 @@
-import ResearchContent from '@/features/research/ResearchContent';
-import { Suspense, lazy, useState } from 'react';
-import { Atom, ArrowRight, ArrowUpRight, ChevronDown, Gem, Hammer, Linkedin, Mail, MapPin, Menu, Mountain, X } from 'lucide-react';
-import Gallery from '@/components/Gallery';
-import ContactForm from '@/components/ContactForm';
-import SomalilandMap from '@/components/SomalilandMap';
-import { Counter, Crystal3D, ScrollProgress } from '@/components/Effects';
+import CompanyPages from '@/components/CompanyPages';
+import { readSiteRoute } from '@/lib/siteRouting';
+import './company-pages.css';
+import { Suspense, lazy, useEffect, useState } from 'react';
+import { ArrowRight, ArrowUpRight, ChevronDown, Menu, X } from 'lucide-react';
+import { Crystal3D, ScrollProgress } from '@/components/Effects';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { DEPOSITS, IMAGES, MINERALS, SITE, TIMELINE } from '@/data/site';
+import { IMAGES, SITE } from '@/data/site';
 import { useI18n } from '@/i18n/core';
 import { useAdminSession } from '@/hooks/useAdminSession';
 import { useReveals } from '@/hooks/useReveals';
@@ -14,19 +13,36 @@ import { useScrollHeader } from '@/hooks/useScrollHeader';
 import { useUploads } from '@/hooks/useUploads';
 import { supabaseConfigured } from '@/lib/supabase';
 
-const DEPOSIT_ICONS = { gem: Gem, atom: Atom, hammer: Hammer, mountain: Mountain } as const;
-const METALS = MINERALS.filter((m) => m.cat === 'Metal' || m.cat === 'Precious');
 
 const MediaPanel = lazy(() => import('@/components/MediaPanel'));
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [route, setRoute] = useState(() => readSiteRoute(window.location.hash));
+  useEffect(() => {
+    const syncRoute = () => {
+      if (['#main', '#privacy'].includes(window.location.hash)) return;
+      setRoute(readSiteRoute(window.location.hash));
+      setMenuOpen(false);
+    };
+    window.addEventListener('hashchange', syncRoute);
+    return () => window.removeEventListener('hashchange', syncRoute);
+  }, []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const target = route.section ? document.getElementById(route.section) : null;
+      if (target) target.scrollIntoView({ block: 'start', behavior: 'instant' });
+      else window.scrollTo({ top: 0, behavior: 'instant' });
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [route]);
+
   const [mediaOpen, setMediaOpen] = useState(false);
   const { t } = useI18n();
   const scrolled = useScrollHeader();
   const { uploads, refresh } = useUploads();
   const admin = useAdminSession(mediaOpen);
-  useReveals();
+  useReveals(route.page);
 
   return (
     <div className="app">
@@ -34,31 +50,40 @@ export default function App() {
       <ScrollProgress />
 
       <header className={`hdr ${scrolled || menuOpen ? 'scrolled' : ''}`}>
-        <a className="hdr-brand" href="#top"><img className="hdr-brand-mark" src="/brand-emblem.webp" width={43} height={39} alt="" aria-hidden="true" /><span className="brand-wordmark brand-wordmark--on-dark">Green Gemstone Mining Company</span></a>
+        <a className="hdr-brand" href="#/home"><img className="hdr-brand-mark" src="/brand-emblem.webp" width={43} height={39} alt="" aria-hidden="true" /><span className="brand-wordmark brand-wordmark--on-dark">Green Gemstone Mining Company</span></a>
         <nav id="main-nav" className={`hdr-nav ${menuOpen ? 'open' : ''}`} aria-label={t.ui.mainNav}>
-          <a href="#top" onClick={() => setMenuOpen(false)}>{t.nav.overview}</a>
+          <a href="#/home" onClick={() => setMenuOpen(false)}>{t.nav.overview}</a>
           <div className="nav-menu-item">
-            <a href="#company" onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
-            <details className="nav-dropdown"><summary aria-label={`${t.nav.company} submenu`}><ChevronDown size={13} aria-hidden="true" /></summary><div className="nav-dropdown-panel">
-              <a href="#company" onClick={() => setMenuOpen(false)}>Company overview</a>
-              <a href="#leadership" onClick={() => setMenuOpen(false)}>Leadership</a>
-              <a href="#mission" onClick={() => setMenuOpen(false)}>Mission &amp; values</a>
+            <a href="#/about" onClick={() => setMenuOpen(false)}>{t.nav.company}</a>
+            <details className="nav-dropdown"><summary aria-label={`${t.nav.company} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
+              <a href="#/about?section=company-profile" onClick={() => setMenuOpen(false)}>Company profile</a>
+              <a href="#/about?section=vision-mission" onClick={() => setMenuOpen(false)}>Vision &amp; mission</a>
+              <a href="#/about?section=leadership" onClick={() => setMenuOpen(false)}>Leadership</a>
+              <a href="#/about?section=history-details" onClick={() => setMenuOpen(false)}>Company history</a>
             </div></details>
           </div>
           <div className="nav-menu-item">
-            <a href="#resources" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
-            <details className="nav-dropdown"><summary aria-label={`${t.nav.portfolio} submenu`}><ChevronDown size={13} aria-hidden="true" /></summary><div className="nav-dropdown-panel">
-              <a href="#buyer-specifications">Buyer specifications</a>
-              <a href="#resources" onClick={() => setMenuOpen(false)}>Mineral resources</a>
-              <a href="#industrial-metals" onClick={() => setMenuOpen(false)}>Industrial metals</a>
+            <a href="#/minerals" onClick={() => setMenuOpen(false)}>{t.nav.portfolio}</a>
+            <details className="nav-dropdown"><summary aria-label={`${t.nav.portfolio} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
+              <a href="#/minerals?section=gemstones" onClick={() => setMenuOpen(false)}>Gemstones</a>
+              <a href="#/minerals?section=buyer-specifications">Buyer specifications</a>
+              <a href="#/minerals?section=industrial-metals" onClick={() => setMenuOpen(false)}>Industrial &amp; precious metals</a>
+              <a href="#/projects?section=services" onClick={() => setMenuOpen(false)}>Services</a>
             </div></details>
           </div>
-          <a href="#project-dossiers">Field notes &amp; evidence</a>
-          <a href="#projects" onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
-          <a href="#gallery" onClick={() => setMenuOpen(false)}>{t.nav.gallery}</a>
-          <a href="#contact" onClick={() => setMenuOpen(false)}>{t.nav.contact}</a>
+          <div className="nav-menu-item">
+            <a href="#/projects" onClick={() => setMenuOpen(false)}>{t.nav.projects}</a>
+            <details className="nav-dropdown"><summary aria-label={`${t.nav.projects} submenu`}><ChevronDown size={13} /></summary><div className="nav-dropdown-panel">
+              <a href="#/projects?section=development-projects" onClick={() => setMenuOpen(false)}>Mining development</a>
+              <a href="#/about?section=rural-development" onClick={() => setMenuOpen(false)}>Rural development &amp; community support</a>
+              <a href="#/projects?section=project-dossiers">Field notes &amp; laboratory evidence</a>
+              <a href="#/projects?section=operations" onClick={() => setMenuOpen(false)}>Operations &amp; equipment</a>
+            </div></details>
+          </div>
+          <a href="#/gallery" onClick={() => setMenuOpen(false)}>{t.nav.gallery}</a>
+          <a href="#/contact" onClick={() => setMenuOpen(false)}>{t.nav.contact}</a>
           <LanguageSwitcher />
-          <a className="hdr-cta" href="#contact" onClick={() => setMenuOpen(false)}>{t.nav.cta} <ArrowUpRight size={14} aria-hidden="true" /></a>
+          <a className="hdr-cta" href="#/contact" onClick={() => setMenuOpen(false)}>{t.nav.cta} <ArrowUpRight size={14} aria-hidden="true" /></a>
         </nav>
         <button type="button" className="hdr-burger" aria-expanded={menuOpen} aria-controls="main-nav" onClick={() => setMenuOpen((v) => !v)} aria-label={menuOpen ? t.ui.menuClose : t.ui.menuOpen}>
           {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
@@ -71,7 +96,8 @@ export default function App() {
         </Suspense>
       )}
 
-      <main id="main">
+      <main id="main" tabIndex={-1}>
+        {route.page === 'home' ? <>
         <section id="top" className="hero">
           <img className="hero-bg" src={IMAGES.company} alt="" width={806} height={536} fetchPriority="high" />
           <div className="hero-overlay" />
@@ -81,8 +107,8 @@ export default function App() {
             <h1>{t.hero.h1a} <span className="h1-line">{t.hero.h1b}</span></h1>
             <p className="hero-sub">{t.hero.sub}</p>
             <div className="hero-cta">
-              <a className="btn btn-gold" href="#contact">{t.hero.primary} <ArrowRight size={16} aria-hidden="true" /></a>
-              <a className="btn-ghost" href="#resources">{t.hero.secondary} <ChevronDown size={16} aria-hidden="true" /></a>
+              <a className="btn btn-gold" href="#/contact">{t.hero.primary} <ArrowRight size={16} aria-hidden="true" /></a>
+              <a className="btn-ghost" href="#/minerals">{t.hero.secondary} <ChevronDown size={16} aria-hidden="true" /></a>
             </div>
             <div className="hero-metrics">
               {t.hero.metrics.map((metric) => (
@@ -96,10 +122,6 @@ export default function App() {
           <div className="hero-foot"><span>{t.hero.foot}</span></div>
         </section>
 
-        <section className="marquee">
-          <div className="marquee-track">{[...t.marquee, ...t.marquee].map((word, i) => <span key={`${word}-${i}`}><Gem size={12} /> {word}</span>)}</div>
-        </section>
-
         <section id="company" className="sec">
           <div className="sec-container company">
             <div className="company-visual reveal">
@@ -110,184 +132,25 @@ export default function App() {
               <p className="eyebrow">{t.company.eyebrow}</p>
               <h2 className="display">{t.company.h2a}<br /><em>{t.company.h2b}</em></h2>
               <p className="body-lg">{t.company.lead}</p>
-              <p className="body-text">{t.company.p1}</p>
-              <p className="body-text">{t.company.p2}</p>
-              <a className="link-go" href="#mission">{t.company.link} <ArrowRight size={15} /></a>
+              <a className="link-go" href="#/about">{t.company.link} <ArrowRight size={15} /></a>
             </div>
           </div>
         </section>
 
-        <section id="leadership" className="sec" aria-labelledby="leadership-title">
-          <div className="sec-container">
-            <div className="reveal center-block">
-              <p className="eyebrow center">Leadership</p>
-              <h2 id="leadership-title" className="display">Local leadership.<br /><em>Operational focus.</em></h2>
-            </div>
-            <div className="mission-grid">
-              <article className="mission-card reveal">
-                <h3>Mr. Ahmed Saleiman</h3>
-                <p>Executive Director</p>
-              </article>
-              <article className="mission-card reveal">
-                <h3>Mr. Saeed Guled</h3>
-                <p>Operations Manager</p>
-              </article>
-              <article className="mission-card reveal">
-                <h3>Mr. Abdillahi Omar Abdillahi</h3>
-                <p>Executive Leadership</p>
-              </article>
-            </div>
+        <section className="sec home-destinations" aria-label="Explore Green Gemstone">
+          <div className="sec-container mission-grid">
+            {([
+              ['minerals', t.nav.portfolio, t.catalogue.text],
+              ['projects', t.nav.projects, t.projects.text],
+              ['gallery', t.nav.gallery, t.gallery.text],
+            ] as const).map(([page, title, text]) => <a className="mission-card" href={`#/${page}`} key={page}>
+              <h2 className="home-destination-title">{title} <ArrowUpRight size={18} aria-hidden="true" /></h2>
+              <p>{text}</p>
+            </a>)}
           </div>
         </section>
-
-        <section id="resources" className="sec sec-dark">
-          <div className="sec-container">
-            <div className="deposits-head reveal">
-              <div>
-                <p className="eyebrow">{t.resources.eyebrow}</p>
-                <h2 className="display light">{t.resources.h2a}<br /><em>{t.resources.h2b}</em></h2>
-              </div>
-              <p>{t.resources.intro}</p>
-            </div>
-            <div className="deposits-grid">
-              {DEPOSITS.map((deposit, index) => {
-                const text = t.resources.deposits[index];
-                return (
-                <article className="deposit reveal" key={text.name} style={{ transitionDelay: `${index * 100}ms` }}>
-                  <div className={`deposit-art tone-${deposit.tone}`} aria-hidden="true">{(() => { const Icon = DEPOSIT_ICONS[deposit.icon]; return <Icon size={96} strokeWidth={0.6} />; })()}</div>
-                  <span className="deposit-tag">{text.tag}</span>
-                  <div className="deposit-body">
-                    <h3>{text.name}</h3>
-                    <p>{text.desc}</p>
-                    <a href="#contact">{t.resources.discuss} <ArrowUpRight size={14} /></a>
-                  </div>
-                </article>
-              );
-              })}
-            </div>
-          </div>
-        </section>
-
-        <section id="industrial-metals" className="split">
-          <div className="split-img split-panel"><ul aria-label={t.industrial.listLabel}>{METALS.map((m) => <li key={m.name}>{t.catalogue.minerals[m.name] ?? m.name}</li>)}</ul></div>
-          <div className="split-text">
-            <div className="reveal">
-              <p className="eyebrow">{t.industrial.eyebrow}</p>
-              <h2 className="display light">{t.industrial.h2a}<br /><em>{t.industrial.h2b}</em></h2>
-              <p className="body-text">{t.industrial.text}</p>
-              <div className="split-stats">
-                <Counter value={12} label={t.industrial.stats[0]} />
-                <Counter value={6} label={t.industrial.stats[1]} plus={false} />
-                <Counter value={2018} label={t.industrial.stats[2]} plus={false} />
-              </div>
-              <a className="btn btn-gold" href="#projects">{t.industrial.cta} <ArrowRight size={16} /></a>
-            </div>
-          </div>
-        </section>
-
-        <section id="mission" className="sec">
-          <div className="sec-container">
-            <div className="mission-head reveal">
-              <p className="eyebrow">{t.mission.eyebrow}</p>
-              <h2 className="display">{t.mission.h2a}<br /><em>{t.mission.h2b}</em></h2>
-              <p className="body-text">{t.mission.text}</p>
-            </div>
-            <div className="mission-grid">
-              {t.mission.points.map((point, index) => (
-                <div className="mission-card reveal" key={index} style={{ transitionDelay: `${index * 120}ms` }}>
-                  <span className="num">{String(index + 1).padStart(2, '0')}</span>
-                  <h3>{point.t}</h3>
-                  <p>{point.d}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="projects" className="sec sec-dark">
-          <div className="sec-container">
-            <div className="reveal center-block">
-              <p className="eyebrow center">{t.projects.eyebrow}</p>
-              <h2 className="display light">{t.projects.h2a}<br /><em>{t.projects.h2b}</em></h2>
-              <p className="body-text">{t.projects.text}</p>
-            </div>
-            <div className="reveal"><SomalilandMap /></div>
-          </div>
-        </section>
-
-        <section className="sec">
-          <div className="sec-container">
-            <div className="reveal center-block">
-              <p className="eyebrow center">{t.history.eyebrow}</p>
-              <h2 className="display">{t.history.h2a}<br /><em>{t.history.h2b}</em></h2>
-            </div>
-            <div className="timeline-rail">
-              {TIMELINE.map((item, index) => (
-                <div className="tl-node reveal" key={item.year} style={{ transitionDelay: `${index * 120}ms` }}>
-                  <span className="tl-dot" />
-                  <span className="tl-year">{item.year}</span>
-                  <h3>{t.history.timeline[index].title}</h3>
-                  <p>{t.history.timeline[index].desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <ResearchContent kind="projects" />
-        <ResearchContent kind="minerals" />
-        <ResearchContent kind="company" />
-        <ResearchContent kind="investor" />
-
-        <section id="gallery" className="sec sec-dark">
-          <div className="sec-container">
-            <div className="reveal center-block">
-              <p className="eyebrow center">{t.gallery.eyebrow}</p>
-              <h2 className="display light">{t.gallery.h2a}<br /><em>{t.gallery.h2b}</em></h2>
-              <p className="body-text">{t.gallery.text}</p>
-            </div>
-          </div>
-          <Gallery uploads={uploads} />
-        </section>
-
-        <section className="sec">
-          <div className="sec-container">
-            <div className="reveal center-block">
-              <p className="eyebrow center">{t.catalogue.eyebrow}</p>
-              <h2 className="display">{t.catalogue.h2a}<br /><em>{t.catalogue.h2b}</em></h2>
-              <p className="body-text">{t.catalogue.text}</p>
-            </div>
-            <div className="mineral-grid reveal">
-              {MINERALS.map((mineral, index) => (
-                <div className="mineral" key={mineral.name}>
-                  <span className="mineral-num">{String(index + 1).padStart(2, '0')}</span>
-                  <Gem size={18} />
-                  <div className="mineral-info"><strong>{t.catalogue.minerals[mineral.name] ?? mineral.name}</strong><small>{t.catalogue.cats[mineral.cat] ?? mineral.cat}</small></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="contact" className="contact-sec">
-          <div className="contact-visual">
-            <div className="contact-stamp">{t.contact.stamp1}<strong>{t.contact.stamp2}</strong></div>
-          </div>
-          <div className="contact-panel">
-            <div className="reveal">
-              <p className="eyebrow">{t.contact.eyebrow}</p>
-              <h2 className="display light">{t.contact.h2a}<br /><em>{t.contact.h2b}</em></h2>
-              <p className="body-text">{t.contact.text}</p>
-              <div className="contact-info">
-                <a href={`mailto:${SITE.email}`}><Mail size={16} aria-hidden="true" /> {SITE.email}</a>
-                <span><MapPin size={16} aria-hidden="true" /> {t.contact.address}</span>
-                {SITE.linkedin && <a href={SITE.linkedin} rel="noopener noreferrer" target="_blank"><Linkedin size={16} aria-hidden="true" /> LinkedIn</a>}
-              </div>
-              <ContactForm />
-              <p className="privacy-note">{t.contact.privacyBefore} <a href="#privacy">{t.contact.privacyLink}</a>.</p>
-            </div>
-          </div>
-        </section>
+        <section className="page-cta"><div><p className="eyebrow">{SITE.name}</p><h2>{t.contact.h2a} {t.contact.h2b}</h2></div><a className="btn btn-gold" href="#/contact">{t.nav.contact} <ArrowRight size={16} aria-hidden="true" /></a></section>
+        </> : <CompanyPages page={route.page} uploads={uploads} />}
       </main>
 
       <footer className="footer">
@@ -298,21 +161,21 @@ export default function App() {
           </div>
           <div className="footer-col">
             <h3>{t.footer.company}</h3>
-            <a href="#company">{t.footer.about}</a>
-            <a href="#mission">{t.footer.mission}</a>
-            <a href="#projects">{t.footer.projects}</a>
+            <a href="#/about">{t.footer.about}</a>
+            <a href="#/about?section=vision-mission">{t.footer.mission}</a>
+            <a href="#/projects">{t.footer.projects}</a>
           </div>
           <div className="footer-col">
             <h3>{t.footer.resources}</h3>
-            <a href="#resources">{t.footer.deposits}</a>
-            <a href="#gallery">{t.footer.gallery}</a>
-            <a href="#contact">{t.footer.contact}</a>
+            <a href="#/minerals">{t.footer.deposits}</a>
+            <a href="#/gallery">{t.footer.gallery}</a>
+            <a href="#/contact">{t.footer.contact}</a>
           </div>
           <div className="footer-col">
             <h3>{t.footer.connect}</h3>
             <a href={`mailto:${SITE.email}`}>{t.footer.email}</a>
             {SITE.linkedin && <a href={SITE.linkedin} rel="noopener noreferrer" target="_blank">LinkedIn</a>}
-            <a href="#contact">{t.footer.partner}</a>
+            <a href="#/contact">{t.footer.partner}</a>
           </div>
         </div>
         <div className="footer-base">

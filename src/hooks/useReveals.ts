@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 /** Adds `.in` to `.reveal` elements as they enter the viewport (all at once if IO is unavailable). */
-export function useReveals() {
+export function useReveals(routeKey = 'home') {
   useEffect(() => {
     const els = Array.from(document.querySelectorAll('.reveal'));
     if (typeof IntersectionObserver === 'undefined') {
@@ -21,5 +21,5 @@ export function useReveals() {
     );
     els.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  }, [routeKey]);
 }

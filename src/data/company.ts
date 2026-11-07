@@ -8,7 +8,7 @@ export type Evidence = 'observed' | 'reported' | 'unverified' | 'inferred' | 'co
 
 export interface Finding { mineral: string; evidence: Evidence }
 export interface ProjectArea {
-  id: string; name: string; region: string; lon: number; lat: number; priority: 1 | 2 | 3 | null; port?: boolean; findings: Finding[];
+  id: string; name: string; region: string; lon: number | null; lat: number | null; priority: 1 | 2 | 3 | null; port?: boolean; findings: Finding[];
 }
 
 const f = (mineral: string, evidence: Evidence): Finding => ({ mineral, evidence });

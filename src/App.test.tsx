@@ -5,7 +5,7 @@ import App from '@/App';
 import ContactForm from '@/components/ContactForm';
 import Gallery from '@/components/Gallery';
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); window.history.replaceState(null, '', '/'); });
 
 describe('App', () => {
   it('renders one h1, a skip link and a closed mobile menu', () => {
@@ -25,18 +25,35 @@ describe('App', () => {
   });
 
 
-  it('provides accessible company and portfolio dropdowns with real anchor targets', () => {
+  it('keeps detailed sections off home and opens each dropdown destination', () => {
     render(<App />);
-    const nav = document.querySelector('#main-nav');
-    expect(nav?.querySelectorAll('details.nav-dropdown')).toHaveLength(2);
-    expect(screen.getByLabelText('Company submenu')).toBeTruthy();
-    expect(screen.getByLabelText('Portfolio submenu')).toBeTruthy();
-    expect(document.querySelector('#industrial-metals')).toBeTruthy();
-    const links = nav?.querySelectorAll<HTMLAnchorElement>('.nav-dropdown-panel a');
-    links?.forEach((link) => expect(document.querySelector(link.getAttribute('href')!)).toBeTruthy());
+    const nav = document.querySelector('#main-nav')!;
+    expect(nav.querySelectorAll('details.nav-dropdown')).toHaveLength(3);
+    for (const id of ['leadership', 'operations', 'industrial-metals', 'project-dossiers', 'gallery', 'contact']) {
+      expect(document.getElementById(id)).toBeNull();
+    }
+    const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('.nav-dropdown-panel a'));
+    for (const link of links) {
+      const href = link.getAttribute('href')!;
+      window.history.replaceState(null, '', href);
+      fireEvent(window, new HashChangeEvent('hashchange'));
+      const section = new URLSearchParams(href.split('?')[1]).get('section');
+      if (section) expect(document.getElementById(section), href).toBeTruthy();
+      expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    }
     fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
-    fireEvent.click(nav!.querySelector<HTMLAnchorElement>('a[href="#mission"]')!);
+    fireEvent.click(nav.querySelector<HTMLAnchorElement>('a[href="#/about?section=company-profile"]')!);
     expect(document.querySelector('#main-nav')?.classList.contains('open')).toBe(false);
+  });
+
+  it('supports browser history navigation back to the compact homepage', () => {
+    window.history.replaceState(null, '', '#/about?section=leadership');
+    render(<App />);
+    expect(document.getElementById('leadership')?.textContent).toContain('Mr. Abdillahi Omar Abdillahi');
+    window.history.replaceState(null, '', '#/home');
+    fireEvent(window, new HashChangeEvent('hashchange'));
+    expect(document.getElementById('leadership')).toBeNull();
+    expect(document.querySelector('.hero')).toBeTruthy();
   });
 
   it('does not link to a LinkedIn page that is not configured', () => {
