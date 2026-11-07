@@ -35,6 +35,7 @@ export const so: AboutRecords = {
  ]},
  leadership:{eyebrow:'Shirkadda',title:'Hoggaan maxalli ah.',emphasis:'Diiradda hawlgallada.',introduction:'',note:'',cards:[
  {label:'Hoggaanka fulinta',title:'Mr. Ahmed Saleiman',paragraphs:['Agaasimaha Fulinta'],items:[]},
- {label:'Hawlgallada',title:'Mr. Saeed Guled',paragraphs:['Maareeyaha Hawlgallada'],items:[]}
+ {label:'Hawlgallada',title:'Mr. Saeed Guled',paragraphs:['Maareeyaha Hawlgallada'],items:[]},
+ {label:'Hoggaanka fulinta',title:'Mr. Abdillahi Omar Abdillahi',paragraphs:['Hoggaanka fulinta'],items:[]}
  ]}
 };

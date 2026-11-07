@@ -35,6 +35,7 @@ export const zh: AboutRecords = {
  ]},
  leadership:{eyebrow:'公司',title:'本地领导。',emphasis:'聚焦运营。',introduction:'',note:'',cards:[
  {label:'执行领导',title:'Mr. Ahmed Saleiman',paragraphs:['执行董事'],items:[]},
- {label:'运营',title:'Mr. Saeed Guled',paragraphs:['运营经理'],items:[]}
+ {label:'运营',title:'Mr. Saeed Guled',paragraphs:['运营经理'],items:[]},
+ {label:'执行领导',title:'Mr. Abdillahi Omar Abdillahi',paragraphs:['执行领导'],items:[]}
  ]}
 };

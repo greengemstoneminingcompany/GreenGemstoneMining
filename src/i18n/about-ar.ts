@@ -35,6 +35,7 @@ export const ar: AboutRecords = {
  ]},
  leadership:{eyebrow:'الشركة',title:'قيادة محلية.',emphasis:'تركيز تشغيلي.',introduction:'',note:'',cards:[
  {label:'القيادة التنفيذية',title:'Mr. Ahmed Saleiman',paragraphs:['المدير التنفيذي'],items:[]},
- {label:'العمليات',title:'Mr. Saeed Guled',paragraphs:['مدير العمليات'],items:[]}
+ {label:'العمليات',title:'Mr. Saeed Guled',paragraphs:['مدير العمليات'],items:[]},
+ {label:'القيادة التنفيذية',title:'Mr. Abdillahi Omar Abdillahi',paragraphs:['القيادة التنفيذية'],items:[]}
  ]}
 };
