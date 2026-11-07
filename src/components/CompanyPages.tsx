@@ -69,13 +69,29 @@ export default function CompanyPages({ page, uploads }: { page: CompanyPage; upl
         </div>
       </section>
       {page === 'about' && <div data-editor-id="about.content"><nav className="gallery-nav-actions about-section-nav" aria-label="On this page">{[['company-profile','Company profile'],['leadership','Leadership'],['history-details','Company history'],['rural-development','Community']].map(([id,label])=><a key={id} href={'#/about?section='+id}>{buyerText(lang,label)}</a>)}</nav><CompanyContent /></div>}
+      {page === 'projects' && (<section id="telluride-project" className="sec" aria-labelledby="telluride-title">
+  <div className="sec-container">
+    <h2 id="telluride-title" className="display">Telluride Gold Project</h2>
+    <p className="body-text">Explore the company’s field media from geological surveying and excavation at Telluride.</p>
+    <div className="gallery-nav-actions">
+      <a href="#/gallery?album=241f9bd8-658c-50ce-8680-119f6fe4d438">Mining and Excavation</a>
+      <a href="#/contact?project=Telluride%20Gold%20Project">Discuss the project</a>
+      <a href="/telluride-project-brief.md" download>Download the project brief</a><a href="#/buyers?section=public-documents">Public documents and updates</a>
+    </div>
+    <details className="compact-details">
+      <summary>Evidence and project updates</summary>
+      <p>Company field media documents activity at the site. Ask the company for dated records and the current project status.</p>
+      <a href="#/contact?project=Telluride%20Gold%20Project">Request supporting records</a>
+    </details>
+  </div>
+</section>)}
       {page === 'projects' && <section className="sec sec-dark" data-editor-id="projects.overview"><div className="sec-container">
         <div className="page-section-heading"><p className="body-text">{cp.map}</p></div>
         <div id="project-map" className="project-map-anchor"><Suspense fallback={<p className="map-loading" role="status">{buyerText(lang,'Loading interactive map…')}</p>}><SomalilandMap projects={records.projects} /></Suspense></div>
-        <section className="project-directory" aria-label={cp.fieldRecords} data-editor-id="projects.directory">
+        <section id="project-portfolio" className="project-directory" aria-label={cp.fieldRecords} data-editor-id="projects.directory">
           <div className="project-directory-head"><p className="eyebrow">{cp.fieldRecords}</p><h2>{cp.projectAreas} <em>{cp.evidenceHeading}</em></h2><p>{cp.recordsDisclaimer}</p></div>
           <div className="project-filters" role="group" aria-label={cp.filterProjects}>{([['all', cp.filterAll], ['priority', cp.filterPriority], ['other', cp.filterOther], ['port', cp.filterPort]] as const).map(([filter, label]) => <button key={filter} type="button" className={projectFilter === filter ? 'active' : ''} aria-pressed={projectFilter === filter} onClick={() => setProjectFilter(filter)}>{label}</button>)}</div>
-          <div className="project-card-grid">{visibleProjects.map((project, index) => <article className="project-card" id={'project-'+project.id} key={project.id}><div className="project-card-art" style={{ '--card-index': index } as CSSProperties}><span>{String(index + 1).padStart(2, '0')}</span></div><div className="project-card-body"><p>{project.region}</p><h3>{project.name}</h3><div className="project-findings">{project.findings.slice(0, 4).map((finding) => <span key={`${finding.mineral}-${finding.evidence}`}>{finding.mineral} · {finding.evidence}</span>)}</div><div className="gallery-nav-actions">{Number.isFinite(project.lon)&&Number.isFinite(project.lat)&&<a href={'#/projects?section=project-map&mapProject='+encodeURIComponent(project.id)}>{buyerText(lang,"View map")}</a>}<a href={'#/contact?project='+encodeURIComponent(project.name)}>{buyerText(lang,"Enquire about this project")}</a>{/telluride/i.test(project.name)&&<a href="#/gallery?album=51333d5a-8c0f-547b-aef4-31c521207e70">{buyerText(lang,"View field media")}</a>}</div></div></article>)}</div>
+          <div className="project-card-grid">{visibleProjects.map((project, index) => <article className="project-card" id={'project-'+project.id} key={project.id}><div className="project-card-art" style={{ '--card-index': index } as CSSProperties}><span>{String(index + 1).padStart(2, '0')}</span></div><div className="project-card-body"><p>{project.region}</p><h3>{project.name}</h3><p>{project.findings.length ? buyerText(lang,"Field findings available") : buyerText(lang,"Project profile")}</p><div className="project-findings">{project.findings.slice(0, 4).map((finding) => <span key={`${finding.mineral}-${finding.evidence}`}>{finding.mineral} · {finding.evidence}</span>)}</div><div className="gallery-nav-actions">{Number.isFinite(project.lon)&&Number.isFinite(project.lat)&&<a href={'#/projects?section=project-map&mapProject='+encodeURIComponent(project.id)}>{buyerText(lang,"View map")}</a>}<a href={'#/contact?project='+encodeURIComponent(project.name)}>{buyerText(lang,"Enquire about this project")}</a>{/telluride/i.test(project.name)&&<a href="#/gallery?album=51333d5a-8c0f-547b-aef4-31c521207e70">{buyerText(lang,"View field media")}</a>}</div></div></article>)}</div>
         </section>
       </div></section>}
       {page === 'projects' && <><ResearchContent kind="projects" /><details className="compact-details"><summary>{cp.projectAreas}</summary><AboutSection sectionKey="operations" /><AboutSection sectionKey="development" /><AboutSection sectionKey="services" /></details></>}

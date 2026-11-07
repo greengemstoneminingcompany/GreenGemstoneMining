@@ -12,7 +12,10 @@ type State = 'idle' | 'sending' | 'sent' | 'error';
 export default function ContactForm() {
   const { t } = useI18n();
   const f = t.contact.form;
-  const [form, setForm] = useState({ name: '', email: '', company: '', interest: INTERESTS[0] as Interest, message: '', website: '' });
+  const [form, setForm] = useState(() => {
+    const requested = new URLSearchParams(window.location.hash.split('?')[1]).get('interest');
+    return { name: '', email: '', company: '', interest: INTERESTS.find(item => item === requested) ?? INTERESTS[0], message: '', website: '' };
+  });
   const [details, setDetails] = useState(() => { const details = takeEnquiryDetails(); const project = new URLSearchParams(window.location.hash.split('?')[1]).get('project'); return project ? { ...details, project: project.slice(0, 160) } : details; });
   useEffect(() => {
     const apply = () => setDetails(value => ({ ...value, ...takeEnquiryDetails() }));
