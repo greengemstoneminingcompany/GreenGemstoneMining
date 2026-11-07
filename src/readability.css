@@ -86,3 +86,24 @@
 .region-card .chip-industrial { color: #155c66; border-color: #57868d; }
 .region-card .chip-energy { color: #743047; border-color: #a46a7e; }
 .region-card .chip-btn[aria-pressed='true'] { color: #03201b; border-color: #006446; box-shadow: inset 0 0 0 1px #006446; }
+
+/* Contrast issues measured in the live desktop/mobile audit. */
+.buyer-vision .bv-label, .buyer-vision .bv-eyebrow { color: #735426; }
+.buyer-vision .bv-label-light { color: #d2b783; }
+.buyer-vision .bv-stat-strip small, .buyer-vision .bv-finding-list small,
+.buyer-vision .bv-section-top-dark > p, .buyer-vision .bv-project-footer p { color: #465f52; }
+.buyer-vision .bv-section-top-dark h2 em { color: #765625; }
+.buyer-vision .bv-preview-disclaimer { color: #465345; }
+.buyer-workspace-public .bw-buyer-body > div:first-child > span,
+.buyer-workspace-public .bw-buyer-body h2 em,
+.buyer-workspace-public .bw-buyer-accordions button > span:first-child,
+.buyer-workspace-public .bw-buyer-accordions small { color: #735426; }
+.buyer-workspace-public .bw-buyer-accordions p { color: #465f52; }
+.bw-gallery-heading > span { color: #735426; }
+.bw-gallery-heading p { color: #465f52; }
+.buyer-secondary .project-card-body > p { color: #006446; }
+.buyer-secondary.company-page-projects #development-projects .content-intro .eyebrow { color: #f1d987; }
+.buyer-secondary.company-page-projects #development-projects .content-intro h2,
+.buyer-secondary.company-page-projects #development-projects .content-intro h2 em { color: #f8fbf7; }
+.buyer-secondary.company-page-projects #development-projects .content-intro .body-text { color: #d6e3dc; }
+.page-contact-form .research-enquiry, .page-contact-form .research-enquiry > summary { color: #163c2a; }
