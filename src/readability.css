@@ -28,3 +28,47 @@
 .region-card .ev-strong { color: #006446; border-color: #006446; }
 .region-card .ev-partial { color: #775510; border-color: #775510; }
 .region-card .ev-limited { color: #934414; border-color: #934414; }
+
+/* Source-reference sections sit on the light showcase page surface. */
+.company-page .research-block { background: var(--paper); color: var(--ink); }
+.company-page .research-heading h2,
+.company-page .research-block h3,
+.company-page .research-disclosure > summary,
+.company-page .research-sources summary { color: var(--ink); }
+.company-page .research-heading small,
+.company-page .research-source-note,
+.company-page .research-dossier dd,
+.company-page .research-dossier-aside p,
+.company-page .research-sources span,
+.company-page .research-disclosure > summary > span,
+.company-page .research-table-wrap caption { color: var(--readable-muted); }
+.company-page .research-block .eyebrow,
+.company-page .research-block a,
+.company-page .research-text-button,
+.company-page .research-dossier dt,
+.company-page .research-date { color: var(--emerald-deep); }
+.company-page .research-select { color: var(--ink); }
+.company-page .research-table-wrap table { color: var(--ink); }
+.company-page .research-table-wrap thead { background: var(--forest); color: #f8fbf7; }
+.company-page .research-table-wrap th,
+.company-page .research-table-wrap td,
+.company-page .research-disclosure,
+.company-page .research-product,
+.company-page .research-dossier-aside,
+.company-page .research-history > article { border-color: var(--readable-border); }
+/* Buyer page overrides must pair their dark overview surfaces with light copy. */
+.buyer-secondary.company-page-projects .page-section-heading .body-text { color: #d6e3dc; }
+.buyer-secondary.company-page-projects .project-directory-head h2 { color: #f8fbf7; }
+.buyer-secondary.company-page-projects .project-directory-head h2 em,
+.buyer-secondary.company-page-projects .project-directory-head .eyebrow { color: #f1d987; }
+.buyer-secondary.company-page-projects .project-directory-head > p:last-child { color: #d6e3dc; }
+.buyer-secondary.company-page-contact .page-contact-grid > div:first-child .eyebrow { color: #f1d987; }
+.buyer-secondary.company-page-contact .page-contact-grid > div:first-child h2,
+.buyer-secondary.company-page-contact .page-contact-detail a,
+.buyer-secondary.company-page-contact .page-contact-detail span { color: #f8fbf7; }
+.buyer-secondary.company-page-contact .page-contact-detail svg { color: #f1d987; }
+.buyer-secondary.company-page-contact .page-contact-note { color: #d6e3dc; }
+.buyer-secondary .bw-folder { border-color: var(--readable-border); }
+/* Keep the buyer call-to-action's existing light background and dark heading. */
+.buyer-secondary .page-cta .eyebrow { color: #405c48; }
+.buyer-secondary .page-cta h2 { color: #1b432d; }
