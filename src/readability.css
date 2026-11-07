@@ -72,3 +72,17 @@
 /* Keep the buyer call-to-action's existing light background and dark heading. */
 .buyer-secondary .page-cta .eyebrow { color: #405c48; }
 .buyer-secondary .page-cta h2 { color: #1b432d; }
+
+/* Regional cards are light: badges, chips and occurrence labels need dark inks too. */
+.region-card .mg-label, .geomap-panel .national { color: var(--readable-muted); }
+.geomap-panel .national strong, .region-card .occ-item strong { color: var(--readable-ink); }
+.region-card .occ-item { color: var(--readable-muted); border-color: var(--readable-border); }
+.region-card .evidence { color: var(--readable-ink); border-color: var(--readable-border); }
+.region-card .evidence.ev-strong { color: #006446; border-color: #006446; }
+.region-card .evidence.ev-partial { color: #775510; border-color: #775510; }
+.region-card .evidence.ev-limited { color: #934414; border-color: #934414; }
+.region-card .chip-gems { color: #07583f; border-color: #528b71; }
+.region-card .chip-metals { color: #6e480e; border-color: #92703a; }
+.region-card .chip-industrial { color: #155c66; border-color: #57868d; }
+.region-card .chip-energy { color: #743047; border-color: #a46a7e; }
+.region-card .chip-btn[aria-pressed='true'] { color: #03201b; border-color: #006446; box-shadow: inset 0 0 0 1px #006446; }
