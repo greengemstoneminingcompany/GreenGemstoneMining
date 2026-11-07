@@ -922,3 +922,8 @@ html[lang='zh-Hans'] .display, html[lang='ar'] .display { font-size: clamp(26px,
 @media (max-width: 760px) {
   .home-contact-compact .contact-visual { min-height: 180px; }
 }
+
+/* Keep mineral search directly below the canvas, independent of region-card height. */
+.geomap-map-column { min-width: 0; display: grid; align-content: start; gap: 20px; }
+.geomap-map-column > .geomap-stage { position: relative; top: auto; }
+.geomap-map-column > .geomap-finder, .geomap-map-column > .survey-controls { margin-top: 0; margin-bottom: 0; }
